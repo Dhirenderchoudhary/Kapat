@@ -79,7 +79,7 @@
     "defaults"
   ],
   "portless": {
-    "name": "zerostarter",
+    "name": "razorpay",
     "script": "dev:app"
   }
 }
