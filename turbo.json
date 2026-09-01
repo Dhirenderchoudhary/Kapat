@@ -17,6 +17,13 @@
       "persistent": true,
       "cache": false
     },
+    // Same as "dev" but skips the portless wrapper, so both apps bind the fixed ports in .env
+    // (api 4000, web 3000) instead of portless-assigned ones. Used by `bun run dev:local`.
+    "dev:app": {
+      "dependsOn": ["^build"],
+      "persistent": true,
+      "cache": false
+    },
     "start": {
       "persistent": true,
       "cache": false

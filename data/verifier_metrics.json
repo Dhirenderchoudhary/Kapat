@@ -1,0 +1,49 @@
+{
+  "total_entries": 39,
+  "correct": 39,
+  "accuracy": 1.0,
+  "accuracy_by_outcome": {
+    "confirmed_linked": 1.0,
+    "denied_linked": 1.0,
+    "no_response": 1.0,
+    "unclear": 1.0
+  },
+  "accuracy_by_language": {
+    "en-IN": 1.0,
+    "hi-IN": 1.0,
+    "mr-IN": 1.0
+  },
+  "counts_by_outcome": {
+    "confirmed_linked": {
+      "correct": 12,
+      "total": 12
+    },
+    "denied_linked": {
+      "correct": 12,
+      "total": 12
+    },
+    "no_response": {
+      "correct": 6,
+      "total": 6
+    },
+    "unclear": {
+      "correct": 9,
+      "total": 9
+    }
+  },
+  "counts_by_language": {
+    "en-IN": {
+      "correct": 13,
+      "total": 13
+    },
+    "hi-IN": {
+      "correct": 13,
+      "total": 13
+    },
+    "mr-IN": {
+      "correct": 13,
+      "total": 13
+    }
+  },
+  "misclassified": []
+}

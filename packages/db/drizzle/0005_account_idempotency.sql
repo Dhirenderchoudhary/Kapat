@@ -1,0 +1,16 @@
+-- Phase 8 (Phases.md): FR-11 ("idempotent ingestion - no duplicate accounts/transactions from
+-- redelivered events") explicitly names accounts, not just transactions. transactions already
+-- had a real DB-level guarantee (razorpay_event_id unique, migration 0004). Accounts didn't -
+-- customer_ref had no uniqueness constraint, so POST /webhooks/razorpay upserting on customer_ref
+-- would have been an application-level check only, exactly the anti-pattern Rules.md Principle 3
+-- warns against ("app-level checks are for error messages, not the actual guarantee").
+--
+-- Hand-written, not drizzle-kit generated: bun/drizzle-kit were unavailable this session (no
+-- network egress anywhere reachable - Memory.md decision 20/21). This SQL matches the
+-- accountsCustomerRefUidx index added to packages/db/src/schema/fraud.ts in the same change, and
+-- was applied against a real Postgres and exercised (Memory.md decision 21). The drizzle
+-- meta/_journal.json entry for this migration was added by hand too; meta/snapshot JSON was
+-- deliberately left untouched rather than hand-edited (too easy to produce an invalid snapshot
+-- by hand) - run `bun run db:generate` once real network access is back to regenerate a correct
+-- snapshot against this same schema; it should confirm this exact change, not propose a new one.
+CREATE UNIQUE INDEX "accounts_customer_ref_uidx" ON "accounts" USING btree ("customer_ref");

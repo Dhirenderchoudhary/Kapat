@@ -12,7 +12,7 @@ COPY --from=prepare /app/out/json/ .
 RUN bun install --frozen-lockfile --ignore-scripts
 COPY --from=prepare /app/out/full/ .
 ENV INTERNAL_API_URL=http://api:4000
-RUN --mount=type=secret,id=dotenv,target=/app/.env,required=true bunx turbo run build --filter=@web/next
+RUN --mount=type=secret,id=dotenv,target=/app/.env,required=true bunx turbo run build --filter=@web/next --force
 RUN cp -r /app/web/next/.next/static /app/web/next/.next/standalone/web/next/.next/static
 RUN cp -r /app/web/next/public /app/web/next/.next/standalone/web/next
 
@@ -20,6 +20,9 @@ FROM base AS runner
 WORKDIR /app/web/next
 COPY --from=builder --chown=bun:bun /app/web/next/.next/standalone /app
 RUN mkdir -p .next && chown bun:bun .next
+
+ENV HOSTNAME="0.0.0.0"
+ENV PORT=3000
 
 USER bun
 CMD ["bun", "server.js"]

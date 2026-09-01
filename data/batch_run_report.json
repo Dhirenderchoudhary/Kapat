@@ -1,0 +1,33 @@
+{
+  "input": {
+    "account_count": 396,
+    "transaction_count": 949,
+    "ground_truth_cluster_count": 40
+  },
+  "exception": null,
+  "elapsed_seconds": 0.031,
+  "graph": {
+    "node_count": 396,
+    "edge_count": 212
+  },
+  "predicted_cluster_count": 38,
+  "cluster_size_distribution": {
+    "min": 2,
+    "max": 10,
+    "sizes": [
+      10, 8, 6, 6, 6, 6, 6, 5, 5, 5, 4, 4, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 2, 2, 2, 2, 2,
+      2, 2, 2, 2, 2, 2, 2
+    ]
+  },
+  "risk_score_distribution": {
+    "min": 0.2792,
+    "max": 0.7871,
+    "mean": 0.4569
+  },
+  "ground_truth_summary": {
+    "true_ring_count": 18,
+    "true_rings_recovered_at_iou_0.5": 17,
+    "legitimate_lookalike_count": 22,
+    "legitimate_lookalikes_wrongly_flagged_high_confidence": 0
+  }
+}

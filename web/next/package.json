@@ -40,6 +40,7 @@
     "react": "catalog:",
     "react-day-picker": "catalog:",
     "react-dom": "catalog:",
+    "react-force-graph-2d": "catalog:",
     "react-resizable-panels": "catalog:",
     "recharts": "catalog:",
     "shiki": "catalog:",

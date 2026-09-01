@@ -1,3 +1,6 @@
 export * from "@/schema/auth"
 export * from "@/schema/console"
+export * from "@/schema/fraud"
+export * from "@/schema/holds"
+export * from "@/schema/razorpay"
 export * from "@/schema/waitlist"

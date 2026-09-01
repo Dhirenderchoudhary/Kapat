@@ -12,7 +12,21 @@ import { z } from "zod"
 import { errorHandler, globalErrorResponses, jsonError } from "@/lib/error"
 import { createServer, upgradeWebSocket } from "@/lib/server"
 import { rateLimiterMiddleware, requireFeature } from "@/middlewares"
-import { agentsRouter, authRouter, v1Router, waitlistRouter } from "@/routers"
+import {
+  agentsRouter,
+  analyticsRouter,
+  checkoutRouter,
+  authRouter,
+  clustersRouter,
+  evidenceRouter,
+  holdsRouter,
+  ingestRouter,
+  metricsRouter,
+  razorpayRouter,
+  v1Router,
+  waitlistRouter,
+  webhooksRouter,
+} from "@/routers"
 
 const BUILD_VERSION = getBuildVersion()
 
@@ -59,6 +73,9 @@ const routes = app
     const data = c.req.header()
     return c.json({ data })
   })
+  // Mounted at app root (not under /api) per Architecture.md §6's contract table: Razorpay-style
+  // webhook senders hit /webhooks/razorpay directly, unversioned and outside the dashboard's API surface.
+  .route("/webhooks", webhooksRouter)
   .basePath("/api")
   .get(
     "/health",
@@ -149,6 +166,14 @@ socket.addEventListener("message", (event) => {
   )
   .route("/agents", agentsRouter)
   .route("/auth", authRouter)
+  .route("/analytics", analyticsRouter)
+  .route("/checkout", checkoutRouter)
+  .route("/clusters", clustersRouter)
+  .route("/evidence", evidenceRouter)
+  .route("/holds", holdsRouter)
+  .route("/ingest", ingestRouter)
+  .route("/metrics", metricsRouter)
+  .route("/razorpay", razorpayRouter)
   .route("/v1", v1Router)
   .route("/waitlist", waitlistRouter)
   // Gate both the OpenAPI document and the Scalar UI on apiDocs; the UI fetches the spec, so gating only the UI would leave the full spec public.

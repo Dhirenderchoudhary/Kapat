@@ -1,0 +1,242 @@
+[
+  {
+    "id": "resp_023",
+    "language_code": "hi-IN",
+    "transcript": "Shayad, lekin main pakka nahi bata sakta.",
+    "expected_outcome": "unclear"
+  },
+  {
+    "id": "resp_033",
+    "language_code": "mr-IN",
+    "transcript": "Nahi, yababat mala kahi mahiti nahi.",
+    "expected_outcome": "denied_linked"
+  },
+  {
+    "id": "resp_003",
+    "language_code": "en-IN",
+    "transcript": "Of course, that's my uncle, we share the same house.",
+    "expected_outcome": "confirmed_linked"
+  },
+  {
+    "id": "resp_011",
+    "language_code": "en-IN",
+    "transcript": null,
+    "expected_outcome": "no_response",
+    "note": "call not answered"
+  },
+  {
+    "id": "resp_010",
+    "language_code": "en-IN",
+    "transcript": "I'm not sure, possibly someone from my extended family.",
+    "expected_outcome": "unclear"
+  },
+  {
+    "id": "resp_035",
+    "language_code": "mr-IN",
+    "transcript": "Mala thik mahit nahi, kadachit olakhicha koni asel.",
+    "expected_outcome": "unclear"
+  },
+  {
+    "id": "resp_028",
+    "language_code": "mr-IN",
+    "transcript": "Mala mahit aahe, to mazha roommate aahe.",
+    "expected_outcome": "confirmed_linked"
+  },
+  {
+    "id": "resp_030",
+    "language_code": "mr-IN",
+    "transcript": "Nahi, mi ha account kadhi aikla nahi.",
+    "expected_outcome": "denied_linked"
+  },
+  {
+    "id": "resp_031",
+    "language_code": "mr-IN",
+    "transcript": "Mala ha konacha account aahe he ekhi mahit nahi.",
+    "expected_outcome": "denied_linked"
+  },
+  {
+    "id": "resp_022",
+    "language_code": "hi-IN",
+    "transcript": "Mujhe yakeen nahi hai, ho sakta hai koi jaan-pehchaan ka ho.",
+    "expected_outcome": "unclear"
+  },
+  {
+    "id": "resp_026",
+    "language_code": "mr-IN",
+    "transcript": "Hoy, to mazha bhau aahe, amhi ekach gharat rahato.",
+    "expected_outcome": "confirmed_linked"
+  },
+  {
+    "id": "resp_021",
+    "language_code": "hi-IN",
+    "transcript": "Pata nahi thik se, shayad koi rishtedaar hoga.",
+    "expected_outcome": "unclear"
+  },
+  {
+    "id": "resp_012",
+    "language_code": "en-IN",
+    "transcript": null,
+    "expected_outcome": "no_response",
+    "note": "call not answered"
+  },
+  {
+    "id": "resp_004",
+    "language_code": "en-IN",
+    "transcript": "No, I've never heard of that account before.",
+    "expected_outcome": "denied_linked"
+  },
+  {
+    "id": "resp_009",
+    "language_code": "en-IN",
+    "transcript": "It could be a relative but I really can't say for certain.",
+    "expected_outcome": "unclear"
+  },
+  {
+    "id": "resp_034",
+    "language_code": "mr-IN",
+    "transcript": "Khatri nahi, kadachit natevaik asel.",
+    "expected_outcome": "unclear"
+  },
+  {
+    "id": "resp_024",
+    "language_code": "hi-IN",
+    "transcript": null,
+    "expected_outcome": "no_response",
+    "note": "call not answered"
+  },
+  {
+    "id": "resp_029",
+    "language_code": "mr-IN",
+    "transcript": "Nakkich, ha mazya kakancha account aahe.",
+    "expected_outcome": "confirmed_linked"
+  },
+  {
+    "id": "resp_020",
+    "language_code": "hi-IN",
+    "transcript": "Nahi, mujhe iske baare mein koi jaankaari nahi hai.",
+    "expected_outcome": "denied_linked"
+  },
+  {
+    "id": "resp_025",
+    "language_code": "hi-IN",
+    "transcript": null,
+    "expected_outcome": "no_response",
+    "note": "call not answered"
+  },
+  {
+    "id": "resp_036",
+    "language_code": "mr-IN",
+    "transcript": "Kadachit, pan mi khatrine sangu shakat nahi.",
+    "expected_outcome": "unclear"
+  },
+  {
+    "id": "resp_027",
+    "language_code": "mr-IN",
+    "transcript": "Ho, ha aaicha account aahe, tyanchya jawal fon mazyakade astoy.",
+    "expected_outcome": "confirmed_linked"
+  },
+  {
+    "id": "resp_019",
+    "language_code": "hi-IN",
+    "transcript": "Yeh mera nahi hai, main is naam ke kisi ko nahi jaanta.",
+    "expected_outcome": "denied_linked"
+  },
+  {
+    "id": "resp_016",
+    "language_code": "hi-IN",
+    "transcript": "Bilkul, yeh mere chacha ka account hai.",
+    "expected_outcome": "confirmed_linked"
+  },
+  {
+    "id": "resp_038",
+    "language_code": "mr-IN",
+    "transcript": null,
+    "expected_outcome": "no_response",
+    "note": "call not answered"
+  },
+  {
+    "id": "resp_032",
+    "language_code": "mr-IN",
+    "transcript": "Ha majha nahi, mi ya navachya konalahi olakhat nahi.",
+    "expected_outcome": "denied_linked"
+  },
+  {
+    "id": "resp_002",
+    "language_code": "en-IN",
+    "transcript": "Yeah I'm aware of it, it belongs to my roommate.",
+    "expected_outcome": "confirmed_linked"
+  },
+  {
+    "id": "resp_000",
+    "language_code": "en-IN",
+    "transcript": "Oh yes, that's my sister's account, we live together.",
+    "expected_outcome": "confirmed_linked"
+  },
+  {
+    "id": "resp_037",
+    "language_code": "mr-IN",
+    "transcript": null,
+    "expected_outcome": "no_response",
+    "note": "call not answered"
+  },
+  {
+    "id": "resp_013",
+    "language_code": "hi-IN",
+    "transcript": "Haan ji, woh mera bhai hai, hum ek hi ghar mein rehte hain.",
+    "expected_outcome": "confirmed_linked"
+  },
+  {
+    "id": "resp_018",
+    "language_code": "hi-IN",
+    "transcript": "Mujhe bilkul pata nahi yeh kiska account hai.",
+    "expected_outcome": "denied_linked"
+  },
+  {
+    "id": "resp_005",
+    "language_code": "en-IN",
+    "transcript": "I have absolutely no idea who that is.",
+    "expected_outcome": "denied_linked"
+  },
+  {
+    "id": "resp_006",
+    "language_code": "en-IN",
+    "transcript": "That's not mine, I don't know anyone by that name.",
+    "expected_outcome": "denied_linked"
+  },
+  {
+    "id": "resp_008",
+    "language_code": "en-IN",
+    "transcript": "Hmm, maybe, I'm honestly not sure who that would be.",
+    "expected_outcome": "unclear"
+  },
+  {
+    "id": "resp_014",
+    "language_code": "hi-IN",
+    "transcript": "Ji haan, yeh mummy ka account hai, unka phone mere paas hi hai.",
+    "expected_outcome": "confirmed_linked"
+  },
+  {
+    "id": "resp_015",
+    "language_code": "hi-IN",
+    "transcript": "Haan mujhe pata hai, woh mera roommate hai.",
+    "expected_outcome": "confirmed_linked"
+  },
+  {
+    "id": "resp_017",
+    "language_code": "hi-IN",
+    "transcript": "Nahi, maine kabhi is account ke baare mein nahi suna.",
+    "expected_outcome": "denied_linked"
+  },
+  {
+    "id": "resp_001",
+    "language_code": "en-IN",
+    "transcript": "That's my father's account actually, he shops from my address sometimes.",
+    "expected_outcome": "confirmed_linked"
+  },
+  {
+    "id": "resp_007",
+    "language_code": "en-IN",
+    "transcript": "No, I'm not aware of any such account, sorry.",
+    "expected_outcome": "denied_linked"
+  }
+]

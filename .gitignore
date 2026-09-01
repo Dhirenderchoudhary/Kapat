@@ -40,6 +40,24 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.venv/
+venv/
+
+# agent skills & internal notes
+.agents/
+.claude/
+.github/skills
+skills-lock.json
+Memory.md
+PRD.md
+Phases.md
+Rules.md
+
 # custom directories
 .generated/
 .playwright-cli/
