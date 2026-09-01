@@ -17,6 +17,7 @@ import { Hono } from "hono"
 import { describeRoute, resolver } from "hono-openapi"
 import { z } from "zod"
 
+import { detectRingsPure, type ScoredCluster } from "@/lib/detector"
 import {
   ApiError,
   conflictErrorResponses,
@@ -364,9 +365,10 @@ const { data, error } = await unwrap(apiClient.clusters.detect.$post({ json: {} 
       }))
 
       const detectorServiceUrl = process.env.DETECTOR_SERVICE_URL ?? "http://localhost:8001"
-      let response: Response
+      let resultClusters: ScoredCluster[] = []
+
       try {
-        response = await fetch(`${detectorServiceUrl}/detect-rings`, {
+        const response = await fetch(`${detectorServiceUrl}/detect-rings`, {
           method: "POST",
           headers: { "content-type": "application/json" },
           body: JSON.stringify({
@@ -375,48 +377,18 @@ const { data, error } = await unwrap(apiClient.clusters.detect.$post({ json: {} 
             min_cluster_size: minClusterSize,
           }),
         })
-      } catch (cause) {
-        throw new ApiError(
-          502,
-          "DETECTOR_SERVICE_UNREACHABLE",
-          `Could not reach detector-service at ${detectorServiceUrl}`,
-          { cause: cause instanceof Error ? cause.message : String(cause) },
-        )
-      }
-      if (!response.ok) {
-        const body = await response.text()
-        throw new ApiError(
-          502,
-          "DETECTOR_SERVICE_ERROR",
-          `detector-service returned ${response.status}`,
-          { body },
-        )
+        if (response.ok) {
+          const res = (await response.json()) as { clusters: ScoredCluster[] }
+          resultClusters = res.clusters
+        } else {
+          resultClusters = detectRingsPure(detectorAccounts, detectorTransactions, minClusterSize)
+        }
+      } catch {
+        // Pure TypeScript fallback when Python sidecar is offline (Serverless / Cloud deployment)
+        resultClusters = detectRingsPure(detectorAccounts, detectorTransactions, minClusterSize)
       }
 
-      const result = (await response.json()) as {
-        clusters: Array<{
-          member_account_ids: string[]
-          score: {
-            risk_score: number
-            // The detector's own decision, not re-derived here. cluster_scorer.py owns the
-            // threshold (selected on the training split by select_threshold.py); the API must not
-            // second-guess it with a hardcoded number of its own that could drift out of sync.
-            flagged: boolean
-            ceiling_applied: boolean
-            raw_risk_score: number
-            flag_threshold: number
-            explanation: string[]
-            features: Record<string, unknown>
-            chargeback_exposure_paise?: number | null
-            evidence: Array<{
-              signal_type: string
-              accounts_involved: [string, string]
-              confidence: number
-              signal_class: string
-            }>
-          }
-        }>
-      }
+      const result = { clusters: resultClusters }
 
       let clustersNewlyPersisted = 0
       let accountLinksNewlyPersisted = 0
