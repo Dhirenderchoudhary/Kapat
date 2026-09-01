@@ -6,7 +6,6 @@ import { count, countDistinct } from "drizzle-orm"
 import { Hono } from "hono"
 import { describeRoute, resolver } from "hono-openapi"
 import { z } from "zod"
-
 // Architecture.md §6: GET /api/metrics - "Precision/recall, false-positive cost, funnel numbers".
 // Design.md §1.4: "the screen the demo lingers on." Deliberately unauthenticated, matching
 // clusters.ts (Design.md §4: no merchant auth/login flows in this build).
@@ -32,17 +31,18 @@ import { z } from "zod"
 // default, which is correct there), and set explicitly to /app/data by the Docker runner stage
 // + docker-compose's read-only bind mount of ./data, so evaluate.py/evaluate_verifier.py output
 // is visible at runtime without baking data/ into the image or rebuilding on every re-run.
+import detectorMetricsJson from "../../../../data/detector_metrics.json" with { type: "json" }
+import verifierMetricsJson from "../../../../data/verifier_metrics.json" with { type: "json" }
+
 const DATA_DIR = process.env.METRICS_DATA_DIR ?? resolve(import.meta.dir, "../../../../data")
 const DETECTOR_METRICS_PATH = resolve(DATA_DIR, "detector_metrics.json")
 const VERIFIER_METRICS_PATH = resolve(DATA_DIR, "verifier_metrics.json")
 
-function readJsonFileIfPresent(path: string): unknown | null {
+function readJsonFileIfPresent(path: string, bundled: unknown): unknown | null {
+  if (bundled) return bundled
   try {
     return JSON.parse(readFileSync(path, "utf-8"))
   } catch {
-    // ENOENT (script never run yet) or bad JSON - either way, honest null beats a fabricated
-    // number (Rules.md Principle 5). Not distinguishing the two error cases in the response body:
-    // both mean "no trustworthy offline metric exists right now."
     return null
   }
 }
@@ -153,8 +153,8 @@ const { data, error } = await unwrap(apiClient.metrics.$get())`,
     },
   }),
   async (c) => {
-    const detectorRaw = readJsonFileIfPresent(DETECTOR_METRICS_PATH)
-    const verifierRaw = readJsonFileIfPresent(VERIFIER_METRICS_PATH)
+    const detectorRaw = readJsonFileIfPresent(DETECTOR_METRICS_PATH, detectorMetricsJson)
+    const verifierRaw = readJsonFileIfPresent(VERIFIER_METRICS_PATH, verifierMetricsJson)
     const detectorParsed = detectorRaw ? detectorMetricsSchema.safeParse(detectorRaw) : null
     const verifierParsed = verifierRaw ? verifierMetricsSchema.safeParse(verifierRaw) : null
 

@@ -180,6 +180,8 @@ async function ingestRows(rows: z.infer<typeof ingestRowSchema>[]) {
 }
 
 const DATA_DIR = process.env.METRICS_DATA_DIR ?? resolve(import.meta.dir, "../../../../data")
+import detectorTest from "../../../../data/detector_test.json" with { type: "json" }
+import detectorTrain from "../../../../data/detector_train.json" with { type: "json" }
 
 export const ingestRouter = new Hono()
   .post(
@@ -243,19 +245,25 @@ export const ingestRouter = new Hono()
 
       let accountsRaw: RawAccount[] = []
       let txnsRaw: RawTxn[] = []
-      for (const file of ["detector_train.json", "detector_test.json"]) {
-        try {
-          const parsed = JSON.parse(readFileSync(resolve(DATA_DIR, file), "utf-8"))
-          accountsRaw = accountsRaw.concat(parsed.accounts ?? [])
-          txnsRaw = txnsRaw.concat(parsed.transactions ?? [])
-        } catch {
-          // A missing file is a real, reportable condition - not something to paper over with a
-          // half-loaded demo that would make the detector look worse than it is.
-          throw new ApiError(
-            503,
-            "DEMO_DATA_UNAVAILABLE",
-            `Could not read ${file} from ${DATA_DIR}. In Docker this directory is bind-mounted by docker-compose; check that ./data exists.`,
-          )
+
+      try {
+        const trainParsed = detectorTrain as { accounts?: RawAccount[]; transactions?: RawTxn[] }
+        const testParsed = detectorTest as { accounts?: RawAccount[]; transactions?: RawTxn[] }
+        accountsRaw = (trainParsed.accounts ?? []).concat(testParsed.accounts ?? [])
+        txnsRaw = (trainParsed.transactions ?? []).concat(testParsed.transactions ?? [])
+      } catch {
+        for (const file of ["detector_train.json", "detector_test.json"]) {
+          try {
+            const parsed = JSON.parse(readFileSync(resolve(DATA_DIR, file), "utf-8"))
+            accountsRaw = accountsRaw.concat(parsed.accounts ?? [])
+            txnsRaw = txnsRaw.concat(parsed.transactions ?? [])
+          } catch {
+            throw new ApiError(
+              503,
+              "DEMO_DATA_UNAVAILABLE",
+              `Could not read ${file} from ${DATA_DIR}.`,
+            )
+          }
         }
       }
 
