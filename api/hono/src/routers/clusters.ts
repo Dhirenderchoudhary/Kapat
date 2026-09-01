@@ -248,17 +248,17 @@ const { data, error } = await unwrap(apiClient.clusters.$get())`,
       }
       const { status, page, perPage } = parsed.data
       const where = status ? eq(clusters.status, status) : undefined
+      const query = db.select().from(clusters)
+      const countQuery = db.select({ value: count() }).from(clusters)
 
-      const [rows, total] = await Promise.all([
-        db
-          .select()
-          .from(clusters)
-          .where(where)
+      const [rows, totalRes] = await Promise.all([
+        (where ? query.where(where) : query)
           .orderBy(desc(clusters.riskScore), desc(clusters.createdAt))
           .limit(perPage)
           .offset((page - 1) * perPage),
-        db.$count(clusters, where),
+        where ? countQuery.where(where) : countQuery,
       ])
+      const total = totalRes[0]?.value ?? 0
 
       const clusterIds = rows.map((r) => r.id)
       const [accountCounts, verificationStatuses] = await Promise.all([
