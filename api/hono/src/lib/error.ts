@@ -90,8 +90,9 @@ export const errorHandler = (err: Error, c: Context) => {
     return jsonError(c, err.status, code, err.message)
   }
 
-  const message = isLocal(env.NODE_ENV) ? err.message : "Internal Server Error"
-  return jsonError(c, 500, "INTERNAL_SERVER_ERROR", message)
+  console.error("[API Error Handler]", err)
+  const message = isLocal(env.NODE_ENV) ? err.message : err.message || "Internal Server Error"
+  return jsonError(c, 500, "INTERNAL_SERVER_ERROR", message, { detail: err.stack })
 }
 
 // Shape of the error envelope jsonError emits; reused by the OpenAPI error responses below.
