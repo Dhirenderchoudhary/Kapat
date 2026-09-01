@@ -1,0 +1,202 @@
+{
+  "generated_at": "2026-08-29T23:06:57.536292+00:00",
+  "flag_threshold": 0.45,
+  "n_cases": 10,
+  "n_correct": 8,
+  "n_failures": 2,
+  "results": [
+    {
+      "case": "household_address_only",
+      "size": 3,
+      "expectation": "not_flagged",
+      "note": "Baseline household. Shares a delivery address, nothing else. The easy case the main test set uses.",
+      "risk_score": 0.2992,
+      "raw_risk_score": 0.2992,
+      "ceiling_applied": true,
+      "signal_types_present": ["shared_address"],
+      "flagged": false,
+      "correct": true,
+      "explanation": [
+        "Benign-explainable signal: a shared delivery address - common among families and flatmates.",
+        "CAPPED at 0.4: every connection in this group has an ordinary household explanation, so it is held below the 0.45 flagging threshold and never shown to the merchant as a ring. Uncapped it would have scored 0.2992."
+      ]
+    },
+    {
+      "case": "household_address_and_card",
+      "size": 3,
+      "expectation": "not_flagged",
+      "note": "Very common real household: one delivery address and one family card. Two benign signals, no fraud-specific ones.",
+      "risk_score": 0.364,
+      "raw_risk_score": 0.364,
+      "ceiling_applied": true,
+      "signal_types_present": ["shared_address", "shared_payment"],
+      "flagged": false,
+      "correct": true,
+      "explanation": [
+        "Benign-explainable signal: a shared delivery address - common among families and flatmates.",
+        "Benign-explainable signal: a shared payment method - common among families and flatmates.",
+        "CAPPED at 0.4: every connection in this group has an ordinary household explanation, so it is held below the 0.45 flagging threshold and never shown to the merchant as a ring. Uncapped it would have scored 0.364."
+      ]
+    },
+    {
+      "case": "household_shares_card_and_orders_together",
+      "size": 3,
+      "expectation": "not_flagged",
+      "note": "HARD. Family that shares an address AND a card AND repeatedly orders within minutes of each other. Fully dense graph, three overlaps. Exactly the case the ceiling rule exists for.",
+      "risk_score": 0.4,
+      "raw_risk_score": 0.4987,
+      "ceiling_applied": true,
+      "signal_types_present": ["coordinated_timing", "shared_address", "shared_payment"],
+      "flagged": false,
+      "correct": true,
+      "explanation": [
+        "Weaker fraud-specific signal: transactions repeatedly firing within minutes of each other - real households do sometimes do this.",
+        "Benign-explainable signal: a shared delivery address - common among families and flatmates.",
+        "Benign-explainable signal: a shared payment method - common among families and flatmates.",
+        "CAPPED at 0.4: every connection in this group has an ordinary household explanation, so it is held below the 0.45 flagging threshold and never shown to the merchant as a ring. Uncapped it would have scored 0.4987."
+      ]
+    },
+    {
+      "case": "flatmates_pass_around_one_coupon",
+      "size": 3,
+      "expectation": "not_flagged",
+      "note": "HARDEST legitimate case. Flatmates share an address and a card, order together, AND pass one promo code around. Indistinguishable from promo abuse on the signals available.",
+      "risk_score": 0.6967,
+      "raw_risk_score": 0.6967,
+      "ceiling_applied": false,
+      "signal_types_present": [
+        "coordinated_timing",
+        "shared_address",
+        "shared_payment",
+        "shared_promo"
+      ],
+      "flagged": true,
+      "correct": false,
+      "explanation": [
+        "Strong fraud-specific signal: the same promo code funnelled through several accounts - no ordinary household produces this.",
+        "Weaker fraud-specific signal: transactions repeatedly firing within minutes of each other - real households do sometimes do this.",
+        "Benign-explainable signal: a shared delivery address - common among families and flatmates.",
+        "Benign-explainable signal: a shared payment method - common among families and flatmates.",
+        "FLAGGED: scored 0.6967, at or above the 0.45 threshold selected on the training split."
+      ]
+    },
+    {
+      "case": "ring_textbook",
+      "size": 5,
+      "expectation": "flagged",
+      "note": "Textbook ring: every signal fires. What the main test set contains.",
+      "risk_score": 0.9675,
+      "raw_risk_score": 0.9675,
+      "ceiling_applied": false,
+      "signal_types_present": [
+        "coordinated_timing",
+        "shared_address",
+        "shared_payment",
+        "shared_phone_pattern",
+        "shared_promo"
+      ],
+      "flagged": true,
+      "correct": true,
+      "explanation": [
+        "Strong fraud-specific signal: phone numbers from one sequential block (a disposable-range pattern) - no ordinary household produces this.",
+        "Strong fraud-specific signal: the same promo code funnelled through several accounts - no ordinary household produces this.",
+        "Weaker fraud-specific signal: transactions repeatedly firing within minutes of each other - real households do sometimes do this.",
+        "Benign-explainable signal: a shared delivery address - common among families and flatmates.",
+        "Benign-explainable signal: a shared payment method - common among families and flatmates.",
+        "FLAGGED: scored 0.9675, at or above the 0.45 threshold selected on the training split."
+      ]
+    },
+    {
+      "case": "ring_distinct_addresses",
+      "size": 5,
+      "expectation": "flagged",
+      "note": "Evasive ring: uses different delivery addresses, but still one card, sequential SIM block, coordinated timing, one promo.",
+      "risk_score": 0.8998,
+      "raw_risk_score": 0.8998,
+      "ceiling_applied": false,
+      "signal_types_present": [
+        "coordinated_timing",
+        "shared_payment",
+        "shared_phone_pattern",
+        "shared_promo"
+      ],
+      "flagged": true,
+      "correct": true,
+      "explanation": [
+        "Strong fraud-specific signal: phone numbers from one sequential block (a disposable-range pattern) - no ordinary household produces this.",
+        "Strong fraud-specific signal: the same promo code funnelled through several accounts - no ordinary household produces this.",
+        "Weaker fraud-specific signal: transactions repeatedly firing within minutes of each other - real households do sometimes do this.",
+        "Benign-explainable signal: a shared payment method - common among families and flatmates.",
+        "FLAGGED: scored 0.8998, at or above the 0.45 threshold selected on the training split."
+      ]
+    },
+    {
+      "case": "ring_no_shared_address_or_card",
+      "size": 5,
+      "expectation": "flagged",
+      "note": "More evasive: different addresses AND different cards. Only the SIM block, timing and promo reuse remain.",
+      "risk_score": 0.8324,
+      "raw_risk_score": 0.8324,
+      "ceiling_applied": false,
+      "signal_types_present": ["coordinated_timing", "shared_phone_pattern", "shared_promo"],
+      "flagged": true,
+      "correct": true,
+      "explanation": [
+        "Strong fraud-specific signal: phone numbers from one sequential block (a disposable-range pattern) - no ordinary household produces this.",
+        "Strong fraud-specific signal: the same promo code funnelled through several accounts - no ordinary household produces this.",
+        "Weaker fraud-specific signal: transactions repeatedly firing within minutes of each other - real households do sometimes do this.",
+        "FLAGGED: scored 0.8324, at or above the 0.45 threshold selected on the training split."
+      ]
+    },
+    {
+      "case": "ring_promo_abuse_only",
+      "size": 4,
+      "expectation": "flagged",
+      "note": "Pure promo-abuse ring: no shared address, no shared card, ordinary phone numbers. Only coordinated timing + one promo funnelled through all accounts.",
+      "risk_score": 0.5831,
+      "raw_risk_score": 0.5831,
+      "ceiling_applied": false,
+      "signal_types_present": ["coordinated_timing", "shared_promo"],
+      "flagged": true,
+      "correct": true,
+      "explanation": [
+        "Strong fraud-specific signal: the same promo code funnelled through several accounts - no ordinary household produces this.",
+        "Weaker fraud-specific signal: transactions repeatedly firing within minutes of each other - real households do sometimes do this.",
+        "FLAGGED: scored 0.5831, at or above the 0.45 threshold selected on the training split."
+      ]
+    },
+    {
+      "case": "ring_burner_sims_only",
+      "size": 4,
+      "expectation": "flagged",
+      "note": "Sequential SIM block and nothing else - no shared address, card, timing or promo.",
+      "risk_score": 0.4708,
+      "raw_risk_score": 0.4708,
+      "ceiling_applied": false,
+      "signal_types_present": ["shared_phone_pattern"],
+      "flagged": true,
+      "correct": true,
+      "explanation": [
+        "Strong fraud-specific signal: phone numbers from one sequential block (a disposable-range pattern) - no ordinary household produces this.",
+        "FLAGGED: scored 0.4708, at or above the 0.45 threshold selected on the training split."
+      ]
+    },
+    {
+      "case": "ring_maximally_evasive",
+      "size": 4,
+      "expectation": "flagged",
+      "note": "Hardest ring: coordinated timing only. Different addresses, cards, phones, no promo reuse. Deliberately at the edge of what these five signals can see at all.",
+      "risk_score": 0.3872,
+      "raw_risk_score": 0.3872,
+      "ceiling_applied": true,
+      "signal_types_present": ["coordinated_timing"],
+      "flagged": false,
+      "correct": false,
+      "explanation": [
+        "Weaker fraud-specific signal: transactions repeatedly firing within minutes of each other - real households do sometimes do this.",
+        "CAPPED at 0.4: every connection in this group has an ordinary household explanation, so it is held below the 0.45 flagging threshold and never shown to the merchant as a ring. Uncapped it would have scored 0.3872."
+      ]
+    }
+  ],
+  "purpose": "Adversarial companion to evaluate.py. The main held-out split contains only easy look-alikes (one shared signal); these cases are deliberately harder on both sides. Failures here are the detector's real decision boundary and are reported as failures."
+}

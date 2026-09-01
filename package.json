@@ -8,7 +8,7 @@
     "web/*"
   ],
   "scripts": {
-    "build": "turbo run build --summarize && bun .github/scripts/build-sizes.ts",
+    "build": "SKIP_ENV_VALIDATION=true turbo run build --summarize && bun .github/scripts/build-sizes.ts",
     "check-types": "turbo run check-types --summarize && bun run check-types:scripts && bun run check-types:tests",
     "check-types:scripts": "tsc -p .github/scripts/tsconfig.json",
     "check-types:tests": "if [ -d tests ]; then find tests -name tsconfig.json -print0 | xargs -0 -n1 tsc -p; fi",
@@ -18,6 +18,7 @@
     "db:migrate": "turbo run build --filter=@packages/env && bun --cwd packages/db drizzle-kit migrate",
     "db:studio": "turbo run build --filter=@packages/env && bun --cwd packages/db drizzle-kit studio",
     "dev": "PORTLESS_HTTPS=0 PORTLESS_PORT=1355 PORTLESS_SYNC_HOSTS=0 turbo run dev",
+    "dev:local": "turbo run dev:app",
     "devtools": "turbo devtools",
     "format": "oxfmt",
     "format:check": "oxfmt --check",
@@ -49,7 +50,8 @@
     "typescript": "catalog:"
   },
   "overrides": {
-    "js-yaml": "^4.3.1"
+    "js-yaml": "^4.3.1",
+    "nanoid": "^3.3.18"
   },
   "commitlint": {
     "extends": [
@@ -126,6 +128,7 @@
     "react": "^19.2.7",
     "react-day-picker": "^10.0.1",
     "react-dom": "^19.2.7",
+    "react-force-graph-2d": "^1.27.1",
     "react-resizable-panels": "^4.12.2",
     "recharts": "^3.10.1",
     "shadcn": "^4.16.1",

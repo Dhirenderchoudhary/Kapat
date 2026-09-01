@@ -1,4 +1,24 @@
 services:
+  # Local dev / demo Postgres (Architecture.md §8). Deliberately NOT the POSTGRES_URL in the
+  # root .env - that value is the shared Neon database canary and production both read from
+  # (see the db-migration skill), so api/detector-service below are pointed at this container
+  # instead via an explicit override, never at the shared .env value, when run through compose.
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_USER=razorpay
+      - POSTGRES_PASSWORD=razorpay
+      - POSTGRES_DB=razorpay
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U razorpay"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
   api:
     build:
       context: .
@@ -9,8 +29,29 @@ services:
       - .env
     environment:
       - INTERNAL_API_URL=http://api:4000
+      - POSTGRES_URL=postgres://razorpay:razorpay@postgres:5432/razorpay
+      # POST /api/clusters/detect calls the real detector-service container over Docker's
+      # internal network by service name - localhost would be this api container itself.
+      - DETECTOR_SERVICE_URL=http://detector-service:8001
+      # Encrypts the merchant's Razorpay API secret at rest (AES-256-GCM). Without it the
+      # API refuses to store a credential at all rather than falling back to plaintext.
+      # Generate with: openssl rand -base64 32
+      - RAZORPAY_CREDENTIAL_KEY=${RAZORPAY_CREDENTIAL_KEY:-}
+      # Standard Checkout (order creation + payment-signature verification).
+      - RAZORPAY_KEY_ID=${RAZORPAY_KEY_ID:-}
+      - RAZORPAY_KEY_SECRET=${RAZORPAY_KEY_SECRET:-}
+      # Webhook signature secret - set when you create the webhook in the Razorpay
+      # dashboard. NOT the API key secret; different secret, different scheme.
+      - RAZORPAY_WEBHOOK_SECRET=${RAZORPAY_WEBHOOK_SECRET:-}
+    volumes:
+      # Read-only: evaluate.py / evaluate_verifier.py write these on the host: rerun them there
+      # and GET /api/metrics picks the new numbers up on its next request, no rebuild needed.
+      - ./data:/app/data:ro
     ports:
       - "4000:4000"
+    depends_on:
+      postgres:
+        condition: service_healthy
 
   web:
     build:
@@ -22,8 +63,44 @@ services:
       - .env
     environment:
       - INTERNAL_API_URL=http://api:4000
+      - HOSTNAME=0.0.0.0
+      - PORT=3000
     ports:
-      - "3000:3000"
+      - "3005:3000"
+
+  # Fraud-ring detector (Architecture.md §2.1). /detect-rings is fully wired
+  # (graph_builder.py -> clustering.py -> cluster_scorer.py, Phase 2/3/4) - not run as a compose
+  # stack this session (no Docker daemon reachable; validated instead via native Postgres in the
+  # cloud container - Memory.md decisions 19-21), so treat this service definition as unbuilt
+  # until a real `docker compose up` smoke test happens on a machine with Docker.
+  detector-service:
+    build:
+      context: .
+      dockerfile: services/detector-service/Dockerfile
+    environment:
+      - POSTGRES_URL=postgres://razorpay:razorpay@postgres:5432/razorpay
+    ports:
+      - "8001:8001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # Multilingual voice verifier (Architecture.md §2.2). /call is fully wired
+  # (conversation_flow.py -> simulated_call.py -> response_parser.py, Phase 6) - the Sarvam AI
+  # client (sarvam_client.py) is written but its live credential/API call is still unvalidated
+  # (Phase 0 exit criteria, a human step). Same "not run as a compose stack yet" caveat as
+  # detector-service above.
+  verifier-service:
+    build:
+      context: .
+      dockerfile: services/verifier-service/Dockerfile
+    env_file:
+      - .env
+    ports:
+      - "8002:8002"
+
+volumes:
+  postgres_data:
 
 secrets:
   dotenv:

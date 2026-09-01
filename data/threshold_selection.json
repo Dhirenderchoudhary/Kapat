@@ -1,0 +1,195 @@
+{
+  "generated_at": "2026-08-29T23:04:53.951470+00:00",
+  "selected_on": "detector_train.json",
+  "never_read": "detector_test.json",
+  "selection_rule": "Among thresholds achieving maximum recall on the TRAIN split, take the highest precision; break ties by widest margin to the nearest actual cluster score. Fixed in advance, not chosen after inspecting the curve.",
+  "selected_threshold": 0.45,
+  "train_metrics_at_selected_threshold": {
+    "threshold": 0.45,
+    "clusters_flagged": 12,
+    "true_rings_recovered": 13,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0,
+    "lookalikes_flagged": 0
+  },
+  "score_separation_on_train": {
+    "lowest_flagged_score": 0.5929,
+    "highest_unflagged_score": 0.2992,
+    "margin": 0.2937
+  },
+  "curve": [
+    {
+      "threshold": 0.05,
+      "clusters_flagged": 27,
+      "true_rings_recovered": 13,
+      "precision": 0.4444,
+      "recall": 1.0,
+      "f1": 0.6154,
+      "lookalikes_flagged": 15
+    },
+    {
+      "threshold": 0.1,
+      "clusters_flagged": 27,
+      "true_rings_recovered": 13,
+      "precision": 0.4444,
+      "recall": 1.0,
+      "f1": 0.6154,
+      "lookalikes_flagged": 15
+    },
+    {
+      "threshold": 0.15,
+      "clusters_flagged": 27,
+      "true_rings_recovered": 13,
+      "precision": 0.4444,
+      "recall": 1.0,
+      "f1": 0.6154,
+      "lookalikes_flagged": 15
+    },
+    {
+      "threshold": 0.2,
+      "clusters_flagged": 27,
+      "true_rings_recovered": 13,
+      "precision": 0.4444,
+      "recall": 1.0,
+      "f1": 0.6154,
+      "lookalikes_flagged": 15
+    },
+    {
+      "threshold": 0.25,
+      "clusters_flagged": 27,
+      "true_rings_recovered": 13,
+      "precision": 0.4444,
+      "recall": 1.0,
+      "f1": 0.6154,
+      "lookalikes_flagged": 15
+    },
+    {
+      "threshold": 0.3,
+      "clusters_flagged": 12,
+      "true_rings_recovered": 13,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "lookalikes_flagged": 0
+    },
+    {
+      "threshold": 0.35,
+      "clusters_flagged": 12,
+      "true_rings_recovered": 13,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "lookalikes_flagged": 0
+    },
+    {
+      "threshold": 0.4,
+      "clusters_flagged": 12,
+      "true_rings_recovered": 13,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "lookalikes_flagged": 0
+    },
+    {
+      "threshold": 0.45,
+      "clusters_flagged": 12,
+      "true_rings_recovered": 13,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "lookalikes_flagged": 0
+    },
+    {
+      "threshold": 0.5,
+      "clusters_flagged": 12,
+      "true_rings_recovered": 13,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "lookalikes_flagged": 0
+    },
+    {
+      "threshold": 0.55,
+      "clusters_flagged": 12,
+      "true_rings_recovered": 13,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "lookalikes_flagged": 0
+    },
+    {
+      "threshold": 0.6,
+      "clusters_flagged": 9,
+      "true_rings_recovered": 10,
+      "precision": 1.0,
+      "recall": 0.7692,
+      "f1": 0.8696,
+      "lookalikes_flagged": 0
+    },
+    {
+      "threshold": 0.65,
+      "clusters_flagged": 5,
+      "true_rings_recovered": 6,
+      "precision": 1.0,
+      "recall": 0.4615,
+      "f1": 0.6316,
+      "lookalikes_flagged": 0
+    },
+    {
+      "threshold": 0.7,
+      "clusters_flagged": 5,
+      "true_rings_recovered": 6,
+      "precision": 1.0,
+      "recall": 0.4615,
+      "f1": 0.6316,
+      "lookalikes_flagged": 0
+    },
+    {
+      "threshold": 0.75,
+      "clusters_flagged": 4,
+      "true_rings_recovered": 4,
+      "precision": 1.0,
+      "recall": 0.3077,
+      "f1": 0.4706,
+      "lookalikes_flagged": 0
+    },
+    {
+      "threshold": 0.8,
+      "clusters_flagged": 0,
+      "true_rings_recovered": 0,
+      "precision": null,
+      "recall": 0.0,
+      "f1": null,
+      "lookalikes_flagged": 0
+    },
+    {
+      "threshold": 0.85,
+      "clusters_flagged": 0,
+      "true_rings_recovered": 0,
+      "precision": null,
+      "recall": 0.0,
+      "f1": null,
+      "lookalikes_flagged": 0
+    },
+    {
+      "threshold": 0.9,
+      "clusters_flagged": 0,
+      "true_rings_recovered": 0,
+      "precision": null,
+      "recall": 0.0,
+      "f1": null,
+      "lookalikes_flagged": 0
+    },
+    {
+      "threshold": 0.95,
+      "clusters_flagged": 0,
+      "true_rings_recovered": 0,
+      "precision": null,
+      "recall": 0.0,
+      "f1": null,
+      "lookalikes_flagged": 0
+    }
+  ],
+  "caveat": "These are TRAIN-split numbers, used only to place the threshold. They are not the detector's reported performance - see data/detector_metrics.json, produced by evaluate.py against the held-out split using this threshold unchanged."
+}
