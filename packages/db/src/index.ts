@@ -17,8 +17,8 @@ const requiresSsl =
 
 const client = postgres(env.POSTGRES_URL, {
   ssl: requiresSsl ? "require" : undefined,
-  max: env.NODE_ENV === "production" ? 10 : 5,
-  idle_timeout: 30,
+  max: 20,
+  idle_timeout: 20,
   connect_timeout: 10,
   prepare: false,
 })
