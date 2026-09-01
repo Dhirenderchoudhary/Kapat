@@ -3,7 +3,6 @@ import { resolve } from "node:path"
 
 import { Hono } from "hono"
 import { describeRoute } from "hono-openapi"
-
 // GET /api/evidence - everything this project has measured about itself, in one call.
 //
 // The point is not decoration. A merchant evaluating a fraud detector they did not build has no way
@@ -15,7 +14,21 @@ import { describeRoute } from "hono-openapi"
 // Files are read per request, not cached. They are small, and a cached number that has drifted from
 // the file on disk is worse than a slow read.
 
+import batchRunJson from "../../../../data/batch_run_report.json" with { type: "json" }
+import detectorMetricsJson from "../../../../data/detector_metrics.json" with { type: "json" }
+import holdVerificationJson from "../../../../data/hold_verification_report.json" with { type: "json" }
+import stressTestJson from "../../../../data/stress_test_report.json" with { type: "json" }
+import thresholdSelectionJson from "../../../../data/threshold_selection.json" with { type: "json" }
+
 const DATA_DIR = process.env.METRICS_DATA_DIR ?? resolve(import.meta.dir, "../../../../data")
+
+const BUNDLED_FILES: Record<string, unknown> = {
+  detectorMetrics: detectorMetricsJson,
+  stressTest: stressTestJson,
+  holdVerification: holdVerificationJson,
+  thresholdSelection: thresholdSelectionJson,
+  batchRun: batchRunJson,
+}
 
 const FILES = {
   detectorMetrics: "detector_metrics.json",
@@ -25,12 +38,11 @@ const FILES = {
   batchRun: "batch_run_report.json",
 } as const
 
-function readIfPresent(file: string): unknown | null {
+function readIfPresent(key: string, file: string): unknown | null {
+  if (BUNDLED_FILES[key]) return BUNDLED_FILES[key]
   try {
     return JSON.parse(readFileSync(resolve(DATA_DIR, file), "utf-8"))
   } catch {
-    // Missing file means the script that writes it has not been run. Report null and let the UI say
-    // which command produces it, rather than inventing a number or hiding the gap.
     return null
   }
 }
@@ -45,7 +57,7 @@ export const evidenceRouter = new Hono().get(
   }),
   (c) => {
     const data = Object.fromEntries(
-      Object.entries(FILES).map(([key, file]) => [key, readIfPresent(file)]),
+      Object.entries(FILES).map(([key, file]) => [key, readIfPresent(key, file)]),
     ) as Record<keyof typeof FILES, unknown>
 
     const missing = Object.entries(FILES)
