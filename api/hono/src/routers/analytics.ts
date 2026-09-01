@@ -90,8 +90,38 @@ export const analyticsRouter = new Hono().get(
     },
   }),
   async (c) => {
+    const [accountRow] = await db.select({ n: count() }).from(accounts)
+    const totalAccounts = accountRow?.n ?? 0
+
+    if (totalAccounts === 0) {
+      return c.json({
+        data: {
+          totals: {
+            accounts: 0,
+            transactions: 0,
+            transactionVolumePaise: 0,
+            accountsInFlaggedRings: 0,
+            clustersFlagged: 0,
+            decisionsMade: 0,
+            auditEntries: 0,
+          },
+          flaggedShare: {
+            accountsFlagged: 0,
+            accountsClean: 0,
+            transactionsInFlaggedRings: 0,
+            transactionsClean: 0,
+            exposurePaise: 0,
+          },
+          riskDistribution: RISK_BUCKETS.map((b) => ({ ...b, count: 0 })),
+          signalBreakdown: [],
+          clusterSizes: [],
+          statusBreakdown: {},
+          decisionBreakdown: {},
+        },
+      })
+    }
+
     const [
-      [accountRow],
       [txnRow],
       [volumeRow],
       [clusterRow],
@@ -104,7 +134,6 @@ export const analyticsRouter = new Hono().get(
       [flaggedAccountsRow],
       [exposureRow],
     ] = await Promise.all([
-      db.select({ n: count() }).from(accounts),
       db.select({ n: count() }).from(transactions),
       db.select({ total: sum(transactions.amountPaise) }).from(transactions),
       db.select({ n: count() }).from(clusters),
@@ -124,7 +153,6 @@ export const analyticsRouter = new Hono().get(
       db.select({ total: sum(clusters.chargebackExposurePaise) }).from(clusters),
     ])
 
-    const totalAccounts = accountRow?.n ?? 0
     const totalTransactions = txnRow?.n ?? 0
     const accountsFlagged = flaggedAccountsRow?.n ?? 0
 
