@@ -179,12 +179,40 @@ export function ClusterNetworkGraph({
   }
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       <div
         ref={containerRef}
-        className="bg-card overflow-hidden rounded-lg border"
+        className="glass-panel border-border/80 relative overflow-hidden rounded-xl border shadow-inner"
         style={{ height }}
       >
+        {/* Graph Quick Floating Toolbar */}
+        <div className="border-border/60 bg-background/80 absolute top-3 right-3 z-10 flex items-center gap-1.5 rounded-lg border p-1 shadow-xs backdrop-blur-md">
+          <button
+            type="button"
+            onClick={() => graphRef.current?.zoom(graphRef.current.zoom() * 1.3, 300)}
+            className="text-muted-foreground hover:bg-accent hover:text-foreground rounded p-1 text-xs font-semibold transition-colors"
+            title="Zoom In"
+          >
+            +
+          </button>
+          <button
+            type="button"
+            onClick={() => graphRef.current?.zoom(graphRef.current.zoom() / 1.3, 300)}
+            className="text-muted-foreground hover:bg-accent hover:text-foreground rounded p-1 text-xs font-semibold transition-colors"
+            title="Zoom Out"
+          >
+            -
+          </button>
+          <button
+            type="button"
+            onClick={() => graphRef.current?.zoomToFit(400, 60)}
+            className="text-muted-foreground hover:bg-accent hover:text-foreground rounded px-1.5 py-1 text-[10px] font-medium transition-colors"
+            title="Reset View"
+          >
+            Reset
+          </button>
+        </div>
+
         {width > 0 && (
           <ForceGraph2D
             ref={graphRef}
@@ -199,25 +227,29 @@ export function ClusterNetworkGraph({
             linkColor={(l: any) => l.color}
             linkWidth={(l: any) => l.width}
             linkCurvature={(l: any) => l.curvature}
-            linkDirectionalParticles={0}
+            linkDirectionalParticles={(l: any) =>
+              l.signalClass === "strong_fraud_specific" ? 2 : 0
+            }
+            linkDirectionalParticleSpeed={0.005}
+            linkDirectionalParticleWidth={2}
             cooldownTicks={120}
             onEngineStop={handleEngineStop}
             nodeCanvasObject={(node: any, ctx: CanvasRenderingContext2D, globalScale: number) => {
               ctx.beginPath()
               ctx.arc(node.x, node.y, node.radius, 0, 2 * Math.PI)
-              ctx.fillStyle = "hsl(258, 66%, 52%)"
+              ctx.fillStyle = "hsl(258, 76%, 58%)"
               ctx.fill()
-              // A surface ring so overlapping nodes stay individually readable.
-              ctx.lineWidth = 1.5 / globalScale
-              ctx.strokeStyle = "rgba(255,255,255,0.9)"
+              // A glowing surface ring
+              ctx.lineWidth = 1.8 / globalScale
+              ctx.strokeStyle = "rgba(255,255,255,0.95)"
               ctx.stroke()
 
               const fontSize = Math.max(9 / globalScale, 3)
-              ctx.font = `${fontSize}px ui-sans-serif, system-ui, sans-serif`
+              ctx.font = `600 ${fontSize}px ui-sans-serif, system-ui, sans-serif`
               ctx.textAlign = "center"
               ctx.textBaseline = "top"
-              ctx.fillStyle = "hsl(240, 5%, 45%)"
-              ctx.fillText(node.label, node.x, node.y + node.radius + 2 / globalScale)
+              ctx.fillStyle = "hsl(240, 5%, 65%)"
+              ctx.fillText(node.label, node.x, node.y + node.radius + 3 / globalScale)
             }}
             nodePointerAreaPaint={(node: any, color: string, ctx: CanvasRenderingContext2D) => {
               ctx.beginPath()
@@ -229,24 +261,24 @@ export function ClusterNetworkGraph({
         )}
       </div>
 
-      <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 text-xs">
+      <div className="border-border/50 bg-muted/20 flex flex-wrap items-center gap-x-5 gap-y-2 rounded-lg border px-3.5 py-2 text-xs">
         {LEGEND.filter((l) => presentClasses.has(l.cls)).map(({ cls, note }) => (
           <span key={cls} className="flex items-center gap-1.5">
             <span
               aria-hidden
-              className="inline-block rounded-full"
+              className="inline-block rounded-full shadow-xs"
               style={{
                 width: 14,
                 height: CLASS_WIDTH[cls] + 1,
                 backgroundColor: `hsl(${CLASS_COLOR[cls].h}, ${CLASS_COLOR[cls].s}%, ${CLASS_COLOR[cls].l}%)`,
               }}
             />
-            <span className="font-medium">{SIGNAL_CLASS_LABEL[cls]}</span>
+            <span className="font-semibold">{SIGNAL_CLASS_LABEL[cls]}</span>
             <span className="text-muted-foreground">: {note}</span>
           </span>
         ))}
-        <span className="text-muted-foreground">
-          Node size = transaction volume. Hover any line for the signal and its confidence.
+        <span className="text-muted-foreground ml-auto">
+          Node size = transaction volume · Click/drag nodes to inspect
         </span>
       </div>
     </div>

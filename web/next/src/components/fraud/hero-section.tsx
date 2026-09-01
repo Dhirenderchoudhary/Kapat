@@ -49,20 +49,21 @@ export function HeroSection({
         <div className="grid items-center gap-12 lg:grid-cols-12">
           {/* Left Column: Headline & Action CTAs */}
           <div className="lg:col-span-7">
-            <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/5 px-3.5 py-1 text-xs font-medium text-emerald-700 dark:text-emerald-300">
+            <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-1 text-xs font-medium text-emerald-600 shadow-xs dark:text-emerald-300">
               <span className="relative flex size-2">
                 <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-400 opacity-75" />
                 <span className="relative inline-flex size-2 rounded-full bg-emerald-500" />
               </span>
-              <RiRadarLine className="size-3.5" aria-hidden />
+              <RiRadarLine className="size-3.5 text-emerald-500" aria-hidden />
               <span>{t("hero.badge")}</span>
             </div>
 
-            <h1 className="text-4xl font-bold tracking-tight text-balance sm:text-5xl lg:text-6xl">
-              {t("hero.title")}
+            <h1 className="text-4xl font-extrabold tracking-tight text-balance sm:text-5xl lg:text-6xl">
+              <span className="text-foreground">Stop Coordinated Fraud.</span>{" "}
+              <span className="text-gradient-primary">Protect Every Rupee.</span>
             </h1>
 
-            <p className="text-muted-foreground mt-6 max-w-2xl text-lg leading-relaxed">
+            <p className="text-muted-foreground mt-6 max-w-2xl text-base leading-relaxed sm:text-lg">
               {t("hero.subtitle")}
             </p>
 
@@ -70,7 +71,7 @@ export function HeroSection({
               <Button
                 render={<Link href="/connect" />}
                 size="lg"
-                className="group h-11 px-6 shadow-md"
+                className="group shadow-primary/20 bg-primary hover:bg-primary/95 text-primary-foreground h-11 px-6 font-semibold shadow-lg transition-all hover:scale-[1.02]"
               >
                 <span>{t("hero.connectCta")}</span>
                 <RiArrowRightLine
@@ -82,50 +83,64 @@ export function HeroSection({
                 render={<Link href="/clusters" />}
                 variant="outline"
                 size="lg"
-                className="h-11 px-6 backdrop-blur"
+                className="border-border/80 hover:bg-accent/80 h-11 px-6 backdrop-blur-md transition-all"
               >
-                <RiNodeTree className="size-4 text-emerald-600 dark:text-emerald-400" aria-hidden />
+                <RiNodeTree className="size-4 text-emerald-500" aria-hidden />
                 <span>{t("hero.queueCta")}</span>
+              </Button>
+              <Button
+                render={<Link href="/holds" />}
+                variant="ghost"
+                size="lg"
+                className="text-muted-foreground hover:text-foreground h-11 px-4"
+              >
+                <span>Active Payment Holds</span>
+                <span className="ml-1.5 rounded-full bg-amber-500/10 px-2 py-0.5 text-xs font-semibold text-amber-600 dark:text-amber-400">
+                  Live
+                </span>
               </Button>
             </div>
 
             {/* Metric Highlights */}
             {recall && precision && (
-              <div className="mt-12 grid grid-cols-3 gap-4">
-                <div className="glass-card-hover rounded-xl border p-4 shadow-sm">
+              <div className="mt-10 grid grid-cols-3 gap-3.5 sm:gap-4">
+                <div className="glass-panel glass-card-hover relative overflow-hidden rounded-xl p-4 shadow-sm">
+                  <div className="pointer-events-none absolute top-0 right-0 h-12 w-12 rounded-bl-full bg-emerald-500/10" />
                   <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
+                    <span className="text-muted-foreground text-[11px] font-semibold tracking-wider uppercase">
                       {t("hero.recallLabel")}
                     </span>
                     <RiCheckDoubleLine className="size-4 text-emerald-500" aria-hidden />
                   </div>
-                  <div className="text-foreground mt-2 text-3xl font-bold tabular-nums">
+                  <div className="text-foreground mt-2 text-2xl font-extrabold tabular-nums sm:text-3xl">
                     {recall}
                   </div>
                   <div className="text-muted-foreground mt-1 text-xs">Full ring detection</div>
                 </div>
 
-                <div className="glass-card-hover rounded-xl border p-4 shadow-sm">
+                <div className="glass-panel glass-card-hover relative overflow-hidden rounded-xl p-4 shadow-sm">
+                  <div className="pointer-events-none absolute top-0 right-0 h-12 w-12 rounded-bl-full bg-blue-500/10" />
                   <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
+                    <span className="text-muted-foreground text-[11px] font-semibold tracking-wider uppercase">
                       {t("hero.precisionLabel")}
                     </span>
                     <RiSparklingLine className="size-4 text-blue-500" aria-hidden />
                   </div>
-                  <div className="text-foreground mt-2 text-3xl font-bold tabular-nums">
+                  <div className="text-foreground mt-2 text-2xl font-extrabold tabular-nums sm:text-3xl">
                     {precision}
                   </div>
                   <div className="text-muted-foreground mt-1 text-xs">Zero false alarms</div>
                 </div>
 
-                <div className="glass-card-hover rounded-xl border p-4 shadow-sm">
+                <div className="glass-panel glass-card-hover relative overflow-hidden rounded-xl p-4 shadow-sm">
+                  <div className="pointer-events-none absolute top-0 right-0 h-12 w-12 rounded-bl-full bg-amber-500/10" />
                   <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
+                    <span className="text-muted-foreground text-[11px] font-semibold tracking-wider uppercase">
                       {t("hero.householdsLabel")}
                     </span>
                     <RiShieldCheckLine className="size-4 text-amber-500" aria-hidden />
                   </div>
-                  <div className="text-foreground mt-2 text-3xl font-bold tabular-nums">
+                  <div className="text-foreground mt-2 text-2xl font-extrabold tabular-nums sm:text-3xl">
                     {wronglyFlagged !== null && totalLookalikes !== null
                       ? `${wronglyFlagged} / ${totalLookalikes}`
                       : "0 / 7"}
