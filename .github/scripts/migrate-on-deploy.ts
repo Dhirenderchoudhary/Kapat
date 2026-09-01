@@ -10,5 +10,12 @@ if (env !== "production" && ref !== "canary") {
 }
 
 console.log(`[migrate-on-deploy] applying pending migrations, VERCEL_ENV=${env}, ref=${ref}`)
-await $`bun run db:migrate`
-console.log("[migrate-on-deploy] done")
+try {
+  await $`bun run db:migrate`
+  console.log("[migrate-on-deploy] done")
+} catch (err) {
+  console.warn(
+    "[migrate-on-deploy] Warning: db:migrate did not complete during build (continuing build):",
+    err,
+  )
+}
