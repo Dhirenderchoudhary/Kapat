@@ -201,6 +201,7 @@ socket.addEventListener("message", (event) => {
   .use("/docs", requireFeature("apiDocs"))
   .get("/docs", apiReference)
 
+export { app }
 export type AppType = typeof routes
 export type { BatchAnswer, BatchOutcome, BatchRefusalCode } from "@/lib/batch"
 export type { ErrorCode } from "@/lib/error"
