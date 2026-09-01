@@ -71,25 +71,18 @@ const nextConfig: NextConfig = {
   }),
   reactCompiler: true,
   rewrites: async () => {
-    const targetApiUrl = env.INTERNAL_API_URL || env.NEXT_PUBLIC_API_URL
-    let isSelfRewrite = false
-    try {
-      if (targetApiUrl && env.NEXT_PUBLIC_APP_URL) {
-        isSelfRewrite = new URL(targetApiUrl).origin === new URL(env.NEXT_PUBLIC_APP_URL).origin
-      }
-    } catch {
-      isSelfRewrite = false
-    }
+    const targetApiUrl =
+      process.env.INTERNAL_API_URL ||
+      process.env.NEXT_PUBLIC_API_URL ||
+      env.INTERNAL_API_URL ||
+      env.NEXT_PUBLIC_API_URL ||
+      "https://razorpay-buildathon-api.vercel.app"
 
     return [
-      ...(!isSelfRewrite && targetApiUrl
-        ? [
-            {
-              source: "/api/:path*",
-              destination: `${targetApiUrl.replace(/\/$/, "")}/api/:path*`,
-            },
-          ]
-        : []),
+      {
+        source: "/api/:path*",
+        destination: `${targetApiUrl.replace(/\/$/, "")}/api/:path*`,
+      },
       {
         source: "/blog/:path*.md",
         destination: "/llms.txt/blog/:path*",
