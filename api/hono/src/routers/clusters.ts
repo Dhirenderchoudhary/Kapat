@@ -284,9 +284,12 @@ const { data, error } = await unwrap(apiClient.clusters.$get())`,
           chargebackExposurePaise: row.chargebackExposurePaise,
           accountCount: countByCluster.get(row.id) ?? 0,
           verificationStatus: verificationStatuses.get(row.id) ?? NOT_YET_TRIGGERED,
-          createdAt: row.createdAt.toISOString(),
+          createdAt: (row.createdAt instanceof Date
+            ? row.createdAt
+            : new Date(row.createdAt)
+          ).toISOString(),
         })),
-        ...paging({ page, perPage, total: countedTotal([{ value: total }]) }),
+        ...paging({ page, perPage, total }),
       }
       return c.json({ data })
     },
