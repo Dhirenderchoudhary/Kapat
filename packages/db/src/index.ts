@@ -20,6 +20,7 @@ const client = postgres(env.POSTGRES_URL, {
   max: env.NODE_ENV === "production" ? 10 : 5,
   idle_timeout: 30,
   connect_timeout: 10,
+  prepare: false,
 })
 
 const db: Database = globalThis.db ?? drizzle(client, { schema })
