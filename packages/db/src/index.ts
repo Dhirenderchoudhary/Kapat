@@ -1,36 +1,31 @@
 import { env } from "@packages/env/db"
-import { SQL } from "bun"
-import { drizzle } from "drizzle-orm/bun-sql"
+import { drizzle } from "drizzle-orm/postgres-js"
+import postgres from "postgres"
 
 import * as schema from "@/schema"
 import type { Database } from "@/types"
 
 declare global {
-  var db: Database
+  var db: Database | undefined
 }
 
-let db: Database
+const requiresSsl =
+  env.POSTGRES_URL.includes("sslmode=require") ||
+  env.POSTGRES_URL.includes("supabase.co") ||
+  env.POSTGRES_URL.includes("neon.tech") ||
+  env.NODE_ENV === "production"
 
-if (env.NODE_ENV === "production") {
-  const client = new SQL(env.POSTGRES_URL, {
-    connectionTimeout: 10,
-    idleTimeout: 30,
-    maxLifetime: 0,
-    tls: {
-      rejectUnauthorized: true,
-    },
-  })
-  db = drizzle({ client, schema })
-} else {
-  if (!global.db) {
-    const client = new SQL(env.POSTGRES_URL, {
-      connectionTimeout: 10,
-      idleTimeout: 30,
-      maxLifetime: 0,
-    })
-    global.db = drizzle({ client, schema })
-  }
-  db = global.db
+const client = postgres(env.POSTGRES_URL, {
+  ssl: requiresSsl ? "require" : undefined,
+  max: env.NODE_ENV === "production" ? 10 : 5,
+  idle_timeout: 30,
+  connect_timeout: 10,
+})
+
+const db: Database = globalThis.db ?? drizzle(client, { schema })
+
+if (env.NODE_ENV !== "production") {
+  globalThis.db = db
 }
 
 export { db }
