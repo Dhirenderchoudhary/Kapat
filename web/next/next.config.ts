@@ -71,11 +71,25 @@ const nextConfig: NextConfig = {
   }),
   reactCompiler: true,
   rewrites: async () => {
+    const targetApiUrl = env.INTERNAL_API_URL || env.NEXT_PUBLIC_API_URL
+    let isSelfRewrite = false
+    try {
+      if (targetApiUrl && env.NEXT_PUBLIC_APP_URL) {
+        isSelfRewrite = new URL(targetApiUrl).origin === new URL(env.NEXT_PUBLIC_APP_URL).origin
+      }
+    } catch {
+      isSelfRewrite = false
+    }
+
     return [
-      {
-        source: "/api/:path*",
-        destination: `${env.INTERNAL_API_URL || env.NEXT_PUBLIC_API_URL}/api/:path*`,
-      },
+      ...(!isSelfRewrite && targetApiUrl
+        ? [
+            {
+              source: "/api/:path*",
+              destination: `${targetApiUrl.replace(/\/$/, "")}/api/:path*`,
+            },
+          ]
+        : []),
       {
         source: "/blog/:path*.md",
         destination: "/llms.txt/blog/:path*",
