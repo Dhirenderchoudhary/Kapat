@@ -1,0 +1,6 @@
+# Offline analysis tooling - NOT installed in the detector-service container.
+# train_model.py and make_figures.py are run by hand to produce data/model_comparison.json
+# and docs/images/*; the live /detect-rings path needs none of this.
+scikit-learn>=1.5
+numpy>=1.26
+matplotlib>=3.9
