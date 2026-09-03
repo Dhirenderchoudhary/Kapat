@@ -32,11 +32,13 @@ import { z } from "zod"
 // + docker-compose's read-only bind mount of ./data, so evaluate.py/evaluate_verifier.py output
 // is visible at runtime without baking data/ into the image or rebuilding on every re-run.
 import detectorMetricsJson from "../../../../data/detector_metrics.json" with { type: "json" }
+import modelComparisonJson from "../../../../data/model_comparison.json" with { type: "json" }
 import verifierMetricsJson from "../../../../data/verifier_metrics.json" with { type: "json" }
 
 const DATA_DIR = process.env.METRICS_DATA_DIR ?? resolve(import.meta.dir, "../../../../data")
 const DETECTOR_METRICS_PATH = resolve(DATA_DIR, "detector_metrics.json")
 const VERIFIER_METRICS_PATH = resolve(DATA_DIR, "verifier_metrics.json")
+const MODEL_COMPARISON_PATH = resolve(DATA_DIR, "model_comparison.json")
 
 function readJsonFileIfPresent(path: string, bundled: unknown): unknown | null {
   if (bundled) return bundled
@@ -81,6 +83,93 @@ const verifierMetricsSchema = z.object({
   misclassified: z.array(z.unknown()),
 })
 
+// train_model.py's output. Same read-the-file-the-script-wrote rule as the two above: this API
+// does not train anything, and there is no scikit-learn anywhere in the TS service. The landing
+// page and /evidence quote these numbers, so they must come from the committed run report rather
+// than being typed into a marketing page where they would quietly go stale.
+//
+// The schema is deliberately narrow - only the fields a page actually renders - so adding a new
+// model or a new field to train_model.py cannot break the dashboard.
+const methodResultSchema = z.object({
+  test_average_precision: z.number(),
+  cv_average_precision_mean: z.number().optional(),
+  test_roc_auc: z.number().nullable().optional(),
+  operating_threshold: z.number().optional(),
+  test_at_operating_threshold: z
+    .object({
+      precision: z.number(),
+      recall: z.number(),
+      f1: z.number(),
+      false_positives: z.number(),
+      false_negatives: z.number(),
+      expected_cost: z.number(),
+    })
+    .partial()
+    .optional(),
+  note: z.string().optional(),
+})
+
+const splitSchema = z.object({
+  dataset: z
+    .object({
+      train_clusters: z.number(),
+      test_clusters: z.number(),
+      train_positives: z.number(),
+      test_positives: z.number(),
+      n_features: z.number(),
+    })
+    .partial(),
+  results: z.record(z.string(), methodResultSchema),
+  ranking_by_expected_cost: z.array(z.object({ method: z.string(), expected_cost: z.number() })),
+  per_difficulty: z
+    .record(
+      z.string(),
+      z.object({ n: z.number(), model_correct: z.number(), heuristic_correct: z.number() }),
+    )
+    .optional(),
+  feature_importance: z.array(z.object({ feature: z.string(), importance: z.number() })),
+})
+
+// train_model.py's output. Same read-the-file-the-script-wrote rule as the two above: this API
+// trains nothing and there is no scikit-learn anywhere in the TS service.
+//
+// The report carries TWO splits on purpose. "easy" is the original generator, where every method
+// scores a perfect 1.000 including one trained with no labels at all - kept as evidence that the
+// number measures the dataset rather than the detector. "hard" is the graded generator where the
+// classes genuinely overlap, and it is the one the dashboard quotes.
+const modelComparisonSchema = z.object({
+  generated_at: z.string(),
+  feature_names: z.array(z.string()),
+  cost_model: z
+    .object({
+      false_positive_cost: z.number(),
+      false_negative_cost: z.number(),
+      units: z.string(),
+      why_not_rupees: z.string(),
+    })
+    .partial(),
+  splits: z.record(z.string(), splitSchema),
+  adversarial_evaluation: z.object({
+    summary: z.record(
+      z.string(),
+      z.object({
+        correct: z.number(),
+        total: z.number(),
+        accuracy: z.number(),
+        failures: z.array(
+          z.object({
+            case: z.string(),
+            expected: z.string(),
+            score: z.number(),
+            kind: z.string(),
+          }),
+        ),
+      }),
+    ),
+  }),
+  headline: z.record(z.string(), z.unknown()).optional(),
+})
+
 const funnelSchema = z.object({
   clustersFlagged: z.number(),
   clustersVerified: z.number(),
@@ -94,6 +183,8 @@ const metricsResponseSchema = z.object({
   detectorNote: z.string().nullable(),
   verifier: verifierMetricsSchema.nullable(),
   verifierNote: z.string().nullable(),
+  models: modelComparisonSchema.nullable(),
+  modelsNote: z.string().nullable(),
   funnel: funnelSchema,
 })
 
@@ -129,7 +220,7 @@ export const metricsRouter = new Hono().get(
   describeRoute({
     tags: ["Metrics"],
     description:
-      "Detector precision/recall and verifier accuracy (offline, held-out evaluation - read from evaluate.py/evaluate_verifier.py's last run, never recomputed here) plus live funnel counts from Postgres (Design.md §1.4).",
+      "Detector precision/recall, verifier accuracy, and the trained-model comparison (all offline, held-out evaluation - read from evaluate.py/evaluate_verifier.py/train_model.py's last run, never recomputed here) plus live funnel counts from Postgres (Design.md §1.4).",
     ...({
       "x-codeSamples": [
         {
@@ -155,8 +246,10 @@ const { data, error } = await unwrap(apiClient.metrics.$get())`,
   async (c) => {
     const detectorRaw = readJsonFileIfPresent(DETECTOR_METRICS_PATH, detectorMetricsJson)
     const verifierRaw = readJsonFileIfPresent(VERIFIER_METRICS_PATH, verifierMetricsJson)
+    const modelsRaw = readJsonFileIfPresent(MODEL_COMPARISON_PATH, modelComparisonJson)
     const detectorParsed = detectorRaw ? detectorMetricsSchema.safeParse(detectorRaw) : null
     const verifierParsed = verifierRaw ? verifierMetricsSchema.safeParse(verifierRaw) : null
+    const modelsParsed = modelsRaw ? modelComparisonSchema.safeParse(modelsRaw) : null
 
     const funnel = await computeFunnel()
 
@@ -169,6 +262,10 @@ const { data, error } = await unwrap(apiClient.metrics.$get())`,
       verifierNote: verifierParsed?.success
         ? null
         : "No verifier accuracy metrics found. Run `python3 services/verifier-service/evaluate_verifier.py` to generate data/verifier_metrics.json.",
+      models: modelsParsed?.success ? modelsParsed.data : null,
+      modelsNote: modelsParsed?.success
+        ? null
+        : "No model comparison found. Run `python3 services/detector-service/train_model.py` (needs services/detector-service/requirements-analysis.txt) to generate data/model_comparison.json.",
       funnel,
     }
     return c.json({ data })

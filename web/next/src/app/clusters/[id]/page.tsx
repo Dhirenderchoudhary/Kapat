@@ -28,6 +28,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { apiClient, unwrap } from "@/lib/api/client"
+import { absoluteTime } from "@/lib/time"
 import { cn } from "@/lib/utils"
 
 export const dynamic = "force-dynamic"
@@ -103,7 +104,7 @@ export default async function ClusterDetailPage({ params }: { params: Promise<{ 
 
         <PageHeader
           title={`Fraud Ring Case #${cluster.id.slice(0, 10)}`}
-          description={`${cluster.accountCount} linked accounts · Detected on ${new Date(cluster.createdAt).toLocaleString("en-IN")}`}
+          description={`${cluster.accountCount} linked accounts · Detected ${absoluteTime(cluster.createdAt)}`}
           actions={
             <div className="flex items-center gap-3">
               <div className="text-right">

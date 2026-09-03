@@ -2,3 +2,16 @@ fastapi>=0.115
 uvicorn[standard]>=0.32
 pydantic>=2.9
 networkx>=3.4
+
+# The trained ring classifier. model_scorer.py loads data/ring_model.joblib and, when it is
+# present and its feature contract matches, the live /detect-rings path scores with it instead of
+# the hand-built rule alone: 94.7% precision at 100% recall on the graded held-out split, against
+# 67.4% / 86.1% for the rule.
+#
+# Still optional by design. Every one of these can be absent and the service starts, serves, and
+# detects - model_scorer returns None and the heuristic takes over, with GET /model saying out
+# loud which brain is running. A fraud detector that refuses to boot over an optional dependency
+# is worse than one that runs slightly less well.
+scikit-learn>=1.5
+numpy>=1.26
+joblib>=1.4

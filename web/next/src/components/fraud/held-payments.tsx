@@ -152,44 +152,76 @@ export function HeldPayments({ pollMs = 10_000 }: { pollMs?: number }) {
           {open.map((hold) => {
             const left = timeLeft(hold.msUntilExpiry)
             return (
-              <li key={hold.id} className="rounded-lg border p-5">
+              <li
+                key={hold.id}
+                className={cn(
+                  "glass-panel glass-card-hover relative overflow-hidden rounded-xl border p-5 shadow-sm transition-all",
+                  left.urgent
+                    ? "border-destructive/40 bg-destructive/5"
+                    : "border-border/80 bg-card/60",
+                )}
+              >
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-xs font-medium text-amber-700 dark:text-amber-400">
+                      <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-0.5 text-xs font-semibold text-amber-700 dark:text-amber-400">
+                        <span className="size-1.5 animate-pulse rounded-full bg-amber-500" />
                         {t("hold.heldLabel")}
                       </span>
-                      <span className="font-mono text-xs">{hold.razorpayPaymentId}</span>
+                      <span className="text-foreground font-mono text-xs font-semibold">
+                        {hold.razorpayPaymentId}
+                      </span>
                       {hold.customerRef && (
-                        <span className="text-muted-foreground text-xs">{hold.customerRef}</span>
+                        <span className="text-muted-foreground font-mono text-xs">
+                          {hold.customerRef}
+                        </span>
                       )}
                     </div>
-                    <div className="mt-2 text-2xl font-semibold tabular-nums">
+                    <div className="text-foreground mt-2 text-2xl font-bold tabular-nums sm:text-3xl">
                       {rupees(hold.amountPaise)}
                     </div>
                   </div>
 
-                  <div className={cn("text-right", left.urgent && "text-destructive")}>
-                    <div className="text-muted-foreground flex items-center justify-end gap-1.5 text-xs">
-                      <RiTimeLine className="size-3.5" aria-hidden />
-                      {t("hold.expiresIn")}
+                  <div
+                    className={cn(
+                      "flex items-center gap-2 rounded-xl border px-3 py-2",
+                      left.urgent
+                        ? "border-destructive/40 bg-destructive/10 text-destructive animate-pulse"
+                        : "border-border/80 bg-background/80 text-foreground",
+                    )}
+                  >
+                    <RiTimeLine className="size-4" aria-hidden />
+                    <div className="text-right">
+                      <div className="text-[10px] font-semibold tracking-wider uppercase opacity-75">
+                        {t("hold.expiresIn")}
+                      </div>
+                      <div className="text-base leading-tight font-bold tabular-nums">
+                        {left.text}
+                      </div>
                     </div>
-                    <div className="text-lg font-semibold tabular-nums">{left.text}</div>
                   </div>
                 </div>
 
-                <div className="bg-muted/40 mt-4 rounded-md border p-3 text-sm">
-                  <div className="font-medium">{t("hold.reason")}</div>
-                  <p className="text-muted-foreground mt-1">{hold.reason}</p>
+                <div className="bg-muted/30 border-border/70 mt-4 rounded-lg border p-3.5 text-sm">
+                  <div className="text-foreground text-xs font-semibold tracking-wider uppercase">
+                    {t("hold.reason")}
+                  </div>
+                  <p className="text-foreground mt-1 text-xs leading-relaxed sm:text-sm">
+                    {hold.reason}
+                  </p>
                   {hold.riskScoreAtHold !== null && (
-                    <p className="text-muted-foreground mt-1 text-xs tabular-nums">
-                      risk {hold.riskScoreAtHold.toFixed(2)}
+                    <p className="text-muted-foreground mt-1.5 font-mono text-xs tabular-nums">
+                      Corroboration risk score:{" "}
+                      <strong className="text-foreground">{hold.riskScoreAtHold.toFixed(2)}</strong>
                     </p>
                   )}
                 </div>
 
-                <p className="text-muted-foreground mt-3 flex items-start gap-2 text-sm">
-                  <RiAlarmWarningLine className="mt-0.5 size-4 shrink-0" aria-hidden />
+                <p className="text-muted-foreground mt-3 flex items-start gap-2 text-xs">
+                  <RiAlarmWarningLine
+                    className="mt-0.5 size-4 shrink-0 text-amber-500"
+                    aria-hidden
+                  />
                   <span>
                     {t("hold.notCancelled")} {t("hold.autoRefund")}
                   </span>
@@ -199,24 +231,31 @@ export function HeldPayments({ pollMs = 10_000 }: { pollMs?: number }) {
                   value={notes[hold.id] ?? ""}
                   onChange={(e) => setNotes((n) => ({ ...n, [hold.id]: e.target.value }))}
                   placeholder={t("hold.reason")}
-                  className="bg-background mt-4 h-9 w-full rounded-md border px-2.5 text-sm"
+                  className="bg-background/80 border-border/80 focus:ring-primary mt-4 h-9 w-full rounded-lg border px-3 text-xs shadow-xs transition-all sm:text-sm"
                 />
 
-                <div className="mt-3 flex flex-wrap gap-3">
-                  <Button onClick={() => decide(hold, "release")} disabled={busyId === hold.id}>
+                <div className="mt-3.5 flex flex-wrap gap-3">
+                  <Button
+                    onClick={() => decide(hold, "release")}
+                    disabled={busyId === hold.id}
+                    className="bg-emerald-600 text-white shadow-xs hover:bg-emerald-700"
+                    size="sm"
+                  >
                     <RiCheckLine className="size-4" aria-hidden />
                     {t("hold.release")}
                   </Button>
                   <Button
                     onClick={() => decide(hold, "reject")}
                     disabled={busyId === hold.id}
-                    variant="outline"
+                    variant="destructive"
+                    size="sm"
+                    className="shadow-xs"
                   >
                     <RiRefund2Line className="size-4" aria-hidden />
                     {t("hold.reject")}
                   </Button>
                 </div>
-                <p className="text-muted-foreground mt-2 text-xs">
+                <p className="text-muted-foreground mt-2 text-[11px]">
                   {t("hold.releaseHint")} · {t("hold.rejectHint")}
                 </p>
               </li>

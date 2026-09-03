@@ -30,3 +30,26 @@ export function relativeTime(value: Date | string, now: Date, locale?: string): 
   // Negative for the past, which is what RelativeTimeFormat expects.
   return format.format(-Math.round(elapsed / ms), unit)
 }
+
+/**
+ * An absolute timestamp that renders identically on the server and in the browser.
+ *
+ * `new Date(x).toLocaleString("en-IN")` looks harmless and is a hydration bug: the Node process
+ * formats in the server's timezone (UTC in most deployments) and the browser formats in the
+ * reader's, so React receives two different strings for the same node and throws away the server
+ * markup. It cost this app a hydration failure on the cluster detail page.
+ *
+ * Pinning the zone fixes it and is also the correct product behaviour: this is an India-facing
+ * merchant tool, every payment timestamp is meaningful in IST, and a merchant reading a fraud
+ * timeline should never have to wonder whose clock a time is on. The zone is named in the output
+ * for the same reason.
+ */
+export function absoluteTime(value: Date | string): string {
+  const date = typeof value === "string" ? new Date(value) : value
+  if (Number.isNaN(date.getTime())) return ""
+  return `${new Intl.DateTimeFormat("en-IN", {
+    dateStyle: "medium",
+    timeStyle: "short",
+    timeZone: "Asia/Kolkata",
+  }).format(date)} IST`
+}
