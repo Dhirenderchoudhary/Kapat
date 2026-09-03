@@ -17,6 +17,7 @@ import { describeRoute } from "hono-openapi"
 import batchRunJson from "../../../../data/batch_run_report.json" with { type: "json" }
 import detectorMetricsJson from "../../../../data/detector_metrics.json" with { type: "json" }
 import holdVerificationJson from "../../../../data/hold_verification_report.json" with { type: "json" }
+import modelComparisonJson from "../../../../data/model_comparison.json" with { type: "json" }
 import stressTestJson from "../../../../data/stress_test_report.json" with { type: "json" }
 import thresholdSelectionJson from "../../../../data/threshold_selection.json" with { type: "json" }
 
@@ -28,6 +29,7 @@ const BUNDLED_FILES: Record<string, unknown> = {
   holdVerification: holdVerificationJson,
   thresholdSelection: thresholdSelectionJson,
   batchRun: batchRunJson,
+  modelComparison: modelComparisonJson,
 }
 
 const FILES = {
@@ -36,6 +38,10 @@ const FILES = {
   holdVerification: "hold_verification_report.json",
   thresholdSelection: "threshold_selection.json",
   batchRun: "batch_run_report.json",
+  // train_model.py's answer to "would a trained model do better?". Kept here rather than in a
+  // separate endpoint because it is the same kind of artefact as the rest: a measurement this
+  // repository made about itself, including the result that does not flatter it.
+  modelComparison: "model_comparison.json",
 } as const
 
 function readIfPresent(key: string, file: string): unknown | null {
@@ -52,7 +58,7 @@ export const evidenceRouter = new Hono().get(
   describeRoute({
     tags: ["Metrics"],
     description:
-      "Every measurement this project has made about its own detector: held-out precision/recall, the adversarial stress test including the cases it fails, the 100-payment hold verification, the training-split threshold selection, and the full-dataset batch run. Read from data/ on each request.",
+      "Every measurement this project has made about its own detector: held-out precision/recall, the adversarial stress test including the cases it fails, the 100-payment hold verification, the training-split threshold selection, the full-dataset batch run, and the trained-model comparison. Read from data/ on each request.",
     responses: { 200: { description: "OK" } },
   }),
   (c) => {
@@ -75,6 +81,7 @@ export const evidenceRouter = new Hono().get(
           holdVerification: "python3 services/detector-service/verify_holds.py --n 100",
           thresholdSelection: "python3 services/detector-service/select_threshold.py",
           batchRun: "python3 services/detector-service/run_batch.py",
+          modelComparison: "python3 services/detector-service/train_model.py",
         },
       },
     })
