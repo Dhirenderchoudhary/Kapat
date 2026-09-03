@@ -1,7 +1,17 @@
 import { RiAlertLine, RiCheckLine, RiFlaskLine } from "@remixicon/react"
 import Link from "next/link"
 
-import { BarChart, ChartPalette, ShareBar } from "@/components/fraud/charts"
+import {
+  AnimatedChartStyles,
+  GroupedBars,
+  RankBars,
+  ReplayGrid,
+  ThresholdCurve,
+  type CurvePoint,
+  type ReplayCell,
+} from "@/components/fraud/animated-charts"
+import { ChartPalette } from "@/components/fraud/charts"
+import { FEATURE_LABEL, HAND_WEIGHTED, METHOD_LABEL } from "@/components/fraud/model-labels"
 import { PageHeader } from "@/components/shell/page-header"
 import { PageShell } from "@/components/shell/page-shell"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -76,6 +86,21 @@ export default async function EvidencePage() {
       curve: { threshold: number; precision: number | null; recall: number | null }[]
       score_separation_on_train: Record<string, number | null>
     } | null
+    modelComparison: {
+      results: Record<string, { test_average_precision: number }>
+      adversarial_evaluation: {
+        summary: Record<
+          string,
+          {
+            correct: number
+            total: number
+            accuracy: number
+            failures: { case: string; expected: string; score: number; kind: string }[]
+          }
+        >
+      }
+      random_forest_feature_importance: { feature: string; importance: number }[]
+    } | null
     howToRegenerate: Record<string, string>
   }
 
@@ -90,11 +115,72 @@ export default async function EvidencePage() {
 
   const hv = d.holdVerification as {
     n_payments: number
+    results: { truth: string; held: boolean }[]
     confusion_matrix: Record<string, number>
     metrics: Record<string, number | null>
     class_balance: Record<string, number>
     first_sighting_analysis: Record<string, number | string | null>
   } | null
+
+  // One square per payment, in the order they arrived - which is the order the detector saw them.
+  const replayCells: ReplayCell[] =
+    hv?.results.map((r) => {
+      const fraud = r.truth !== "legitimate"
+      if (fraud) return { kind: r.held ? "held_fraud" : "missed_fraud" }
+      return { kind: r.held ? "held_legit" : "left_alone" }
+    }) ?? []
+
+  // train_model.py compares four methods. Ranked by the adversarial score, because that is the
+  // only column in its report where the methods actually differ.
+  const mc = d.modelComparison as any
+  const hard = mc?.splits?.hard ?? mc
+  const results = hard?.results ?? mc?.results ?? {}
+  const adversarialSummary = mc?.adversarial_evaluation?.summary ?? {}
+
+  const methodRanking =
+    mc && Object.keys(adversarialSummary).length > 0
+      ? Object.entries(adversarialSummary)
+          .map(([key, v]: [string, any]) => ({
+            key,
+            label: METHOD_LABEL[key] ?? key,
+            heldOut:
+              results[key]?.test_average_precision ??
+              results[key]?.test_at_operating_threshold?.precision ??
+              null,
+            ...v,
+          }))
+          .sort((a, b) => b.accuracy - a.accuracy)
+      : []
+
+  // Every method scored on the held-out split, including the unlabelled control.
+  const saturation =
+    mc && Object.keys(results).length > 0
+      ? Object.entries(results).map(([key, r]: [string, any]) => {
+          const ap = r.test_average_precision ?? r.test_at_operating_threshold?.precision ?? 0
+          return {
+            label: METHOD_LABEL[key] ?? key,
+            value: ap,
+            valueText: typeof ap === "number" ? ap.toFixed(3) : String(ap),
+            note: key === "isolation_forest_unsupervised" ? "no labels at all" : undefined,
+            highlight: key === "isolation_forest_unsupervised",
+          }
+        })
+      : []
+
+  const featureImportance = hard?.feature_importance ?? mc?.random_forest_feature_importance ?? []
+  const topFeature = featureImportance[0]?.importance ?? 1
+  const featureRows = featureImportance.slice(0, 8).map((f: any) => ({
+    label: FEATURE_LABEL[f.feature] ?? f.feature.replace(/_/g, " "),
+    value: f.importance / topFeature,
+    valueText: f.importance.toFixed(3),
+    highlight: HAND_WEIGHTED.has(f.feature),
+  }))
+
+  const curve: CurvePoint[] = (d.thresholdSelection?.curve ?? []).map((p) => ({
+    x: p.threshold,
+    recall: p.recall ?? 0,
+    precision: p.precision,
+  }))
 
   const failures = d.stressTest?.results.filter((r) => !r.correct) ?? []
   const passes = d.stressTest?.results.filter((r) => r.correct) ?? []
@@ -102,6 +188,7 @@ export default async function EvidencePage() {
   return (
     <PageShell size="lg">
       <ChartPalette />
+      <AnimatedChartStyles />
       <PageHeader
         title="Evidence"
         description="Everything this detector has been measured on, including the cases it gets wrong. All of it reproducible from the repository."
@@ -228,35 +315,13 @@ export default async function EvidencePage() {
             {hv ? (
               <div className="space-y-5">
                 <p className="text-muted-foreground text-sm leading-relaxed">
-                  Payments replayed one at a time, in order, with the graph rebuilt after each one
-                  from only what had arrived so far: so at payment 7 the detector cannot know about
-                  payment 80. For each, the question the live system asks: hold it, or let it
-                  through?
+                  One square per payment, in arrival order. Each was scored using only what had
+                  already landed, so at payment 7 the detector cannot know about payment 80.
                 </p>
 
-                <ShareBar
-                  segments={[
-                    {
-                      label: "Held, actually fraud",
-                      value: hv.confusion_matrix.held_and_fraud_true_positive,
-                      color: "var(--chart-strong)",
-                    },
-                    {
-                      label: "Released, actually legitimate",
-                      value: hv.confusion_matrix.released_and_legitimate_true_negative,
-                      color: "var(--chart-benign)",
-                    },
-                    {
-                      label: "Released, actually fraud (missed)",
-                      value: hv.confusion_matrix.released_but_fraud_false_negative,
-                      color: "var(--chart-weak)",
-                    },
-                    {
-                      label: "Held, actually legitimate",
-                      value: hv.confusion_matrix.held_but_legitimate_false_positive,
-                      color: "#8b8b8b",
-                    },
-                  ]}
+                <ReplayGrid
+                  cells={replayCells}
+                  legendOrder={["held_fraud", "left_alone", "missed_fraud", "held_legit"]}
                 />
 
                 <div className="grid gap-6 sm:grid-cols-3">
@@ -290,16 +355,10 @@ export default async function EvidencePage() {
                   <h3 className="text-sm font-medium">Why the misses happened</h3>
                   <p className="text-muted-foreground mt-2 text-sm leading-relaxed">
                     Every one of the {String(hv.first_sighting_analysis.missed_fraud_payments)}{" "}
-                    missed payments was that account&apos;s <strong>first ever</strong> payment. On
-                    a first payment an account has no relationships in the graph, so there is
-                    nothing to detect: this is structural, not a tuning problem. Once an account had
-                    been seen once, recall was{" "}
-                    {pct(hv.first_sighting_analysis.recall_after_first_sighting as number | null)}.
-                  </p>
-                  <p className="text-muted-foreground mt-2 text-sm leading-relaxed">
-                    Any product claiming to catch a previously-unseen ring on its very first
-                    transaction, from relationship signals alone, is claiming something the data
-                    cannot support.
+                    misses was that account&apos;s <strong>first ever</strong> payment: no
+                    relationships in the graph yet, so nothing to detect. Structural, not a tuning
+                    problem. Anything claiming to catch an unseen ring on its first transaction from
+                    relationship signals alone is claiming what the data cannot support.
                   </p>
                 </div>
               </div>
@@ -330,31 +389,123 @@ export default async function EvidencePage() {
                   </strong>
                   .
                 </p>
-                <BarChart
-                  data={d.thresholdSelection.curve
-                    .filter((p) => p.recall !== null)
-                    .map((p) => ({
-                      label: String(p.threshold),
-                      value: p.recall ?? 0,
-                      // Formatted server-side: BarChart is a client component, and passing a
-                      // formatter function across that boundary throws at render.
-                      valueText: `recall ${((p.recall ?? 0) * 100).toFixed(0)}%`,
-                      color:
-                        p.threshold === d.thresholdSelection!.selected_threshold
-                          ? "var(--chart-strong)"
-                          : "var(--chart-benign)",
-                      sublabel: `precision ${p.precision === null ? "n/a" : (p.precision * 100).toFixed(0) + "%"}`,
-                    }))}
-                  height={150}
+                <ThresholdCurve
+                  points={curve}
+                  selected={d.thresholdSelection.selected_threshold}
+                  bandFrom={
+                    d.thresholdSelection.score_separation_on_train.highest_unflagged_score ??
+                    undefined
+                  }
+                  bandTo={
+                    d.thresholdSelection.score_separation_on_train.lowest_flagged_score ?? undefined
+                  }
                 />
                 <p className="text-muted-foreground text-xs">
-                  Recall on the training split at each candidate threshold. The highlighted bar is
-                  the one selected. An earlier hand-guessed 0.60 would have cost 23% of recall,
-                  which is why this is chosen by script.
+                  Nothing scores inside the shaded band, so the exact cut within it changes nothing.
+                  An earlier hand-guessed 0.60 would have cost 23% of recall, which is why this is
+                  chosen by script.
                 </p>
               </div>
             ) : (
               <Missing file="threshold_selection.json" cmd={d.howToRegenerate.thresholdSelection} />
+            )}
+          </CardContent>
+        </Card>
+
+        {/* ------------------------------------------------ model comparison */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm">5 &middot; Would a trained model do better?</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {mc ? (
+              <div className="space-y-5">
+                <p className="text-muted-foreground text-sm leading-relaxed">
+                  Three supervised models, trained on the same graph features, selected by
+                  stratified 5-fold cross-validation inside the training split, then run against the
+                  adversarial cases in section 2.
+                </p>
+
+                <GroupedBars
+                  rows={methodRanking.map((r, i) => ({
+                    label: r.label,
+                    highlight: i === 0,
+                    bars: [
+                      {
+                        seriesIndex: 0,
+                        value: r.heldOut ?? 0,
+                        valueText: (r.heldOut ?? 0).toFixed(2),
+                      },
+                      {
+                        seriesIndex: 1,
+                        value: r.accuracy,
+                        valueText: `${r.correct}/${r.total}`,
+                      },
+                    ],
+                  }))}
+                  series={[
+                    {
+                      label: "Held-out split",
+                      color: "color-mix(in oklab, var(--chart-benign) 70%, transparent)",
+                    },
+                    { label: "Adversarial cases", color: "var(--chart-strong)" },
+                  ]}
+                />
+
+                <div className="overflow-x-auto rounded-lg border">
+                  <table className="w-full min-w-[560px] text-sm">
+                    <thead>
+                      <tr className="bg-muted/40 border-b">
+                        <th className="p-3 text-left font-medium">Method</th>
+                        <th className="p-3 text-left font-medium">Held-out AP</th>
+                        <th className="p-3 text-left font-medium">Adversarial</th>
+                        <th className="p-3 text-left font-medium">Failed on</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y">
+                      {methodRanking.map((r, i) => (
+                        <tr key={r.key} className={i === 0 ? "bg-emerald-500/5" : undefined}>
+                          <td className="p-3 align-top font-medium">{r.label}</td>
+                          <td className="p-3 align-top tabular-nums">
+                            {r.heldOut === null ? "-" : r.heldOut.toFixed(3)}
+                          </td>
+                          <td className="p-3 align-top font-semibold tabular-nums">
+                            {r.correct} / {r.total}
+                          </td>
+                          <td className="text-muted-foreground p-3 align-top text-xs">
+                            {r.failures.length === 0
+                              ? "nothing"
+                              : r.failures.map((f: any) => f.case.replace(/_/g, " ")).join(", ")}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                <div className="bg-muted/40 space-y-4 rounded-lg border p-4">
+                  <h3 className="text-sm font-medium">Why the held-out column is all ties</h3>
+                  <RankBars rows={saturation} />
+                  <p className="text-muted-foreground text-sm leading-relaxed">
+                    The highlighted row is an isolation forest fitted with{" "}
+                    <strong>no labels at all</strong>. A score an unlabelled model matches is
+                    measuring the split, not the method: train and test come from one generator, so
+                    memorising the generator is enough.
+                  </p>
+                </div>
+
+                <div className="rounded-lg border p-4">
+                  <h3 className="mb-4 text-sm font-medium">What the forest actually keyed on</h3>
+                  <RankBars rows={featureRows} />
+                  <p className="text-muted-foreground mt-4 text-sm leading-relaxed">
+                    Highlighted bars are signals the corroboration score already weights by hand. It
+                    rediscovered the heuristic rather than beating it, and a merchant can be shown a
+                    corroboration score&apos;s reason for a hold.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <Missing file="model_comparison.json" cmd={d.howToRegenerate.modelComparison} />
             )}
           </CardContent>
         </Card>

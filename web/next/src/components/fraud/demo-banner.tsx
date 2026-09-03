@@ -27,6 +27,7 @@ export function DemoBanner() {
   const [stage, setStage] = useState<"idle" | "loading" | "detecting">("idle")
   const [error, setError] = useState<string | null>(null)
   const [apiDown, setApiDown] = useState(false)
+  const [dbNotReady, setDbNotReady] = useState(false)
 
   useEffect(() => {
     void (async () => {
@@ -44,6 +45,21 @@ export function DemoBanner() {
         analyticsRes.error?.code === "NETWORK_ERROR"
       ) {
         setApiDown(true)
+        setConnected(false)
+        setHasData(false)
+        return
+      }
+
+      // A REACHABLE API whose queries fail is a different fault with a different fix, and telling
+      // someone to restart the API when the real problem is an unmigrated database sends them off
+      // for an hour. The signature is a 500 whose message comes from the query layer: the table
+      // does not exist yet because `bun run db:migrate` has not been run against this Postgres.
+      const queryFailed = (e: { code?: string; message?: string } | null | undefined) =>
+        e?.code === "INTERNAL_SERVER_ERROR" &&
+        /failed query|does not exist|relation .* does not exist/i.test(e.message ?? "")
+
+      if (queryFailed(statusRes.error) || queryFailed(analyticsRes.error)) {
+        setDbNotReady(true)
         setConnected(false)
         setHasData(false)
         return
@@ -93,6 +109,28 @@ export function DemoBanner() {
               <code className="font-mono text-xs">docker compose up --build -d</code>. If the API is
               running on a different host or port, set{" "}
               <code className="font-mono text-xs">NEXT_PUBLIC_API_URL</code> to match.
+            </span>
+          </p>
+        </div>
+      </div>
+    )
+  }
+
+  // Same precedence logic as apiDown: nothing on any screen can work, so this outranks the
+  // synthetic-data invitation below.
+  if (dbNotReady) {
+    return (
+      <div className="border-b bg-amber-500/5">
+        <div className="mx-auto w-full max-w-6xl px-4 py-2.5 sm:px-6">
+          <p className="text-sm">
+            <span className="font-medium text-amber-700 dark:text-amber-400">
+              The API is running, but its database has no tables yet.
+            </span>{" "}
+            <span className="text-muted-foreground">
+              Apply the migrations with{" "}
+              <code className="font-mono text-xs">bun run db:migrate</code> from the repo root, then
+              reload. If that fails to connect, start Postgres first:{" "}
+              <code className="font-mono text-xs">docker compose up -d postgres</code>.
             </span>
           </p>
         </div>

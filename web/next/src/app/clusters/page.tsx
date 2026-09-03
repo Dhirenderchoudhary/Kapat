@@ -127,18 +127,34 @@ export default async function ClustersPage() {
 
           {/* Queue Table or Empty State */}
           {clusters.length === 0 ? (
-            <div className="glass-panel rounded-2xl border border-dashed p-12 text-center shadow-inner">
-              <div className="bg-muted/60 text-muted-foreground mx-auto flex size-14 items-center justify-center rounded-2xl">
-                <RiCheckboxCircleLine className="size-8 text-emerald-500" aria-hidden />
+            <div className="glass-panel-elevated relative overflow-hidden rounded-2xl border p-12 text-center shadow-xl">
+              <div className="bg-dot-grid pointer-events-none absolute inset-0 opacity-30" />
+              <div className="relative mx-auto flex size-20 items-center justify-center rounded-2xl border border-emerald-500/20 bg-emerald-500/10 text-emerald-500 shadow-[0_0_30px_rgba(16,185,129,0.2)]">
+                <RiCheckboxCircleLine
+                  className="size-10 animate-pulse text-emerald-500"
+                  aria-hidden
+                />
+                <span className="absolute -top-1 -right-1 flex size-3">
+                  <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                  <span className="relative inline-flex size-3 rounded-full bg-emerald-500" />
+                </span>
               </div>
-              <h3 className="text-foreground mt-4 text-lg font-bold">No Fraud Rings Flagged</h3>
-              <p className="text-muted-foreground mx-auto mt-2 max-w-md text-sm leading-relaxed">
-                Either no transactions have been ingested yet, or the corroboration engine found
-                zero coordinated anomalies exceeding the flagging threshold.
+              <h3 className="text-foreground relative z-10 mt-5 text-xl font-bold">
+                No Coordinated Fraud Rings Detected
+              </h3>
+              <p className="text-muted-foreground relative z-10 mx-auto mt-2 max-w-md text-sm leading-relaxed">
+                The corroboration graph engine is actively monitoring incoming payments. Either no
+                transactions are loaded, or all activity falls safely within normal household
+                behavior.
               </p>
-              <div className="mt-6 flex flex-wrap justify-center gap-3">
+              <div className="relative z-10 mt-6 flex flex-wrap justify-center gap-3">
                 <LoadDemoData />
-                <Button render={<Link href="/connect" />} variant="outline" size="sm">
+                <Button
+                  render={<Link href="/connect" />}
+                  variant="outline"
+                  size="sm"
+                  className="shadow-xs"
+                >
                   Connect Razorpay API
                 </Button>
               </div>
