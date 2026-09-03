@@ -1,0 +1,67 @@
+{
+  "generated_at": "2026-09-02T16:40:53.693259+00:00",
+  "seed": 42,
+  "why": "The original split is separable on a single feature: rings fire all five signals, households fire one. Every model scores 1.000 on it, including one trained with no labels. This split grades both classes so they overlap in signal space, and gives rings second-order structure (burst signup, amounts near the promo floor, promo concentration, uniform cadence) that a model can learn and the five-signal heuristic does not use.",
+  "ladder": {
+    "rings": [
+      "L0_sloppy",
+      "L1_no_address",
+      "L2_burner_cards",
+      "L3_promo_crew",
+      "L4_careful_sim",
+      "L4_careful_timing"
+    ],
+    "legitimate": [
+      "H0_household",
+      "H1_family_card",
+      "H2_dinner_hour",
+      "H3_flatmates_coupon",
+      "H4_office",
+      "H5_reseller"
+    ]
+  },
+  "train": {
+    "accounts": 2613,
+    "transactions": 11815,
+    "groups": 360,
+    "true_rings": 150,
+    "legitimate_groups": 210,
+    "group_size_median": 5.0,
+    "by_difficulty": {
+      "H0_household": 38,
+      "H1_family_card": 39,
+      "H2_dinner_hour": 29,
+      "H3_flatmates_coupon": 32,
+      "H4_office": 40,
+      "H5_reseller": 32,
+      "L0_sloppy": 26,
+      "L1_no_address": 18,
+      "L2_burner_cards": 28,
+      "L3_promo_crew": 22,
+      "L4_careful_sim": 32,
+      "L4_careful_timing": 24
+    }
+  },
+  "test": {
+    "accounts": 1185,
+    "transactions": 5341,
+    "groups": 170,
+    "true_rings": 70,
+    "legitimate_groups": 100,
+    "group_size_median": 4.0,
+    "by_difficulty": {
+      "H0_household": 19,
+      "H1_family_card": 18,
+      "H2_dinner_hour": 21,
+      "H3_flatmates_coupon": 14,
+      "H4_office": 13,
+      "H5_reseller": 15,
+      "L0_sloppy": 11,
+      "L1_no_address": 10,
+      "L2_burner_cards": 13,
+      "L3_promo_crew": 15,
+      "L4_careful_sim": 10,
+      "L4_careful_timing": 11
+    }
+  }
+}
