@@ -79,6 +79,16 @@ services:
       dockerfile: services/detector-service/Dockerfile
     environment:
       - POSTGRES_URL=postgres://razorpay:razorpay@postgres:5432/razorpay
+      # Where the trained ring classifier lives. The image does not bake data/ in, so the model is
+      # mounted below and this points at the mount. Without it the service still runs - it falls
+      # back to the hand-built scorer and GET /model says so - but it would be scoring with the
+      # weaker brain and nobody would notice from the outside.
+      - DETECTOR_DATA_DIR=/app/data
+    volumes:
+      # Read-only: the detector loads ring_model.joblib and never writes here. Mounting rather than
+      # copying keeps a 50MB model out of the image and lets a retrain take effect on restart
+      # instead of requiring a rebuild.
+      - ./data:/app/data:ro
     ports:
       - "8001:8001"
     depends_on:
