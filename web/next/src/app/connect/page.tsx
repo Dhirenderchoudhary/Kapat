@@ -2,6 +2,7 @@ import { RiCheckLine, RiEyeOffLine, RiLockLine, RiShieldCheckLine } from "@remix
 import Link from "next/link"
 
 import { CheckoutButton } from "@/components/fraud/checkout-button"
+import { ConnectVisualizer } from "@/components/fraud/connect-visualizer"
 import { CsvImport } from "@/components/fraud/csv-import"
 import { LoadDemoData } from "@/components/fraud/load-demo-data"
 import { RazorpayConnect } from "@/components/fraud/razorpay-connect"
@@ -25,16 +26,24 @@ export const dynamic = "force-dynamic"
 export default function ConnectPage() {
   return (
     <main>
-      <section className="border-b">
-        <div className="mx-auto w-full max-w-4xl px-4 py-16 sm:px-6 sm:py-20">
-          <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
+      <section className="relative overflow-hidden border-b py-16 sm:py-20">
+        <div
+          className="pointer-events-none absolute -top-24 left-1/2 -z-10 h-96 w-96 -translate-x-1/2 rounded-full bg-emerald-500/10 blur-3xl"
+          aria-hidden
+        />
+        <div className="mx-auto w-full max-w-4xl px-4 sm:px-6">
+          <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl">
             Connect Razorpay. The agent does the rest.
           </h1>
-          <p className="text-muted-foreground mt-4 max-w-2xl text-lg leading-relaxed">
+          <p className="text-muted-foreground mt-4 max-w-2xl text-base leading-relaxed sm:text-lg">
             Paste your API keys once. The agent pulls your payments, builds the account graph,
             scores every connected group, and puts only the ones worth your attention in a queue. No
             export, no spreadsheet, no terminal.
           </p>
+
+          <div className="mt-8">
+            <ConnectVisualizer />
+          </div>
         </div>
       </section>
 

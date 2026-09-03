@@ -1,6 +1,5 @@
 import { RiCheckLine, RiCloseLine, RiSubtractLine } from "@remixicon/react"
 
-import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 
 export function Section({
@@ -35,43 +34,6 @@ export function Section({
         {children && <div className="mt-10">{children}</div>}
       </div>
     </section>
-  )
-}
-
-/** A numbered pipeline stage with rich visual hierarchy */
-export function Stage({
-  n,
-  title,
-  file,
-  children,
-}: {
-  n: number
-  title: string
-  file?: string
-  children: React.ReactNode
-}) {
-  return (
-    <div className="flex gap-5">
-      <div className="flex flex-col items-center">
-        <div className="bg-primary text-primary-foreground flex size-9 shrink-0 items-center justify-center rounded-xl text-sm font-bold tabular-nums shadow-md">
-          {n}
-        </div>
-        <div className="bg-border/80 my-2 w-px flex-1" />
-      </div>
-      <div className="flex-1 pb-10">
-        <div className="flex flex-wrap items-center gap-2.5">
-          <h3 className="text-foreground text-lg font-semibold">{title}</h3>
-          {file && (
-            <Badge variant="outline" className="text-muted-foreground font-mono text-[11px]">
-              {file}
-            </Badge>
-          )}
-        </div>
-        <div className="text-muted-foreground mt-3 space-y-2.5 text-sm leading-relaxed sm:text-base">
-          {children}
-        </div>
-      </div>
-    </div>
   )
 }
 
