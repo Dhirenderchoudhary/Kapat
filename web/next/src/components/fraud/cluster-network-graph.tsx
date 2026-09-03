@@ -1,8 +1,8 @@
 "use client"
 
-import dynamic from "next/dynamic"
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useMemo, useState } from "react"
 
+import { ChartPalette } from "@/components/fraud/charts"
 import {
   SIGNAL_CLASS_LABEL,
   SIGNAL_LABEL,
@@ -10,10 +10,39 @@ import {
   type SignalClass,
 } from "@/components/fraud/signal-taxonomy"
 
-// react-force-graph-2d touches the DOM/canvas directly - never render it during SSR (Design.md
-// 1.2/2: this is the ring detail view's core evidence display, not decorative, so it has to
-// actually mount client-side rather than silently no-op on the server).
-const ForceGraph2D = dynamic(() => import("react-force-graph-2d"), { ssr: false })
+/**
+ * The ring graph: a deterministic radial layout, drawn as inline SVG.
+ *
+ * WHY THIS REPLACED A FORCE SIMULATION
+ * ====================================
+ * This used to be react-force-graph-2d on a canvas. For the size of graph this product actually
+ * shows - a detected ring is 2 to about 12 accounts - a force simulation is the wrong tool, and it
+ * failed in a specific, visible way: three nodes converged into a tight clump in one corner of a
+ * 420px canvas, ~85% of the box was empty, `zoomToFit` could not rescue it because the simulation
+ * had already collapsed the layout, and node positions changed on every render so the same ring
+ * never looked the same twice.
+ *
+ * A ring has no meaningful spatial structure to discover. Nobody needs to learn that account A is
+ * "near" account B; they need to read WHICH SIGNALS connect WHICH ACCOUNTS. So the layout is fixed
+ * by construction - members evenly spaced on a circle - and every pixel of design effort goes into
+ * the edges, which are the actual evidence.
+ *
+ * WHAT THE PICTURE ENCODES
+ * ========================
+ *   edge colour     signal class: red = no household does this, amber = some do, slate = routine
+ *   edge width      the same ordinal scale, so class survives greyscale and colour-blindness
+ *   edge opacity    confidence in that individual signal
+ *   parallel arcs   one arc per signal between a pair, never merged - the whole product promise is
+ *                   that every connection is individually labelled and auditable
+ *   node size       transaction volume, normalised so one heavy account cannot dwarf the rest
+ *   node ring       highlighted on hover along with everything it touches
+ *
+ * Colour is never the only carrier: there is a legend, every edge names its signal in the hover
+ * panel, and width tracks class independently.
+ *
+ * Deterministic on purpose. The same cluster produces a byte-identical picture every time, which
+ * matters for a screen a merchant may screenshot and attach to a dispute.
+ */
 
 export type GraphAccount = {
   id: string
@@ -30,42 +59,29 @@ export type GraphEvidence = {
   confidence: number
 }
 
-/**
- * Edge colour carries the SIGNAL CLASS, not the confidence.
- *
- * The previous version drew every edge in the same violet, shaded by confidence. That threw away
- * the single most important thing this product knows: a 0.90-confidence shared address and a
- * 0.75-confidence sequential SIM block are wildly different evidence, and colouring them the same
- * hue makes the picture argue that a family and a fraud ring look alike - the exact opposite of
- * what the detector concluded.
- *
- * The ramp is ordinal and escalating (neutral -> amber -> red) and never the only carrier of
- * meaning: there is a legend under the canvas, the hover tooltip names the signal and its class in
- * words, and line weight rises with class too. Confidence still shows up, as opacity.
- */
-const CLASS_COLOR: Record<SignalClass, { h: number; s: number; l: number }> = {
-  benign_explainable: { h: 215, s: 14, l: 52 },
-  weak_fraud_specific: { h: 38, s: 92, l: 46 },
-  strong_fraud_specific: { h: 0, s: 72, l: 51 },
+const CLASS_STROKE: Record<SignalClass, string> = {
+  strong_fraud_specific: "var(--chart-strong)",
+  weak_fraud_specific: "var(--chart-weak)",
+  benign_explainable: "var(--chart-benign)",
 }
 
 const CLASS_WIDTH: Record<SignalClass, number> = {
-  benign_explainable: 1,
-  weak_fraud_specific: 2,
-  strong_fraud_specific: 3,
+  strong_fraud_specific: 2.6,
+  weak_fraud_specific: 1.9,
+  benign_explainable: 1.2,
 }
 
-function edgeColor(signalType: string, confidence: number): string {
-  const { h, s, l } = CLASS_COLOR[signalClassOf(signalType)]
-  const alpha = 0.35 + confidence * 0.5
-  return `hsla(${h}, ${s}%, ${l}%, ${alpha.toFixed(2)})`
+/** Drawn last, so the evidence that decides the verdict sits on top of the routine stuff. */
+const CLASS_ORDER: Record<SignalClass, number> = {
+  benign_explainable: 0,
+  weak_fraud_specific: 1,
+  strong_fraud_specific: 2,
 }
 
-const LEGEND: { cls: SignalClass; note: string }[] = [
-  { cls: "strong_fraud_specific", note: "No ordinary household does this" },
-  { cls: "weak_fraud_specific", note: "Households sometimes do this" },
-  { cls: "benign_explainable", note: "Families and flatmates do this routinely" },
-]
+const W = 760
+const H = 460
+const CX = W / 2
+const CY = H / 2
 
 export function ClusterNetworkGraph({
   accounts,
@@ -74,69 +90,74 @@ export function ClusterNetworkGraph({
   accounts: GraphAccount[]
   evidence: GraphEvidence[]
 }) {
-  const containerRef = useRef<HTMLDivElement>(null)
-  const graphRef = useRef<any>(null)
-  const [width, setWidth] = useState(0)
-  const height = 420
+  const [hovered, setHovered] = useState<string | null>(null)
+  const [focusEdge, setFocusEdge] = useState<string | null>(null)
 
-  // react-force-graph defaults to the WINDOW width when none is given, which is why the graph
-  // rendered as a small clump floating off-centre inside its card. Measure the actual container
-  // and keep it in sync on resize.
-  useEffect(() => {
-    const el = containerRef.current
-    if (!el) return
-    const update = () => setWidth(el.clientWidth)
-    update()
-    const observer = new ResizeObserver(update)
-    observer.observe(el)
-    return () => observer.disconnect()
-  }, [])
-
-  const { nodes, links, presentClasses } = useMemo(() => {
+  const { nodes, edges, presentClasses } = useMemo(() => {
+    const n = accounts.length
     const maxTxns = Math.max(1, ...accounts.map((a) => a.transactionCount))
-    const nodes = accounts.map((a) => ({
-      id: a.id,
-      // customerRef is long; the short form is what fits on a node, the full value is in the tooltip.
-      label: a.customerRef.replace(/^cust_/, ""),
-      fullLabel: a.customerRef,
-      transactionCount: a.transactionCount,
-      // Design.md 2: node size is proportional to transaction volume. Normalised so one heavy
-      // account can't blow the others off the canvas.
-      radius: 5 + (a.transactionCount / maxTxns) * 5,
-    }))
 
-    // Fan out parallel edges (several signal types between the same pair) with alternating
-    // curvature so every one stays independently visible and hoverable - Principle 9 requires each
-    // signal to show its own label, so collapsing them into one line isn't an option.
-    const pairIndex = new Map<string, number>()
-    const links = evidence.map((e) => {
-      const key = [e.accountA, e.accountB].sort().join("::")
-      const i = pairIndex.get(key) ?? 0
-      pairIndex.set(key, i + 1)
-      const curvature = i === 0 ? 0 : Math.ceil(i / 2) * 0.22 * (i % 2 === 0 ? -1 : 1)
-      const cls = signalClassOf(e.signalType)
+    // Leave room for the labels that sit outside the ring, so a long customer ref never collides
+    // with the edge of the viewBox. Small clusters get a tighter circle so three nodes do not
+    // float absurdly far apart.
+    const radius = n <= 2 ? 120 : n <= 4 ? 150 : n <= 8 ? 168 : 182
+
+    const nodes = accounts.map((a, i) => {
+      // Start at the top and go clockwise. -90deg so a 2-node cluster reads vertically rather
+      // than as a horizontal pair that looks like an arrow.
+      const angle = (-90 + (360 / n) * i) * (Math.PI / 180)
       return {
-        id: e.id,
-        source: e.accountA,
-        target: e.accountB,
-        signalType: e.signalType,
-        confidence: e.confidence,
-        signalClass: cls,
-        curvature,
-        color: edgeColor(e.signalType, e.confidence),
-        width: CLASS_WIDTH[cls],
+        ...a,
+        x: CX + Math.cos(angle) * radius,
+        y: CY + Math.sin(angle) * radius,
+        angle,
+        r: 16 + (a.transactionCount / maxTxns) * 12,
+        short: a.customerRef.replace(/^cust_/, ""),
       }
     })
 
-    const presentClasses = new Set(links.map((l) => l.signalClass))
-    return { nodes, links, presentClasses }
-  }, [accounts, evidence])
+    const pos = new Map(nodes.map((node) => [node.id, node]))
 
-  // Fit the graph to its container once the force simulation settles, so it fills the card instead
-  // of sitting as a tight clump wherever the simulation happened to converge.
-  const handleEngineStop = useCallback(() => {
-    graphRef.current?.zoomToFit(400, 60)
-  }, [])
+    // One arc per signal. Several signals between the same pair fan out with alternating
+    // curvature so each stays separately visible and hoverable.
+    const seen = new Map<string, number>()
+    const edges = evidence
+      .map((e) => {
+        const a = pos.get(e.accountA)
+        const b = pos.get(e.accountB)
+        if (!a || !b) return null
+        const key = [e.accountA, e.accountB].sort().join("::")
+        const i = seen.get(key) ?? 0
+        seen.set(key, i + 1)
+
+        // Perpendicular offset from the straight line, alternating sides.
+        const bow = i === 0 ? 0 : Math.ceil(i / 2) * 26 * (i % 2 === 0 ? -1 : 1)
+        const mx = (a.x + b.x) / 2
+        const my = (a.y + b.y) / 2
+        const dx = b.x - a.x
+        const dy = b.y - a.y
+        const len = Math.hypot(dx, dy) || 1
+        const ctrlX = mx + (-dy / len) * bow
+        const ctrlY = my + (dx / len) * bow
+
+        const cls = signalClassOf(e.signalType)
+        return {
+          id: e.id,
+          from: e.accountA,
+          to: e.accountB,
+          cls,
+          signalType: e.signalType,
+          confidence: e.confidence,
+          d: `M${a.x.toFixed(1)},${a.y.toFixed(1)} Q${ctrlX.toFixed(1)},${ctrlY.toFixed(1)} ${b.x.toFixed(1)},${b.y.toFixed(1)}`,
+          labelX: ctrlX,
+          labelY: ctrlY,
+        }
+      })
+      .filter((e): e is NonNullable<typeof e> => e !== null)
+      .sort((p, q) => CLASS_ORDER[p.cls] - CLASS_ORDER[q.cls])
+
+    return { nodes, edges, presentClasses: new Set(edges.map((e) => e.cls)) }
+  }, [accounts, evidence])
 
   if (accounts.length === 0) {
     return (
@@ -146,141 +167,184 @@ export function ClusterNetworkGraph({
     )
   }
 
-  // A cluster with members but NO labelled links is a real, reportable condition, not an empty
-  // decoration. It means the accounts were grouped but the evidence rows behind that grouping were
-  // never written - so the graph would render as disconnected dots with no explanation, which is
-  // exactly what it did before this check existed. Principle 9 says every connection carries a
-  // labelled signal; a graph that silently shows none is hiding a broken pipeline.
-  if (links.length === 0) {
+  // A cluster with members but no labelled links is a real, reportable condition, not an empty
+  // decoration: it means the accounts were grouped but the evidence rows behind that grouping were
+  // never written. Saying so beats drawing disconnected dots.
+  if (edges.length === 0) {
     return (
       <div className="bg-card rounded-lg border p-6">
         <p className="text-sm font-medium">This cluster has no recorded evidence links</p>
         <p className="text-muted-foreground mt-2 text-sm leading-relaxed">
           {accounts.length} accounts were grouped together, but no labelled signal rows exist to
-          explain why - so there is nothing to draw. That is a data problem, not an empty ring: a
-          cluster should never exist without the edges that produced it.
+          explain why. That is a data problem, not an empty ring: a cluster should never exist
+          without the edges that produced it. Re-run detection from the ring queue to rebuild them.
         </p>
-        <p className="text-muted-foreground mt-2 text-sm leading-relaxed">
-          It usually means these clusters were written directly into the database rather than by the
-          detector, or a detection run failed partway. Re-running detection rebuilds the evidence:
-          open the ring queue and use <strong>Run detection</strong>, or{" "}
-          <code className="font-mono text-xs">POST /api/clusters/detect</code>.
-        </p>
-        <ul className="text-muted-foreground mt-3 space-y-1 text-xs">
-          {accounts.slice(0, 8).map((a) => (
-            <li key={a.id} className="font-mono">
-              {a.customerRef} · {a.transactionCount} transactions
-            </li>
-          ))}
-          {accounts.length > 8 && <li>+{accounts.length - 8} more</li>}
-        </ul>
       </div>
     )
   }
 
+  const active = focusEdge ? edges.find((e) => e.id === focusEdge) : null
+  const dimmed = (edgeFrom: string, edgeTo: string) =>
+    hovered !== null && hovered !== edgeFrom && hovered !== edgeTo
+
   return (
     <div className="space-y-3">
-      <div
-        ref={containerRef}
-        className="glass-panel border-border/80 relative overflow-hidden rounded-xl border shadow-inner"
-        style={{ height }}
-      >
-        {/* Graph Quick Floating Toolbar */}
-        <div className="border-border/60 bg-background/80 absolute top-3 right-3 z-10 flex items-center gap-1.5 rounded-lg border p-1 shadow-xs backdrop-blur-md">
-          <button
-            type="button"
-            onClick={() => graphRef.current?.zoom(graphRef.current.zoom() * 1.3, 300)}
-            className="text-muted-foreground hover:bg-accent hover:text-foreground rounded p-1 text-xs font-semibold transition-colors"
-            title="Zoom In"
-          >
-            +
-          </button>
-          <button
-            type="button"
-            onClick={() => graphRef.current?.zoom(graphRef.current.zoom() / 1.3, 300)}
-            className="text-muted-foreground hover:bg-accent hover:text-foreground rounded p-1 text-xs font-semibold transition-colors"
-            title="Zoom Out"
-          >
-            -
-          </button>
-          <button
-            type="button"
-            onClick={() => graphRef.current?.zoomToFit(400, 60)}
-            className="text-muted-foreground hover:bg-accent hover:text-foreground rounded px-1.5 py-1 text-[10px] font-medium transition-colors"
-            title="Reset View"
-          >
-            Reset
-          </button>
+      {/* The palette must travel WITH this component, not be assumed from the page.
+          Every edge colour here is a --chart-* variable, and those are declared by ChartPalette.
+          The evidence and overview pages happen to render it; the cluster detail page did not, so
+          every stroke resolved to nothing and the graph drew three labelled nodes joined by
+          absolutely nothing - a fraud ring rendered as three unrelated dots, on the one screen
+          whose entire job is showing the connections. Rendering it here makes the component
+          self-sufficient; a second copy on a page that already has one is a duplicate <style> with
+          identical declarations, which is harmless. */}
+      <ChartPalette />
+      <div className="bg-card/40 relative overflow-hidden rounded-xl border">
+        <svg
+          viewBox={`0 0 ${W} ${H}`}
+          className="block h-auto w-full"
+          role="img"
+          aria-label={`${accounts.length} linked accounts connected by ${edges.length} labelled signals`}
+        >
+          <defs>
+            {/* A faint glow behind the strongest evidence, so a ring reads as a ring at a glance. */}
+            <radialGradient id="ring-core" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="var(--chart-strong)" stopOpacity="0.10" />
+              <stop offset="100%" stopColor="var(--chart-strong)" stopOpacity="0" />
+            </radialGradient>
+          </defs>
+
+          {presentClasses.has("strong_fraud_specific") && (
+            <circle cx={CX} cy={CY} r={190} fill="url(#ring-core)" />
+          )}
+
+          {edges.map((e) => {
+            const isDim = dimmed(e.from, e.to)
+            return (
+              <path
+                key={e.id}
+                d={e.d}
+                fill="none"
+                stroke={CLASS_STROKE[e.cls]}
+                strokeWidth={CLASS_WIDTH[e.cls]}
+                strokeLinecap="round"
+                opacity={isDim ? 0.08 : 0.3 + e.confidence * 0.6}
+                className="cursor-pointer transition-opacity duration-150"
+                onMouseEnter={() => setFocusEdge(e.id)}
+                onMouseLeave={() => setFocusEdge(null)}
+              >
+                <title>
+                  {SIGNAL_LABEL[e.signalType] ?? e.signalType} ({SIGNAL_CLASS_LABEL[e.cls]}) ·
+                  confidence {e.confidence.toFixed(2)}
+                </title>
+              </path>
+            )
+          })}
+
+          {nodes.map((node) => {
+            const isDim = hovered !== null && hovered !== node.id
+            // Push the label outward along the same spoke the node sits on, so labels radiate and
+            // never overlap each other or the arcs in the middle.
+            const lx = CX + Math.cos(node.angle) * (node.r + 168)
+            const ly = CY + Math.sin(node.angle) * (node.r + 148)
+            const anchor = Math.abs(lx - CX) < 30 ? "middle" : lx > CX ? "start" : "end"
+            return (
+              <g
+                key={node.id}
+                opacity={isDim ? 0.35 : 1}
+                className="cursor-pointer transition-opacity duration-150"
+                onMouseEnter={() => setHovered(node.id)}
+                onMouseLeave={() => setHovered(null)}
+              >
+                <circle
+                  cx={node.x}
+                  cy={node.y}
+                  r={node.r + 5}
+                  fill="none"
+                  stroke="var(--chart-strong)"
+                  strokeWidth={2}
+                  opacity={hovered === node.id ? 0.8 : 0}
+                />
+                <circle
+                  cx={node.x}
+                  cy={node.y}
+                  r={node.r}
+                  className="fill-background stroke-border"
+                  strokeWidth={1.5}
+                />
+                <text
+                  x={node.x}
+                  y={node.y + 4}
+                  textAnchor="middle"
+                  className="fill-foreground"
+                  fontSize={13}
+                  fontWeight={600}
+                >
+                  {node.transactionCount}
+                </text>
+                <text
+                  x={lx}
+                  y={ly}
+                  textAnchor={anchor}
+                  className="fill-muted-foreground"
+                  fontSize={11.5}
+                  fontFamily="ui-monospace, monospace"
+                >
+                  {node.short}
+                </text>
+                <title>
+                  {node.customerRef} · {node.transactionCount} transactions
+                </title>
+              </g>
+            )
+          })}
+        </svg>
+
+        {/* Reads out whatever edge the pointer is on. A tooltip that names the signal in words is
+            what stops colour from being the only thing carrying meaning. */}
+        <div className="border-border/60 bg-background/90 absolute bottom-3 left-3 rounded-lg border px-3 py-2 text-xs backdrop-blur-sm">
+          {active ? (
+            <>
+              <span className="text-foreground font-medium">
+                {SIGNAL_LABEL[active.signalType] ?? active.signalType}
+              </span>
+              <span className="text-muted-foreground">
+                {" "}
+                · {SIGNAL_CLASS_LABEL[active.cls]} · confidence {active.confidence.toFixed(2)}
+              </span>
+            </>
+          ) : (
+            <span className="text-muted-foreground">
+              {accounts.length} accounts · {edges.length} labelled signals · hover an edge
+            </span>
+          )}
         </div>
-
-        {width > 0 && (
-          <ForceGraph2D
-            ref={graphRef}
-            graphData={{ nodes, links }}
-            width={width}
-            height={height}
-            backgroundColor="rgba(0,0,0,0)"
-            nodeLabel={(n: any) => `${n.fullLabel}: ${n.transactionCount} transactions`}
-            linkLabel={(l: any) =>
-              `${SIGNAL_LABEL[l.signalType] ?? l.signalType} · ${SIGNAL_CLASS_LABEL[l.signalClass as SignalClass]} · confidence ${(l.confidence * 100).toFixed(0)}%`
-            }
-            linkColor={(l: any) => l.color}
-            linkWidth={(l: any) => l.width}
-            linkCurvature={(l: any) => l.curvature}
-            linkDirectionalParticles={(l: any) =>
-              l.signalClass === "strong_fraud_specific" ? 2 : 0
-            }
-            linkDirectionalParticleSpeed={0.005}
-            linkDirectionalParticleWidth={2}
-            cooldownTicks={120}
-            onEngineStop={handleEngineStop}
-            nodeCanvasObject={(node: any, ctx: CanvasRenderingContext2D, globalScale: number) => {
-              ctx.beginPath()
-              ctx.arc(node.x, node.y, node.radius, 0, 2 * Math.PI)
-              ctx.fillStyle = "hsl(258, 76%, 58%)"
-              ctx.fill()
-              // A glowing surface ring
-              ctx.lineWidth = 1.8 / globalScale
-              ctx.strokeStyle = "rgba(255,255,255,0.95)"
-              ctx.stroke()
-
-              const fontSize = Math.max(9 / globalScale, 3)
-              ctx.font = `600 ${fontSize}px ui-sans-serif, system-ui, sans-serif`
-              ctx.textAlign = "center"
-              ctx.textBaseline = "top"
-              ctx.fillStyle = "hsl(240, 5%, 65%)"
-              ctx.fillText(node.label, node.x, node.y + node.radius + 3 / globalScale)
-            }}
-            nodePointerAreaPaint={(node: any, color: string, ctx: CanvasRenderingContext2D) => {
-              ctx.beginPath()
-              ctx.arc(node.x, node.y, node.radius + 4, 0, 2 * Math.PI)
-              ctx.fillStyle = color
-              ctx.fill()
-            }}
-          />
-        )}
       </div>
 
-      <div className="border-border/50 bg-muted/20 flex flex-wrap items-center gap-x-5 gap-y-2 rounded-lg border px-3.5 py-2 text-xs">
-        {LEGEND.filter((l) => presentClasses.has(l.cls)).map(({ cls, note }) => (
-          <span key={cls} className="flex items-center gap-1.5">
-            <span
-              aria-hidden
-              className="inline-block rounded-full shadow-xs"
-              style={{
-                width: 14,
-                height: CLASS_WIDTH[cls] + 1,
-                backgroundColor: `hsl(${CLASS_COLOR[cls].h}, ${CLASS_COLOR[cls].s}%, ${CLASS_COLOR[cls].l}%)`,
-              }}
-            />
-            <span className="font-semibold">{SIGNAL_CLASS_LABEL[cls]}</span>
-            <span className="text-muted-foreground">: {note}</span>
-          </span>
-        ))}
-        <span className="text-muted-foreground ml-auto">
-          Node size = transaction volume · Click/drag nodes to inspect
-        </span>
-      </div>
+      <ul className="flex flex-wrap gap-x-6 gap-y-2">
+        {(
+          [
+            ["strong_fraud_specific", "No ordinary household does this"],
+            ["weak_fraud_specific", "Households sometimes do this"],
+            ["benign_explainable", "Families and flatmates do this routinely"],
+          ] as const
+        )
+          .filter(([cls]) => presentClasses.has(cls))
+          .map(([cls, note]) => (
+            <li key={cls} className="flex items-center gap-2 text-xs">
+              <span
+                aria-hidden
+                className="h-[3px] w-5 shrink-0 rounded-full"
+                style={{ backgroundColor: CLASS_STROKE[cls] }}
+              />
+              <span className="text-foreground font-medium">{SIGNAL_CLASS_LABEL[cls]}</span>
+              <span className="text-muted-foreground">{note}</span>
+            </li>
+          ))}
+      </ul>
+      <p className="text-muted-foreground text-xs">
+        The number inside each account is its transaction count, and the circle is sized by it. Each
+        line is one signal: several between the same pair are drawn as separate arcs, never merged.
+      </p>
     </div>
   )
 }
