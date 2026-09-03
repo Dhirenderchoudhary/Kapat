@@ -7,6 +7,11 @@ transactions, phone numbers, addresses, and the voice-verification transcripts a
 committed to `data/`, with train/test splits that are never cross-contaminated. No real Razorpay
 merchant, customer, or transaction data was used anywhere in this build.
 
+> **Picking this up in a new session (human or AI)?** Read
+> [`HANDOFF.md`](HANDOFF.md) first. It is the complete briefing: the hard rules, the algorithm,
+> every measured number and the file it comes from, the known failures, and the environment traps
+> that have already cost hours.
+
 ## What this actually is
 
 Razorpay's existing Thirdwatch product scores individual transactions for fraud. This project
@@ -136,6 +141,56 @@ still-outstanding step that would actually test that is a live Sarvam AI call in
 Marathi, checked by a fluent speaker (Phase 0's exit criteria) - not yet done, and disclosed here
 rather than implied.
 
+### The trained model, and the dataset that made it possible
+
+The first attempt at this comparison produced a useless answer: **every** method scored a perfect
+1.000 average precision on the held-out split, including an isolation forest fitted with no labels
+at all. A score an unlabelled model also reaches is measuring the exam, not the student. The cause
+was the dataset - `generate_synthetic_data.py` gives rings all five signals and households exactly
+one, so the two classes are separable on a single feature and there is nothing to learn.
+
+`generate_hard_dataset.py` fixes that. It grades both populations until they overlap:
+
+- **Rings**, sloppy to careful: all five signals / no shared address / no shared card either /
+  promo + timing only / a SIM block alone / coordinated timing alone.
+- **Legitimate groups**, easy to genuinely ambiguous: a shared address / a family card / a family
+  that also orders at the same hour / flatmates who also pass one coupon around / an office
+  delivery address / a reseller using one card across many addresses.
+
+2,613 accounts and 11,815 transactions in train, 1,185 / 5,341 held out. Rings also carry
+second-order structure the five signals do not capture - burst signup, order amounts clustered just
+above a promo floor, promo concentration, uniform cadence - which is what a model can learn and the
+hand-built rule does not look at. That is an assumption about fraud, disclosed as one.
+
+**Held-out results on the graded split** (`data/model_comparison.json`):
+
+| Method                                 | Precision | Recall   | Costly errors |
+| -------------------------------------- | --------- | -------- | ------------- |
+| **Hybrid (heuristic + random forest)** | **94.7%** | **100%** | **2**         |
+| Random forest                          | 92.3%     | 100%     | 3             |
+| Hist gradient boosting                 | 83.7%     | 100%     | 7             |
+| Extra trees                            | 89.7%     | 97.2%    | 8             |
+| Logistic regression                    | 87.5%     | 97.2%    | 9             |
+| Corroboration heuristic alone          | 67.4%     | 86.1%    | 35            |
+| Isolation forest (**no labels**)       | 0.840 AP  | -        | -             |
+
+"Costly errors" is `false_positives x 1 + false_negatives x 4`, and the operating threshold is
+chosen to minimise it on the TRAINING split - not by F1, which silently asserts that holding a real
+customer's payment and letting a fraudulent one settle hurt equally. The 1:4 ratio is a policy dial
+stated in the report, not a measurement; there is still no calibrated rupee figure and inventing
+one would be fabricated confidence.
+
+On the ten hand-authored adversarial cases the trained model scores **8/10, the same as the
+heuristic** - no regression off-distribution. A model trained on the OLD easy split scores 6/10 on
+the same cases, which is the clearest evidence that the harder dataset is what produced the gain.
+
+**The model runs in the live agent.** `train_model.py --dataset hard --export` writes
+`data/ring_model.joblib` plus a model card; `model_scorer.py` loads it inside detector-service and
+`POST /detect-rings` scores with it, keeping the heuristic's plain-language explanation alongside
+and reporting both verdicts so disagreement stays visible. If scikit-learn or the model file is
+absent the service degrades to the heuristic and `GET /model` says so out loud. Reasoning in full:
+`docs/algorithm.md`.
+
 ## What broke (and what that says about the system)
 
 Two real, disclosed failures, found by actually running evaluation scripts against held-out data
@@ -200,10 +255,21 @@ present, rather than reporting a false pass.
 ## Regenerating the metrics this README quotes
 
 ```bash
-python3 services/detector-service/evaluate.py           # -> data/detector_metrics.json
+python3 services/detector-service/evaluate.py            # -> data/detector_metrics.json
 python3 services/detector-service/run_batch.py           # -> data/batch_run_report.json
 python3 services/verifier-service/evaluate_verifier.py   # -> data/verifier_metrics.json
+python3 services/detector-service/generate_hard_dataset.py  # -> data/hard_train.json, hard_test.json
+python3 services/detector-service/train_model.py --export   # -> data/model_comparison.json + ring_model.joblib
+python3 services/detector-service/make_figures.py        # -> docs/images/ (docs + slides)
 ```
+
+`train_model.py` and `make_figures.py` need `services/detector-service/requirements-analysis.txt`
+(scikit-learn, numpy, matplotlib). Neither is installed in the detector-service container and
+neither runs on the live `/detect-rings` path - they are offline analysis, run by hand, whose
+output the dashboard reads. `make_figures.py` renders the static figures used by `docs/` and the
+submission write-up; the dashboard's own charts are drawn live from the same JSON by
+`web/next/src/components/fraud/animated-charts.tsx`. Both read the run reports, so neither can
+disagree with the run that produced them.
 
 `GET /api/metrics` (`api/hono/src/routers/metrics.ts`) reads the first and third of those files
 directly and combines them with live funnel counts (clusters flagged / verified / decided) queried
