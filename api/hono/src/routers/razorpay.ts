@@ -6,19 +6,11 @@ import { Hono } from "hono"
 import { describeRoute, resolver } from "hono-openapi"
 import { z } from "zod"
 
-import {
-  credentialEncryptionAvailable,
-  decryptSecret,
-  encryptSecret,
-  maskKeyId,
-} from "@/lib/crypto"
+import { credentialEncryptionAvailable, encryptSecret, maskKeyId } from "@/lib/crypto"
 import { ApiError, validationErrorResponses } from "@/lib/error"
-import {
-  fetchAllPayments,
-  mapPayment,
-  RazorpayError,
-  verifyCredentials,
-} from "@/lib/razorpay-client"
+import { verifyCredentials } from "@/lib/razorpay-client"
+import { SESSION_DAYS, sessionExpiry } from "@/lib/razorpay-session"
+import { runSync, startBackfill } from "@/lib/razorpay-sync"
 
 // The live ingestion path: a merchant connects their own Razorpay account once, and the agent pulls
 // their payments and runs detection without anyone exporting a CSV.
@@ -46,6 +38,21 @@ const connectionStatusSchema = z.object({
   keyId: z.string().nullable(),
   lastSyncedAt: z.string().nullable(),
   lastSyncStatus: z.string().nullable(),
+  // The 30-day session. `expired` is computed rather than stored so it can never be stale, and
+  // `daysRemaining` is what the dashboard warns on before the merchant is locked out mid-week.
+  expiresAt: z.string().nullable(),
+  daysRemaining: z.number().nullable(),
+  expired: z.boolean(),
+  autoSyncEnabled: z.boolean(),
+  lastAutoSyncAt: z.string().nullable(),
+  // First-connect history scan. A merchant needs to know the difference between "no rings found"
+  // and "still looking".
+  backfill: z.object({
+    started: z.boolean(),
+    complete: z.boolean(),
+    status: z.string().nullable(),
+    transactionsIngested: z.number(),
+  }),
 })
 
 const syncResponseSchema = z.object({
@@ -59,6 +66,32 @@ const syncResponseSchema = z.object({
   signalCoverage: z.record(z.string(), z.number()),
   windowFrom: z.string().nullable(),
 })
+
+const DAY_MS = 24 * 60 * 60 * 1000
+
+function projectStatus(conn: typeof razorpayConnections.$inferSelect | null) {
+  const now = Date.now()
+  const expiresAt = conn?.expiresAt ?? null
+  const expired = Boolean(expiresAt && expiresAt.getTime() <= now)
+  return {
+    connected: Boolean(conn) && !expired,
+    mode: (conn?.mode as "test" | "live" | undefined) ?? null,
+    keyId: conn ? maskKeyId(conn.keyId) : null,
+    lastSyncedAt: conn?.lastSyncedAt ? conn.lastSyncedAt.toISOString() : null,
+    lastSyncStatus: conn?.lastSyncStatus ?? null,
+    expiresAt: expiresAt ? expiresAt.toISOString() : null,
+    daysRemaining: expiresAt ? Math.max(0, Math.ceil((expiresAt.getTime() - now) / DAY_MS)) : null,
+    expired,
+    autoSyncEnabled: conn?.autoSyncEnabled ?? false,
+    lastAutoSyncAt: conn?.lastAutoSyncAt ? conn.lastAutoSyncAt.toISOString() : null,
+    backfill: {
+      started: Boolean(conn?.backfillStartedAt),
+      complete: Boolean(conn?.backfillCompletedAt),
+      status: conn?.backfillStatus ?? null,
+      transactionsIngested: conn?.backfillPaymentsIngested ?? 0,
+    },
+  }
+}
 
 async function currentConnection() {
   const [row] = await db
@@ -86,16 +119,7 @@ export const razorpayRouter = new Hono()
       },
     }),
     async (c) => {
-      const conn = await currentConnection()
-      return c.json({
-        data: {
-          connected: Boolean(conn),
-          mode: (conn?.mode as "test" | "live" | undefined) ?? null,
-          keyId: conn ? maskKeyId(conn.keyId) : null,
-          lastSyncedAt: conn?.lastSyncedAt ? conn.lastSyncedAt.toISOString() : null,
-          lastSyncStatus: conn?.lastSyncStatus ?? null,
-        },
-      })
+      return c.json({ data: projectStatus(await currentConnection()) })
     },
   )
   .post(
@@ -146,18 +170,24 @@ export const razorpayRouter = new Hono()
       await db.delete(razorpayConnections)
       const [row] = await db
         .insert(razorpayConnections)
-        .values({ mode, keyId, keySecretEncrypted: encryptSecret(keySecret) })
+        .values({
+          mode,
+          keyId,
+          keySecretEncrypted: encryptSecret(keySecret),
+          // Connecting starts a 30-day session, not an open-ended grant. See razorpay-session.ts
+          // for why the expiry is a feature.
+          expiresAt: sessionExpiry(),
+          autoSyncEnabled: true,
+        })
         .returning()
 
-      return c.json({
-        data: {
-          connected: true,
-          mode: row!.mode as "test" | "live",
-          keyId: maskKeyId(row!.keyId),
-          lastSyncedAt: null,
-          lastSyncStatus: null,
-        },
-      })
+      // Scan the merchant's existing payment history immediately, in the background. This is the
+      // difference between a dashboard that starts empty and one that shows the rings already in
+      // their book on the day they connect. It is detached on purpose: a long history would
+      // otherwise hold this request open for minutes.
+      await startBackfill(row!, new URL(c.req.url).origin)
+
+      return c.json({ data: projectStatus(row!) })
     },
   )
   .post(
@@ -184,125 +214,56 @@ export const razorpayRouter = new Hono()
           "No Razorpay account is connected. Connect one first.",
         )
       }
-
-      let keySecret: string
-      try {
-        keySecret = decryptSecret(conn.keySecretEncrypted)
-      } catch (cause) {
+      if (conn.expiresAt && conn.expiresAt.getTime() <= Date.now()) {
         throw new ApiError(
-          503,
-          "CREDENTIAL_UNREADABLE",
-          `Stored Razorpay credential could not be decrypted (${cause instanceof Error ? cause.message : "unknown error"}). This usually means RAZORPAY_CREDENTIAL_KEY changed since it was saved. Reconnect the account.`,
+          400,
+          "SESSION_EXPIRED",
+          `This Razorpay connection expired after ${SESSION_DAYS} days. Reconnect the account to resume automatic detection.`,
         )
       }
 
-      // Incremental window. A small overlap on re-sync is harmless because ingestion is idempotent
-      // on the Razorpay payment id, and it avoids missing a payment that landed mid-sync.
-      const from = conn.lastSyncedAt
-        ? new Date(conn.lastSyncedAt.getTime() - 60 * 60 * 1000)
-        : undefined
-      const startedAt = new Date()
-
-      let payments
-      try {
-        payments = await fetchAllPayments({ keyId: conn.keyId, keySecret, from })
-      } catch (cause) {
-        await db
-          .update(razorpayConnections)
-          .set({
-            lastSyncStatus: cause instanceof Error ? cause.message.slice(0, 300) : "sync failed",
-          })
-          .where(eq(razorpayConnections.id, conn.id))
-        if (cause instanceof RazorpayError) {
-          throw new ApiError(502, "RAZORPAY_SYNC_FAILED", cause.message)
-        }
-        throw cause
-      }
-
-      const rows = payments.map(mapPayment).filter((r): r is NonNullable<typeof r> => r !== null)
-
-      if (rows.length === 0) {
-        await db
-          .update(razorpayConnections)
-          .set({
-            lastSyncedAt: startedAt,
-            lastSyncStatus: `synced ${payments.length} payments (0 new mapped rows)`,
-          })
-          .where(eq(razorpayConnections.id, conn.id))
-
-        return c.json({
-          data: {
-            paymentsFetched: payments.length,
-            rowsMapped: 0,
-            accountsCreated: 0,
-            transactionsCreated: 0,
-            clustersDetected: 0,
-            clustersFlagged: 0,
-            signalCoverage: {
-              deliveryAddress: 0,
-              paymentFingerprint: 0,
-              phoneNumber: 0,
-              promoCode: 0,
-            },
+      // Same function the background poller and the first-connect backfill call, so a hand-pressed
+      // sync can never behave differently from an automatic one.
+      const summary = await runSync(conn, new URL(c.req.url).origin, {
+        full: c.req.query("full") === "1",
+      })
+      return c.json({ data: summary })
+    },
+  )
+  .post(
+    "/auto-sync",
+    describeRoute({
+      tags: ["Razorpay"],
+      description:
+        "Pause or resume automatic background detection without disconnecting. Pausing keeps the stored credential and the session clock running; it only stops the poller.",
+      responses: {
+        200: {
+          description: "OK",
+          content: {
+            "application/json": { schema: resolver(z.object({ data: connectionStatusSchema })) },
           },
+        },
+      },
+    }),
+    sValidator("json", z.object({ enabled: z.boolean() }), (result) => {
+      if (!result.success) {
+        throw new ApiError(400, "VALIDATION_ERROR", "Expected { enabled: boolean }", {
+          issues: result.error,
         })
       }
-
-      // Reuse the exact ingest + detect path the CSV upload uses - one code path, so a merchant on
-      // the live integration and a merchant on a CSV get identical treatment (and identical bugs,
-      // which is the point: there is no second, divergent pipeline to keep in sync).
-      const origin = new URL(c.req.url).origin
-      const ingestRes = await fetch(`${origin}/api/ingest/transactions`, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ rows, sourceLabel: `razorpay:${conn.mode}` }),
-      })
-      if (!ingestRes.ok) {
-        const errBody = await ingestRes.text().catch(() => "")
-        throw new ApiError(
-          502,
-          "INGEST_FAILED",
-          `Ingest step failed with ${ingestRes.status}: ${errBody}`,
-        )
+    }),
+    async (c) => {
+      const conn = await currentConnection()
+      if (!conn) {
+        throw new ApiError(400, "NOT_CONNECTED", "No Razorpay account is connected.")
       }
-      const ingest = (await ingestRes.json()).data as {
-        accountsCreated: number
-        transactionsCreated: number
-        signalCoverage: Record<string, number>
-      }
-
-      const detectRes = await fetch(`${origin}/api/clusters/detect`, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({}),
-      })
-      if (!detectRes.ok) {
-        throw new ApiError(502, "DETECT_FAILED", `Detection step failed with ${detectRes.status}`)
-      }
-      const detect = (await detectRes.json()).data as {
-        clustersDetected: number
-        clustersFlagged: number
-        clustersNewlyPersisted: number
-      }
-
-      await db
+      const { enabled } = c.req.valid("json")
+      const [row] = await db
         .update(razorpayConnections)
-        .set({ lastSyncedAt: startedAt, lastSyncStatus: "ok" })
+        .set({ autoSyncEnabled: enabled })
         .where(eq(razorpayConnections.id, conn.id))
-
-      return c.json({
-        data: {
-          paymentsFetched: payments.length,
-          rowsMapped: rows.length,
-          accountsCreated: ingest.accountsCreated,
-          transactionsCreated: ingest.transactionsCreated,
-          clustersDetected: detect.clustersDetected,
-          clustersFlagged: detect.clustersFlagged,
-          clustersNewlyPersisted: detect.clustersNewlyPersisted,
-          signalCoverage: ingest.signalCoverage,
-          windowFrom: from ? from.toISOString() : null,
-        },
-      })
+        .returning()
+      return c.json({ data: projectStatus(row!) })
     },
   )
   .delete(
