@@ -10,6 +10,7 @@ import { logger } from "hono/logger"
 import { z } from "zod"
 
 import { errorHandler, globalErrorResponses, jsonError } from "@/lib/error"
+import { startRazorpayPoller } from "@/lib/razorpay-session"
 import { createServer, upgradeWebSocket } from "@/lib/server"
 import { rateLimiterMiddleware, requireFeature } from "@/middlewares"
 import {
@@ -205,6 +206,12 @@ export { app }
 export type AppType = typeof routes
 export type { BatchAnswer, BatchOutcome, BatchRefusalCode } from "@/lib/batch"
 export type { ErrorCode } from "@/lib/error"
+
+// "Connect once and forget about it": the poller re-runs detection on the connected Razorpay
+// account every few minutes, so a ring that forms today is on the dashboard today without anyone
+// pressing a button. It no-ops on serverless, where a process-lifetime timer is meaningless - see
+// @/lib/razorpay-session for that reasoning and for why the session expires after 30 days.
+startRazorpayPoller(env.HONO_APP_URL)
 
 // Bun.serve() shape locally and self-hosted, Node http.Server on Vercel; see @/lib/server.
 export default createServer(app)
