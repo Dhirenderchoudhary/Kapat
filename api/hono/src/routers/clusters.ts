@@ -193,6 +193,13 @@ const detectResponseSchema = z.object({
   clustersFlagged: z.number(),
   clustersNewlyPersisted: z.number(),
   accountLinksNewlyPersisted: z.number(),
+  // Which brain actually produced these clusters. Never omit it and never default it to the
+  // Python service: the two engines do NOT use the same clustering algorithm (see @/lib/detector),
+  // and every measured number this project publishes was produced by the Python one. A run that
+  // silently fell back is a run none of those numbers describe, so it has to say so out loud.
+  engine: z.enum(["detector-service", "typescript-fallback"]),
+  clusteringMethod: z.enum(["louvain", "connected_components"]),
+  fallbackReason: z.string().nullable(),
 })
 
 // Deterministic, content-derived ids (not the schema's crypto.randomUUID() default) for clusters/
@@ -299,7 +306,7 @@ const { data, error } = await unwrap(apiClient.clusters.$get())`,
     describeRoute({
       tags: ["Clusters"],
       description:
-        "Runs the real detector agent (services/detector-service's live POST /detect-rings, Architecture.md §6) against every account/transaction currently in Postgres, and persists what it finds - the one place graph_builder -> clustering -> cluster_scorer's actual output becomes clusters/account_links/cluster_members rows. Nothing calls this automatically on ingestion (a deliberate, explicit batch step per Architecture.md's own \"(internal) ... Batch\" framing, not chained off every webhook) - trigger it manually, or from a scheduled job. Idempotent: cluster/account_links ids are derived from their own content, so re-running after new data arrives only ever adds what's genuinely new, never a duplicate.",
+        "Runs the real detector agent (services/detector-service's live POST /detect-rings, Architecture.md §6) against every account/transaction currently in Postgres, and persists what it finds - the one place graph_builder -> clustering -> cluster_scorer's actual output becomes clusters/account_links/cluster_members rows. Called automatically by POST /webhooks/razorpay whenever a webhook ingests a genuinely new transaction (a redelivered event changes no data and re-runs nothing), and callable manually or from a scheduled job for catch-up over imported history. Idempotent: cluster/account_links ids are derived from their own content, so re-running after new data arrives only ever adds what's genuinely new, never a duplicate. The response reports `engine` and `clusteringMethod`: when the Python detector-service is unreachable this falls back to a TypeScript detector that clusters by connected components rather than Louvain, which is a different algorithm from the one every published metric was measured on, so the run says which one produced it.",
       ...({
         "x-codeSamples": [
           {
@@ -370,6 +377,26 @@ const { data, error } = await unwrap(apiClient.clusters.detect.$post({ json: {} 
       const detectorServiceUrl = process.env.DETECTOR_SERVICE_URL ?? "http://localhost:8001"
       let resultClusters: ScoredCluster[] = []
 
+      // Which engine ran, tracked rather than assumed. The TypeScript fallback is NOT a port of
+      // the Python detector: it groups with connected components where the Python service runs
+      // Louvain, so on the same input the two can return different clusters (@/lib/detector says
+      // so at length). Every published metric in data/*.json was measured on the Python path, so a
+      // fallback run is one no published number describes. It gets recorded on the response, in
+      // the audit log, and in the logs - never silently substituted.
+      let engine: "detector-service" | "typescript-fallback" = "detector-service"
+      let fallbackReason: string | null = null
+
+      const useFallback = (reason: string) => {
+        engine = "typescript-fallback"
+        fallbackReason = reason
+        console.warn(
+          `[clusters/detect] detector-service unavailable (${reason}). Falling back to the ` +
+            `TypeScript detector, which clusters by connected components rather than Louvain. ` +
+            `Results from this run are not comparable to the published metrics in data/.`,
+        )
+        return detectRingsPure(detectorAccounts, detectorTransactions, minClusterSize)
+      }
+
       try {
         const response = await fetch(`${detectorServiceUrl}/detect-rings`, {
           method: "POST",
@@ -384,13 +411,15 @@ const { data, error } = await unwrap(apiClient.clusters.detect.$post({ json: {} 
           const res = (await response.json()) as { clusters: ScoredCluster[] }
           resultClusters = res.clusters
         } else {
-          resultClusters = detectRingsPure(detectorAccounts, detectorTransactions, minClusterSize)
+          resultClusters = useFallback(`HTTP ${response.status} from ${detectorServiceUrl}`)
         }
-      } catch {
-        // Pure TypeScript fallback when Python sidecar is offline (Serverless / Cloud deployment)
-        resultClusters = detectRingsPure(detectorAccounts, detectorTransactions, minClusterSize)
+      } catch (error) {
+        resultClusters = useFallback(
+          error instanceof Error ? error.message : "detector-service unreachable",
+        )
       }
 
+      const clusteringMethod = engine === "detector-service" ? "louvain" : "connected_components"
       const result = { clusters: resultClusters }
 
       let clustersNewlyPersisted = 0
@@ -433,7 +462,13 @@ const { data, error } = await unwrap(apiClient.clusters.detect.$post({ json: {} 
               clusterId,
               payload: {
                 event: "cluster_detected",
-                detectedBy: "detector-service /detect-rings",
+                detectedBy:
+                  engine === "detector-service"
+                    ? "detector-service /detect-rings"
+                    : "api/hono TypeScript fallback detector (detector-service unreachable)",
+                engine,
+                clusteringMethod,
+                fallbackReason,
                 riskScore: detected.score.risk_score,
                 rawRiskScore: detected.score.raw_risk_score,
                 flagThreshold: detected.score.flag_threshold,
@@ -475,6 +510,9 @@ const { data, error } = await unwrap(apiClient.clusters.detect.$post({ json: {} 
           clustersFlagged: flaggedClusters.length,
           clustersNewlyPersisted,
           accountLinksNewlyPersisted,
+          engine,
+          clusteringMethod,
+          fallbackReason,
         },
       })
     },
