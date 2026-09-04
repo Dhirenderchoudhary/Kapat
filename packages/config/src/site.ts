@@ -1,8 +1,9 @@
 // Brand identity for this app: the single source a fork edits to rebrand. web reads it via lib/config.ts.
 export const site = {
-  name: "Razorpay",
-  description: "Razorpay is just getting started. Tell its story here.",
-  tagline: "Your tagline, ready when you are.",
+  name: "AI Risk Manager",
+  description:
+    "Detects coordinated fraud rings that per-transaction scoring misses. Graph corroboration, voice verification, merchant decision.",
+  tagline: "Rings, not single payments.",
   social: {
     discord: "",
     github: "",
@@ -13,8 +14,8 @@ export const site = {
     name: "LocalAgent",
     email: "agent@local.host",
   },
-  // Injectable long-form text blocks. A product sets its own, or leaves them empty.
-  apiReferenceDescription: "",
+  apiReferenceDescription:
+    "Hono API for cluster detection, payment holds, Sarvam voice, and Razorpay ingest. The agent never captures or refunds except on a named merchant decision.",
   llmsFullPreamble: "",
 } as const
 

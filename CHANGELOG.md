@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.0.3
+
+[compare changes](https://github.com/Dhirenderchoudhary/Kapat/compare/v0.0.2...v0.0.3)
+
+### 🚀 Enhancements
+
+- **voice:** Live Sarvam agent; keep API hosts in env only ([0f5087b](https://github.com/Dhirenderchoudhary/Kapat/commit/0f5087b))
+
+### ❤️ Contributors
+
+- Dhirender Choudhary @Dhirenderchoudhary
+
 ## v0.0.2
 
 [compare changes](https://github.com/Dhirenderchoudhary/Razorpay_Buildathon/compare/v0.0.1...v0.0.2)

@@ -829,6 +829,6 @@
       "risk_score": 0.5929
     }
   ],
-  "what_this_verifies": "The agent's hold DECISION over a replayed payment stream, using the real graph_builder -> clustering -> cluster_scorer pipeline, rebuilt after every payment from only the payments seen so far. It does NOT verify the Razorpay HTTP integration - no environment this ran in can reach api.razorpay.com. Signature verification and payment mapping are covered by tests/test_razorpay.mjs.",
+  "what_this_verifies": "The agent's hold DECISION over a replayed payment stream, using the real graph_builder -> clustering -> cluster_scorer pipeline, rebuilt after every payment from only the payments seen so far. It does NOT verify the Razorpay HTTP integration - no environment this ran in can reach api.razorpay.com. Signature verification and payment mapping are covered by tests/razorpay.test.mjs.",
   "known_limitation": "Recall is bounded by design, not by a bug: a ring is invisible until enough of its accounts and transactions exist for community detection to find it, so early payments from a ring are released. This system catches a ring on its later payments, never its first. A false negative here is usually an early payment, not a miss."
 }

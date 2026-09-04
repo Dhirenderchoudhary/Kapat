@@ -91,7 +91,7 @@ assuming:
 | **Hybrid: heuristic + random forest (ships)** | 1.000         | **4**             | **9 / 10**  |
 | Random forest                                 | 1.000         | 6                 | -           |
 | Gradient boosting                             | 1.000         | 7                 | -           |
-| Logistic regression                            | 1.000         | 12                | -           |
+| Logistic regression                           | 1.000         | 12                | -           |
 | Corroboration heuristic (no training)         | 1.000         | 45                | 8 / 10      |
 | Model trained on the EASY split only          | 1.000         | -                 | 6 / 10      |
 

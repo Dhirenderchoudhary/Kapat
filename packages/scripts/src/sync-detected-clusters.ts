@@ -1,7 +1,7 @@
 import { spawnSync } from "node:child_process"
 import { createHash } from "node:crypto"
 
-import { accounts, accountLinks, auditLog, clusterMembers, clusters, db } from "../../db/src"
+import { accounts, accountLinks, auditLog, clusterMembers, clusters, db } from "@packages/db"
 
 function deterministicId(prefix: string, parts: string[]): string {
   const hash = createHash("sha256").update(parts.join("|")).digest("hex").slice(0, 20)

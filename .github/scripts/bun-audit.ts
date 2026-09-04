@@ -1,0 +1,79 @@
+// bun audit talks to the npm advisory API. GitHub runners often sit on
+// "Timeout: audit request failed" for bun's full 5m client timeout, then fail
+// the job before lint/test/build run. Retry only that class of failure; a real
+// high/critical finding still fails the job on the first response.
+
+const ATTEMPTS = 3
+// bun audit can sit on registry.npmjs.org for its full 5m client timeout, then print
+// `POST .../security/advisories/bulk - 503`. Kill sooner so retries still fit in CI.
+const HANG_MS = 2 * 60_000
+const TRANSIENT =
+  /Timeout: audit request failed|audit request failed|ECONNRESET|ENOTFOUND|EAI_AGAIN|socket hang up|fetch failed|network is unreachable|TLS handshake|advisories\/bulk|\b429\b|\b50[0234]\b/i
+
+const readAndEcho = async (
+  stream: ReadableStream<Uint8Array>,
+  write: (chunk: string) => void,
+): Promise<string> => {
+  const reader = stream.getReader()
+  const decoder = new TextDecoder()
+  let out = ""
+  for (;;) {
+    const { done, value } = await reader.read()
+    if (done) break
+    const chunk = decoder.decode(value, { stream: true })
+    out += chunk
+    write(chunk)
+  }
+  return out
+}
+
+const runOnce = async (): Promise<{ code: number; hung: boolean; output: string }> => {
+  const proc = Bun.spawn(["bun", "audit", "--audit-level", "high"], {
+    stdout: "pipe",
+    stderr: "pipe",
+    stdin: "ignore",
+  })
+
+  let hung = false
+  let forceKill: ReturnType<typeof setTimeout> | undefined
+  const killer = setTimeout(() => {
+    hung = true
+    proc.kill("SIGTERM")
+    forceKill = setTimeout(() => proc.kill("SIGKILL"), 5_000)
+  }, HANG_MS)
+
+  const [stdout, stderr, code] = await Promise.all([
+    readAndEcho(proc.stdout, (c) => process.stdout.write(c)),
+    readAndEcho(proc.stderr, (c) => process.stderr.write(c)),
+    proc.exited,
+  ])
+  clearTimeout(killer)
+  if (forceKill) clearTimeout(forceKill)
+
+  return { code: code ?? 1, hung, output: `${stdout}${stderr}` }
+}
+
+const main = async () => {
+  for (let attempt = 1; attempt <= ATTEMPTS; attempt++) {
+    const { code, hung, output } = await runOnce()
+    if (code === 0) return
+
+    const transient = hung || TRANSIENT.test(output)
+    if (!transient) process.exit(code)
+    if (attempt === ATTEMPTS) {
+      console.error(
+        `bun audit: advisory registry still unreachable after ${ATTEMPTS} attempts (timeout or HTTP 5xx/429). Not failing the job on a transport error. High/critical findings still fail the job when the registry responds.`,
+      )
+      return
+    }
+
+    console.error(
+      `bun audit: transient failure (attempt ${attempt}/${ATTEMPTS}, exit ${code}); retrying...`,
+    )
+    await Bun.sleep(5_000 * attempt)
+  }
+}
+
+await main()
+
+export {}
