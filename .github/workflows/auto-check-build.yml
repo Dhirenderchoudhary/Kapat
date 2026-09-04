@@ -1,14 +1,18 @@
 name: auto-check-build
 
 on:
+  push:
+    branches:
+      - "**"
   pull_request:
     types: [opened, synchronize, reopened]
     branches: ["canary", "main"]
   pull_request_review:
     types: [submitted, edited, dismissed]
+  workflow_dispatch:
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
