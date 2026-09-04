@@ -22,8 +22,12 @@ import { createHmac, timingSafeEqual } from "node:crypto"
  */
 
 function safeEqualHex(a: string, b: string): boolean {
-  // timingSafeEqual throws on length mismatch, which would itself leak length - so normalise to a
-  // constant-length comparison by hashing both sides to fixed-width buffers first.
+  // timingSafeEqual throws on a length mismatch, so the lengths are compared first and an early
+  // false is returned. That early return is not a leak worth closing here: both sides are
+  // hex-encoded HMAC-SHA256 digests, so the expected length is a fixed, public 64 characters, and
+  // learning that a submitted signature was the wrong length tells an attacker nothing they did
+  // not already know. Only the equal-length case, where the comparison carries real information,
+  // reaches timingSafeEqual.
   const bufA = Buffer.from(a, "utf8")
   const bufB = Buffer.from(b, "utf8")
   if (bufA.length !== bufB.length) return false
