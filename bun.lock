@@ -117,6 +117,9 @@
     "packages/scripts": {
       "name": "@packages/scripts",
       "version": "0.0.0",
+      "dependencies": {
+        "@packages/db": "workspace:*",
+      },
       "devDependencies": {
         "@packages/config": "workspace:*",
         "@packages/env": "workspace:*",
