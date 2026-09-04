@@ -228,7 +228,7 @@ export default async function LandingPage() {
         id="voice"
         eyebrow="Autonomous Verification"
         title="Voice AI verifies ambiguous links in 3 languages"
-        lead="When cross-correlation signals are inconclusive (e.g. shared student housing or family members), an autonomous Voice AI agent conducts a 30-second telephone check in the customer's native tongue to confirm or dispute linkage."
+        lead="Sarvam Bulbul speaks the agent line in English, Hindi, or Marathi. For a held payment it asks the merchant whether to cancel or release. It never executes that action on its own."
       >
         <VoiceStudio />
       </Section>

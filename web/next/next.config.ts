@@ -71,18 +71,34 @@ const nextConfig: NextConfig = {
   }),
   reactCompiler: true,
   rewrites: async () => {
-    const targetApiUrl =
-      process.env.INTERNAL_API_URL ||
-      process.env.NEXT_PUBLIC_API_URL ||
-      env.INTERNAL_API_URL ||
-      env.NEXT_PUBLIC_API_URL ||
-      "https://razorpay-buildathon-api.vercel.app"
+    const internal = process.env.INTERNAL_API_URL || env.INTERNAL_API_URL
+    const pub = process.env.NEXT_PUBLIC_API_URL || env.NEXT_PUBLIC_API_URL
+    const web = process.env.NEXT_PUBLIC_APP_URL || env.NEXT_PUBLIC_APP_URL
+    const candidate = internal || pub
+    let targetApiUrl: string | undefined
+    if (candidate) {
+      try {
+        const dest = new URL(candidate).origin
+        const site = web ? new URL(web).origin : ""
+        if (site && dest === site) {
+          if (internal && new URL(internal).origin !== site) targetApiUrl = internal
+        } else {
+          targetApiUrl = candidate
+        }
+      } catch {
+        targetApiUrl = candidate
+      }
+    }
 
     return [
-      {
-        source: "/api/:path*",
-        destination: `${targetApiUrl.replace(/\/$/, "")}/api/:path*`,
-      },
+      ...(targetApiUrl
+        ? [
+            {
+              source: "/api/:path*",
+              destination: `${targetApiUrl.replace(/\/$/, "")}/api/:path*`,
+            },
+          ]
+        : []),
       {
         source: "/blog/:path*.md",
         destination: "/llms.txt/blog/:path*",

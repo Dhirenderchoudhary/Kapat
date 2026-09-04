@@ -1,5 +1,31 @@
 # Changelog
 
+## v0.0.2
+
+[compare changes](https://github.com/Dhirenderchoudhary/Razorpay_Buildathon/compare/v0.0.1...v0.0.2)
+
+### 🚀 Enhancements
+
+- **detector-service:** Gate timing and promo signals on repeat occasions ([ad7fba4](https://github.com/Dhirenderchoudhary/Razorpay_Buildathon/commit/ad7fba4))
+- **api:** Port Louvain into the TS fallback and report which engine ran ([7ed9d14](https://github.com/Dhirenderchoudhary/Razorpay_Buildathon/commit/7ed9d14))
+- **web:** Refresh the console shell, hero and charts ([fd60e9b](https://github.com/Dhirenderchoudhary/Razorpay_Buildathon/commit/fd60e9b))
+
+### 📖 Documentation
+
+- Record the two-engine split and the regenerated numbers ([ce0379e](https://github.com/Dhirenderchoudhary/Razorpay_Buildathon/commit/ce0379e))
+
+### 🏡 Chore
+
+- **data:** Regenerate model and evaluation artifacts ([3814bae](https://github.com/Dhirenderchoudhary/Razorpay_Buildathon/commit/3814bae))
+
+### ✅ Tests
+
+- Pin cross-engine detector parity and the occasion floor ([73db13b](https://github.com/Dhirenderchoudhary/Razorpay_Buildathon/commit/73db13b))
+
+### ❤️ Contributors
+
+- Dhirender Choudhary @Dhirenderchoudhary
+
 ## v0.0.1
 
 ### 🚀 Enhancements
