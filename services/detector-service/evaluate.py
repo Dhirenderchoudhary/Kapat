@@ -32,6 +32,7 @@ Usage: python3 evaluate.py
 from __future__ import annotations
 
 import json
+import sys
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -241,12 +242,20 @@ def _write_metrics_file(result: dict) -> None:
 
 
 def main() -> None:
+    # The per-ring lines below print a rupee exposure figure, and chargeback_exposure.py formats it
+    # with a literal U+20B9. On a Windows console stdout defaults to cp1252, which cannot encode
+    # that character, so this script used to write detector_metrics.json correctly and THEN die
+    # with a UnicodeEncodeError while printing its own summary - looking like a failed evaluation
+    # when the evaluation had in fact succeeded. Force UTF-8 on the way out.
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+
     if not TEST_DATA_PATH.exists():
         raise SystemExit(
             f"{TEST_DATA_PATH} not found. Run generate_synthetic_data.py first (Phase 1). "
             "evaluate.py only ever scores the held-out test split - never the train split."
         )
-    data = json.loads(TEST_DATA_PATH.read_text())
+    data = json.loads(TEST_DATA_PATH.read_text(encoding="utf-8"))
     result = run_evaluation(data)
     _write_metrics_file(result)
 
