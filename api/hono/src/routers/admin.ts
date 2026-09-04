@@ -47,6 +47,7 @@ import {
   forbiddenErrorResponses,
   validationErrorResponses,
 } from "@/lib/error"
+import { jsonRequestBody } from "@/lib/openapi"
 import { countedTotal, paging, pagingFields } from "@/lib/paging"
 import { escapeLike, isUniqueViolation } from "@/lib/sql"
 import { consoleAdminMiddleware, requireFeature } from "@/middlewares"
@@ -339,6 +340,7 @@ const { data, error } = await unwrap(
       tags: ["Admin"],
       description:
         "Set the role on a set of accounts. Guards run per account, so some can change while others are refused; every id comes back with its own outcome.",
+      ...jsonRequestBody(roleBatchSchema),
       ...({
         "x-codeSamples": [
           {
@@ -443,6 +445,7 @@ const { data, error } = await unwrap(
       tags: ["Admin"],
       description:
         "Ban or unban a set of accounts. Guards run per account, so some can change while others are refused; every id comes back with its own outcome. A ban ends that person's sessions.",
+      ...jsonRequestBody(statusBatchSchema),
       ...({
         "x-codeSamples": [
           {
@@ -764,6 +767,7 @@ const { data, error } = await unwrap(
       tags: ["Admin"],
       description:
         "Add a rule granting console access. A leading @ makes it a domain rule, anything else must parse as an address; both are normalized lowercase.",
+      ...jsonRequestBody(allowlistCreateSchema),
       ...({
         "x-codeSamples": [
           {
@@ -863,6 +867,7 @@ const { data, error } = await unwrap(
       tags: ["Admin"],
       description:
         "Remove a set of rules in one transaction. A rule that is already gone comes back as its own not-found outcome rather than failing the request.",
+      ...jsonRequestBody(allowlistBatchSchema),
       ...({
         "x-codeSamples": [
           {
@@ -1003,6 +1008,7 @@ const { data, error } = await unwrap(
       tags: ["Admin"],
       description:
         "Remove a set of signups in one transaction. A signup that is already gone comes back as its own not-found outcome rather than failing the request.",
+      ...jsonRequestBody(waitlistBatchSchema),
       ...({
         "x-codeSamples": [
           {

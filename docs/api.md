@@ -2,7 +2,7 @@
 
 Hono app in `api/hono`. Browser and OpenAPI clients use the `/api` prefix. Razorpay webhook senders hit `/webhooks/razorpay` at the process root so dashboard routing is not part of the ingest contract.
 
-Live spec: `GET /api/openapi.json`. UI: `GET /api/docs` (feature `apiDocs`).
+Live spec: `GET /api/openapi.json`. UI: `GET /api/docs` (feature `apiDocs`). Scalar Try It uses the `servers` entry from `HONO_APP_URL` (the API process). Request bodies and query params are in the spec so a Try It call is a real request, not an empty POST.
 
 JSON envelope: `{ "data": ... }` on success. Errors use `{ "error": { "code", "message" } }` from `api/hono/src/lib/error.ts`.
 
@@ -34,11 +34,11 @@ CORS: `HONO_TRUSTED_ORIGINS`. Rate limit: `HONO_RATE_LIMIT` / window.
 
 ## Ingest
 
-| Method | Path                       | Notes                                                                                                    |
-| ------ | -------------------------- | -------------------------------------------------------------------------------------------------------- |
-| POST   | `/webhooks/razorpay`       | Signature from `RAZORPAY_WEBHOOK_SECRET`. Unique `razorpay_event_id`. New transaction may trigger detect |
-| POST   | `/api/ingest/transactions` | `{ rows: [...] }`. Upsert on `customer_ref` / `razorpay_event_id`. Does not run detect                   |
-| POST   | `/api/ingest/demo`         | Bundled `detector_train.json` + `detector_test.json`                                                     |
+| Method | Path                       | Notes                                                                                                                                                                                      |
+| ------ | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| POST   | `/webhooks/razorpay`       | Signature from `RAZORPAY_WEBHOOK_SECRET` (`X-Razorpay-Signature`). Unique `razorpay_event_id`. New transaction may trigger detect. Same-origin on the website via the `/webhooks` rewrite. |
+| POST   | `/api/ingest/transactions` | `{ rows: [...] }`. Upsert on `customer_ref` / `razorpay_event_id`. Does not run detect                                                                                                     |
+| POST   | `/api/ingest/demo`         | Bundled `detector_train.json` + `detector_test.json`                                                                                                                                       |
 
 ## Measurement
 

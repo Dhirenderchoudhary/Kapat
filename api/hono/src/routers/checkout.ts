@@ -4,6 +4,7 @@ import { describeRoute, resolver } from "hono-openapi"
 import { z } from "zod"
 
 import { ApiError, validationErrorResponses } from "@/lib/error"
+import { jsonRequestBody } from "@/lib/openapi"
 import { verifyCheckoutSignature } from "@/lib/razorpay-signatures"
 
 // Razorpay Standard Web Checkout (docs: /payments/payment-gateway/web-integration/standard).
@@ -56,7 +57,24 @@ export const checkoutRouter = new Hono()
       tags: ["Checkout"],
       description:
         "Public checkout configuration - the key ID only. The key SECRET is never exposed here or anywhere else client-reachable; it exists solely to sign server-side.",
-      responses: { 200: { description: "OK" } },
+      responses: {
+        200: {
+          description: "OK",
+          content: {
+            "application/json": {
+              schema: resolver(
+                z.object({
+                  data: z.object({
+                    keyId: z.string().nullable(),
+                    configured: z.boolean(),
+                    mode: z.enum(["live", "test"]),
+                  }),
+                }),
+              ),
+            },
+          },
+        },
+      },
     }),
     (c) =>
       c.json({
@@ -73,6 +91,7 @@ export const checkoutRouter = new Hono()
       tags: ["Checkout"],
       description:
         "Creates a Razorpay Order (POST https://api.razorpay.com/v1/orders) and returns the order id the browser needs to open Checkout. Amount is in paise and must be at least 100.",
+      ...jsonRequestBody(createOrderSchema),
       responses: {
         200: {
           description: "OK",
@@ -160,6 +179,7 @@ export const checkoutRouter = new Hono()
       tags: ["Checkout"],
       description:
         "Verifies a completed Checkout payment: HMAC-SHA256 of `order_id|payment_id` with the API key secret, compared timing-safely against razorpay_signature. A mismatch returns 400 and the payment is NOT treated as successful. Detection is not run here - the webhook is the ingestion path, so a browser that never calls this cannot suppress a real payment from being analysed.",
+      ...jsonRequestBody(verifyPaymentSchema),
       responses: {
         200: { description: "OK" },
         ...validationErrorResponses,
