@@ -1,9 +1,20 @@
 ---
 slug: /console/docs
-title: Introduction
-description: Internal documentation.
+title: Console
+description: Operator screens and what each one is for.
 ---
 
-# Introduction
+# Console
 
-Your team's internal docs live here.
+| Path             | Job                                          |
+| ---------------- | -------------------------------------------- |
+| `/`              | Overview and voice studio                    |
+| `/clusters`      | Work the queue                               |
+| `/clusters/[id]` | Read the graph, decide                       |
+| `/holds`         | Capture or refund a held payment             |
+| `/analysis`      | Live counts from Postgres                    |
+| `/evidence`      | What the detector got wrong as well as right |
+| `/metrics`       | Held-out accuracy next to today's funnel     |
+| `/connect`       | Razorpay keys, encrypted at rest             |
+
+Dismiss needs a reason. Release and reject on a hold need a name. The voice studio on `/` only asks; the hold page is where money moves.
