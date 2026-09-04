@@ -1,15 +1,15 @@
-"""Integration test proving Phase 6's exit criteria (Phases.md): "a borderline synthetic cluster
+"""Integration test proving Phase 6's exit criteria: "a borderline synthetic cluster
 runs through the full verify -> parse -> outcome cycle in at least one language."
 
 Deliberately does not import services/verifier-service/main.py: that module needs fastapi/
 pydantic, which this environment can't install (no network egress from this shell - see
-Memory.md decision 19's identical constraint for the TypeScript side). This test instead
+the identical constraint that applies on the TypeScript side). This test instead
 composes the same three modules main.py's /call handler chains together
 (conversation_flow -> call_harness.simulated_call -> response_parser), which is exactly Phase 6's
-real pipeline, per Rules.md's "one deep module, not two divergent ones" discipline already
+real pipeline, per the "one deep module, not two divergent ones" discipline already
 established for services/detector-service/main.py. main.py's FastAPI layer itself is verified
 separately, live, in an environment with network access - not silently assumed equivalent
-(matching Memory.md's own precedent of never assuming untested layers are fine).
+(never assuming an untested layer is fine because a neighbouring one passes).
 
 Run from the repo root: python3 -m unittest tests.test_verify_flow -v
 """
@@ -45,7 +45,7 @@ def run_verification(account_id: str, language_code: str, signal_type: str, tran
 
 
 class TestVerifyFlowBorderlineCluster(unittest.TestCase):
-    """PRD.md §7 Flow B: two accounts share a delivery address (moderate confidence - could be a
+    """Verification Flow B: two accounts share a delivery address (moderate confidence - could be a
     legitimate shared household). Voice verification asks about the linkage; both confirming
     they're family should come back "verified legitimate", not "ring"."""
 
@@ -55,13 +55,13 @@ class TestVerifyFlowBorderlineCluster(unittest.TestCase):
 
         self.assertEqual(result_a["outcome"], "confirmed_linked")
         self.assertEqual(result_b["outcome"], "confirmed_linked")
-        # confirmed_linked leans legitimate (Memory.md decision 14) - the closing line should
+        # confirmed_linked leans legitimate - the closing line should
         # not read as an escalation.
         self.assertIn("action nahi", result_a["closing_line"].lower() + result_b["closing_line"].lower())
         self.assertIn("delivery address", result_a["script"].lower())
 
     def test_flow_c_one_account_denies_in_english(self) -> None:
-        """PRD.md §7 Flow C: one account holder denies knowledge entirely - strengthens the ring
+        """Verification Flow C: one account holder denies knowledge entirely - strengthens the ring
         hypothesis rather than resolving it as a household."""
         result = run_verification(
             "acct_c", "en-IN", "shared_payment", "No, I have no idea what account that is, never heard of it."
@@ -70,7 +70,7 @@ class TestVerifyFlowBorderlineCluster(unittest.TestCase):
         self.assertIn("payment", result["script"].lower())
 
     def test_flow_d_no_response_in_marathi(self) -> None:
-        """PRD.md §7 Flow D: no answer - the dashboard should show "unconfirmed", not fabricate
+        """Verification Flow D: no answer - the dashboard should show "unconfirmed", not fabricate
         a result, and the cluster's evidence stays visible either way."""
         result = run_verification("acct_d", "mr-IN", "coordinated_timing", None)
         self.assertEqual(result["outcome"], "no_response")

@@ -1,4 +1,4 @@
-"""Phase 1 (Phases.md): synthetic data generator for the fraud-ring detector.
+"""Phase 1: synthetic data generator for the fraud-ring detector.
 
 Produces accounts, transactions, and account_links (Architecture.md §5) with two deliberately
 different populations mixed together, plus a baseline of unconnected accounts:
@@ -9,25 +9,24 @@ different populations mixed together, plus a baseline of unconnected accounts:
     a ring rather than a coincidence).
   - LEGITIMATE LOOK-ALIKES: accounts sharing only a delivery address (a real household or
     roommates), with independent payment methods, independent phone numbers, uncoordinated
-    transaction timing, and no promo-code reuse. These exist specifically so precision/recall
-    (PRD.md §9) is not measured against an easy dataset - Phases.md Phase 1 exit criteria is
+    transaction timing, and no promo-code reuse. These exist specifically so precision/recall is not measured against an easy dataset - Phase 1 exit criteria is
     explicit that a dataset where every connected account is a ring is worthless.
   - BASELINE: ordinary accounts with no shared signals with anyone, the majority of the data.
 
 Every account_links row this script writes carries a labeled signal_type and confidence
-(Rules.md Principle 9) and matches the check constraint on packages/db/src/schema/fraud.ts's
+(Principle 9) and matches the check constraint on packages/db/src/schema/fraud.ts's
 account_links table. ground_truth_clusters records which account groups are real rings vs.
 look-alikes, for evaluate.py (Phase 3) to score against - the generator is the only place this
 ground truth exists, so evaluate.py must never guess it from account_links alone.
 
 Deterministic and dependency-free (stdlib only) on purpose: `python3 generate_synthetic_data.py`
 must run the same way on any machine, with no pip install required to reproduce the committed
-train/test split (Phases.md Phase 1 deliverable: "Fixed, committed train/test split").
+train/test split (Phase 1 deliverable: "Fixed, committed train/test split").
 
 Usage:
     python3 generate_synthetic_data.py [--seed 42] [--out-dir ../../data]
 
-All data is synthetic (Rules.md Principle 6) - no real accounts, addresses, phone numbers, or
+All data is synthetic (Principle 6) - no real accounts, addresses, phone numbers, or
 transactions anywhere in this file's output.
 """
 

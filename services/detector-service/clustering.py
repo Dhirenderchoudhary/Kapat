@@ -1,12 +1,12 @@
 """Community detection over the account signal graph (Architecture.md §2.1, §3).
 
-Phase 2 (Phases.md). Louvain via networkx's built-in implementation, not python-louvain and not
+Phase 2. Louvain via networkx's built-in implementation, not python-louvain and not
 a Graph Neural Network.
 
 The GNN trade-off is deliberate and explained in Architecture.md §3 - simplicity and
 explainability over marginal accuracy at this stage, not a shortcut to hide.
 
-The python-louvain substitution is a real failure-recovery story (PRD.md §12), not a silent swap:
+The python-louvain substitution is a real failure-recovery story, not a silent swap:
 `pip install python-louvain` fails to build under modern setuptools (AttributeError:
 install_layout - a known incompatibility in that package's old build backend). Architecture.md §4
 names "python-louvain or networkx" explicitly, so networkx.algorithms.community.louvain_communities

@@ -2,10 +2,10 @@
 
 Simulated-call-first: this is the default call path for the whole build, not a fallback - real
 Twilio/Exotel (twilio_call.py) is a stretch item gated behind this working end to end first
-(Phases.md Phase 6, "Stretch, priority order").
+(Phase 6, "Stretch, priority order").
 
 This module does not run real telephony, TTS, or STT - it never invents a transcript itself
-(Rules.md Principle 5: no fabricated confidence, and a made-up transcript is the same class of
+(Principle 5: no fabricated confidence, and a made-up transcript is the same class of
 problem). The caller supplies the account holder's simulated response - drawn from
 data/synthetic_response_test_set.json for a batch/demo run, or typed by a human running a live
 demo - and this function's only job is to shape that into the same {"transcript", "reached"}

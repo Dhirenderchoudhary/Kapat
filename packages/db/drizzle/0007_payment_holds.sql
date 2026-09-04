@@ -1,12 +1,12 @@
--- Phase 15 (Memory.md decision 30): transaction holds.
+-- Phase 15: transaction holds.
 --
 -- Backs the "hold, don't cancel" feature. The mechanism is Razorpay manual capture: a payment in
 -- the authorized state has funds held but unsettled for up to 3 days. The agent declines to
 -- capture; the merchant releases (capture) or rejects (refund). If nobody decides, Razorpay
 -- auto-refunds the customer - the correct failure mode for a system that might be wrong.
 --
--- Hand-written, not drizzle-kit generated (registries unreachable - see Memory.md decisions
--- 20/21/25). Matches packages/db/src/schema/holds.ts exactly.
+-- Hand-written, not drizzle-kit generated (drizzle-kit could not run in the environment these
+-- migrations were written in). Matches packages/db/src/schema/holds.ts exactly.
 CREATE TABLE IF NOT EXISTS "payment_holds" (
 	"id" text PRIMARY KEY NOT NULL,
 	"razorpay_payment_id" text NOT NULL,

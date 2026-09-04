@@ -13,7 +13,7 @@ import { check } from "drizzle-orm/pg-core"
 //     checkout code), and having it readable is what lets the dashboard show WHICH account is
 //     connected without decrypting anything.
 //   - Nothing in this system ever needs a write scope on the merchant's Razorpay account. The
-//     client only ever issues GET /v1/payments (Rules.md Principle 1 extends here: the agent
+//     client only ever issues GET /v1/payments (Principle 1 extends here: the agent
 //     cannot act on a merchant's payments even if a bug tried to).
 export const razorpayConnections = pgTable(
   "razorpay_connections",

@@ -1,9 +1,9 @@
-"""DB-level idempotency guarantees (PRD.md FR-11, Rules.md Principle 3: "app-level checks are for
+"""DB-level idempotency guarantees (Principle 3: "app-level checks are for
 error messages, not the guarantee").
 
 Exercises the exact SQL patterns api/hono/src/routers/webhooks.ts and clusters.ts run against
 Postgres - ON CONFLICT DO NOTHING on accounts.customer_ref and transactions.razorpay_event_id
-(migration 0005_account_idempotency.sql closed the accounts gap - see Memory.md decision 21), and
+(migration 0005_account_idempotency.sql closed the accounts gap), and
 the compare-and-set UPDATE ... WHERE status <> 'resolved' that makes a cluster decision
 execute-at-most-once. See tests/db_test_helper.py's docstring for why this shells out to `psql`
 instead of importing a Python Postgres driver, and for why these tests SKIP (not fail) without a
@@ -87,9 +87,9 @@ class TestWebhookIdempotency(unittest.TestCase):
 
     def test_bypassing_the_app_and_inserting_a_duplicate_customer_ref_directly_is_rejected(self) -> None:
         # Proves the guarantee lives in the database, not just in the app's ON CONFLICT clause -
-        # exactly what Rules.md Principle 3 asks for. Note: psql without -v ON_ERROR_STOP=1
+        # exactly what Principle 3 asks for. Note: psql without -v ON_ERROR_STOP=1
         # still exits 0 even when a statement inside the script errors (verified empirically
-        # against a real Postgres 16 - Memory.md decision 21) - the error only shows up on
+        # against a real Postgres 16) - the error only shows up on
         # stderr, so that's what this asserts on, not the process's exit code.
         with FraudSchemaSandbox() as sandbox:
             sandbox.q("INSERT INTO accounts (id, customer_ref) VALUES ('acct_1', 'cust_1')")
@@ -123,7 +123,7 @@ class TestDecisionIdempotency(unittest.TestCase):
             self.assertEqual(second.stdout.strip(), "")  # no row returned - nothing updated
 
     def test_escalate_leaves_cluster_open_for_a_later_final_decision(self) -> None:
-        # escalate moves status to pending_review (Design.md §1.2, PRD.md §7 Flow C), which is
+        # escalate moves status to pending_review (Design.md §1.2, verification Flow C), which is
         # NOT "resolved" - a later freeze/block/dismiss on the same cluster must still succeed.
         with FraudSchemaSandbox() as sandbox:
             sandbox.q("INSERT INTO clusters (id, risk_score) VALUES ('cl_1', 0.8)")

@@ -71,7 +71,7 @@ services:
   # Fraud-ring detector (Architecture.md §2.1). /detect-rings is fully wired
   # (graph_builder.py -> clustering.py -> cluster_scorer.py, Phase 2/3/4) - not run as a compose
   # stack this session (no Docker daemon reachable; validated instead via native Postgres in the
-  # cloud container - Memory.md decisions 19-21), so treat this service definition as unbuilt
+  # cloud container), so treat this service definition as unbuilt
   # until a real `docker compose up` smoke test happens on a machine with Docker.
   detector-service:
     build:

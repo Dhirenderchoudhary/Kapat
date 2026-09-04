@@ -115,8 +115,8 @@ docs/images/                  static figures for docs and slides only. The app d
 tests/                        Python unittest + tests/razorpay.test.mjs (24 node tests)
 ```
 
-Note: several code comments reference `Memory.md` and `Rules.md`. **Those files no longer exist.**
-Treat the references as historical. Do not recreate them without asking.
+Note: code comments cite numbered principles ("Principle 5", "Principle 9"). Those are defined in
+`docs/principles.md`, reconstructed from the ~120 places the code cites them.
 
 ---
 

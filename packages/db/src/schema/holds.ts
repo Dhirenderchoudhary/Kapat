@@ -15,7 +15,7 @@ import { accounts } from "@/schema/fraud"
  *   merchant releases  ->  POST /v1/payments/:id/capture  ->  money settles
  *   merchant rejects   ->  refund, or simply let the window expire
  *
- * Rules.md Principle 1 in its strongest form: the agent's power is limited to NOT ACTING. It never
+ * Principle 1 in its strongest form: the agent's power is limited to NOT ACTING. It never
  * captures, never refunds, never cancels. Declining to capture is the only lever it has, and even
  * that reverses itself automatically in the customer's favour if no human decides. A held payment
  * that everyone forgets about ends up refunded to the customer, which is the correct failure mode
@@ -32,7 +32,7 @@ export const paymentHolds = pgTable(
       .primaryKey()
       .$defaultFn(() => crypto.randomUUID()),
     // Razorpay payment id (pay_...). Unique: one hold per payment, enforced by the database so a
-    // redelivered webhook cannot open a second hold on the same money (Rules.md Principle 3).
+    // redelivered webhook cannot open a second hold on the same money (Principle 3).
     razorpayPaymentId: text("razorpay_payment_id").notNull().unique(),
     razorpayOrderId: text("razorpay_order_id"),
     accountId: text("account_id")

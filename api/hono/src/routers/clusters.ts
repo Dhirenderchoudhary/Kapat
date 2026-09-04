@@ -24,7 +24,7 @@ import {
   notFoundErrorResponses,
   validationErrorResponses,
 } from "@/lib/error"
-import { countedTotal, paging, pagingFields } from "@/lib/paging"
+import { paging, pagingFields } from "@/lib/paging"
 
 // Architecture.md §6: GET /api/clusters, GET /api/clusters/:id. Deliberately no auth middleware
 // here - Design.md §4 lists "no merchant auth/login flows" under What NOT To Design for this
@@ -34,7 +34,7 @@ import { countedTotal, paging, pagingFields } from "@/lib/paging"
 const CLUSTER_STATUSES = ["pending_review", "pending_verification", "resolved"] as const
 
 // verifications.outcome's meaning is inverted from what the words suggest in this ring-
-// verification context (Memory.md decision 14, Design.md §3): confirming awareness of the linked
+// verification context (Design.md §3): confirming awareness of the linked
 // account leans *legitimate* (family/shared household), denying it *strengthens* the ring
 // hypothesis. This maps the raw outcome to the label Design.md §1.1's "Verification status"
 // column actually wants a merchant to read - getting this backwards is exactly the "easy place to
@@ -48,8 +48,8 @@ const VERIFICATION_STATUS_LABEL: Record<string, string> = {
 }
 const NOT_YET_TRIGGERED = "not_yet_triggered"
 
-// Phase 7 (Phases.md): POST /:id/decision. Only this row may trigger anything downstream
-// (Rules.md Principle 1) - the detector's risk_score and the verifier's outcome never freeze or
+// Phase 7: POST /:id/decision. Only this row may trigger anything downstream
+// (Principle 1) - the detector's risk_score and the verifier's outcome never freeze or
 // block anything by themselves.
 const DECISION_ACTIONS = ["freeze", "block", "escalate", "dismiss"] as const
 
@@ -71,7 +71,7 @@ const decisionBodySchema = z
 
 // The status a cluster moves to once this decision executes. freeze/block/dismiss all close the
 // open review (Design.md §1.2's four actions); escalate deliberately keeps the cluster in front
-// of a human for deeper manual review (PRD.md §7 Flow C) rather than resolving it.
+// of a human for deeper manual review (verification Flow C) rather than resolving it.
 const STATUS_AFTER_DECISION: Record<
   (typeof DECISION_ACTIONS)[number],
   (typeof CLUSTER_STATUSES)[number]
@@ -173,7 +173,7 @@ async function latestVerificationStatusByCluster(
   return byCluster
 }
 
-// Phase 8's live-agent gap (Memory.md decision 23/24): services/detector-service's real
+// Phase 8's live-agent gap: services/detector-service's real
 // build_graph -> find_clusters -> score_cluster pipeline was fully built and tested, but nothing
 // in this API ever called its live POST /detect-rings and persisted the result - webhooks.ts
 // only ever inserts raw accounts/transactions. POST /detect below is that missing wire: it calls
@@ -206,7 +206,7 @@ const detectResponseSchema = z.object({
 // account_links created by detection - re-running POST /detect after new accounts/transactions
 // arrive must never create a duplicate row for the same detected grouping/edge. The real
 // guarantee is onConflictDoNothing below, matching account_links_pair_signal_uidx /
-// clusters' primary key (Rules.md Principle 3: the database constraint is the guarantee, this is
+// clusters' primary key (Principle 3: the database constraint is the guarantee, this is
 // just how the same content reliably produces the same id to conflict against).
 function deterministicId(prefix: string, parts: string[]): string {
   const hash = createHash("sha256").update(parts.join("|")).digest("hex").slice(0, 20)
@@ -428,7 +428,7 @@ const { data, error } = await unwrap(apiClient.clusters.detect.$post({ json: {} 
       // Only clusters the detector actually FLAGGED reach the merchant's queue. Communities it
       // computed but scored below its threshold are real output, but they are the ones with an
       // ordinary innocent explanation - surfacing them is precisely the 41.7%-precision behaviour
-      // the Phase 10 redesign removed (Memory.md decision 25). They are counted in the response so
+      // the Phase 10 redesign removed. They are counted in the response so
       // the run stays auditable, just not persisted as flagged rings.
       const flaggedClusters = result.clusters.filter((c) => c.score.flagged)
 
@@ -454,7 +454,7 @@ const { data, error } = await unwrap(apiClient.clusters.detect.$post({ json: {} 
               .values(members.map((accountId) => ({ clusterId, accountId })))
               .onConflictDoNothing()
 
-            // Rules.md Principle 2: the detection itself is part of the cluster's audit chain, not
+            // Principle 2: the detection itself is part of the cluster's audit chain, not
             // just the merchant's later decision. Storing the detector's own explanation verbatim
             // means the dashboard renders the agent's actual reasoning rather than the dashboard's
             // paraphrase of it, and a reviewer can see why this group was flagged months later.
@@ -476,7 +476,7 @@ const { data, error } = await unwrap(apiClient.clusters.detect.$post({ json: {} 
                 explanation: detected.score.explanation,
                 features: detected.score.features,
                 memberAccountIds: members,
-                note: "Detection only. Rules.md Principle 1: this flags a cluster for a human to review - it does not freeze, block or act on anything by itself.",
+                note: "Detection only. Principle 1: this flags a cluster for a human to review - it does not freeze, block or act on anything by itself.",
               },
             })
           }
@@ -522,7 +522,7 @@ const { data, error } = await unwrap(apiClient.clusters.detect.$post({ json: {} 
     describeRoute({
       tags: ["Clusters"],
       description:
-        "Full cluster detail - members, evidence, verifications, decisions, audit log in one call (Rules.md Principle 2)",
+        "Full cluster detail - members, evidence, verifications, decisions, audit log in one call (Principle 2)",
       ...({
         "x-codeSamples": [
           {
@@ -669,7 +669,7 @@ const { data, error } = await unwrap(apiClient.clusters[":id"].$get({ param: { i
     describeRoute({
       tags: ["Clusters"],
       description:
-        "Merchant decision on a flagged cluster - freeze/block/escalate/dismiss (Rules.md Principle 1: only this row may trigger the executor). Idempotent: a cluster that already has a final decision returns 409 rather than executing a second time (Rules.md Principle 3's database-level-guarantee spirit, extended past the webhook case it names).",
+        "Merchant decision on a flagged cluster - freeze/block/escalate/dismiss (Principle 1: only this row may trigger the executor). Idempotent: a cluster that already has a final decision returns 409 rather than executing a second time (Principle 3's database-level-guarantee spirit, extended past the webhook case it names).",
       ...({
         "x-codeSamples": [
           {
@@ -723,7 +723,7 @@ const { data, error } = await unwrap(
       }
 
       const result = await db.transaction(async (tx) => {
-        // Rules.md Principle 1: only inserting this row may trigger anything downstream - it
+        // Principle 1: only inserting this row may trigger anything downstream - it
         // happens before any status change or audit write, never the other way round.
         const [decision] = await tx
           .insert(merchantDecisions)
@@ -753,8 +753,8 @@ const { data, error } = await unwrap(
           .from(clusterMembers)
           .where(eq(clusterMembers.clusterId, id))
 
-        // One structured audit record of what the executor did (Rules.md Principle 2). This IS
-        // the executor for a synthetic-data sandbox (Rules.md Principle 6): there's no real
+        // One structured audit record of what the executor did (Principle 2). This IS
+        // the executor for a synthetic-data sandbox (Principle 6): there's no real
         // Razorpay account to actually freeze, so "executing" means recording the effect
         // honestly rather than silently implying a live payment processor was contacted.
         await tx.insert(auditLog).values({
@@ -767,7 +767,7 @@ const { data, error } = await unwrap(
             decidedBy,
             affectedAccountIds: memberRows.map((r) => r.accountId),
             clusterStatusAfter: updated.status,
-            note: "Synthetic sandbox executor (Rules.md Principle 6) - no real Razorpay API is called; this records what the decision would trigger downstream.",
+            note: "Synthetic sandbox executor (Principle 6) - no real Razorpay API is called; this records what the decision would trigger downstream.",
           },
         })
 

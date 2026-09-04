@@ -51,7 +51,7 @@ export const webhooksRouter = new Hono().post(
   describeRoute({
     tags: ["Webhooks"],
     description:
-      "Receives Razorpay webhook events (payment.authorized / payment.captured / payment.failed), verifies X-Razorpay-Signature as HMAC-SHA256 of the raw body using RAZORPAY_WEBHOOK_SECRET, ingests the payment idempotently, and re-runs ring detection so a new ring surfaces on the dashboard within seconds. Idempotent end to end: Razorpay retries failed deliveries, and a redelivered event is a no-op (Rules.md Principle 3).",
+      "Receives Razorpay webhook events (payment.authorized / payment.captured / payment.failed), verifies X-Razorpay-Signature as HMAC-SHA256 of the raw body using RAZORPAY_WEBHOOK_SECRET, ingests the payment idempotently, and re-runs ring detection so a new ring surfaces on the dashboard within seconds. Idempotent end to end: Razorpay retries failed deliveries, and a redelivered event is a no-op (Principle 3).",
     responses: {
       200: { description: "Accepted" },
       400: { description: "Signature mismatch or malformed payload" },
@@ -116,7 +116,7 @@ export const webhooksRouter = new Hono().post(
     }
 
     // Upsert the account on customer_ref, then the transaction on the Razorpay payment id. Both
-    // guarantees are database constraints, not application checks (Rules.md Principle 3), so a
+    // guarantees are database constraints, not application checks (Principle 3), so a
     // Razorpay retry - or two deliveries racing - cannot duplicate anything.
     const account = await db.transaction(async (tx) => {
       const [inserted] = await tx
@@ -186,7 +186,7 @@ export const webhooksRouter = new Hono().post(
     // Razorpay auto-refunds it after 3 days if nobody captures it. Declining to capture is the only
     // power the agent has, and it expires in the customer's favour. A payment.captured event has
     // already settled - there is nothing left to hold, and the agent will not reach for a refund to
-    // simulate one (Rules.md Principle 1: it does not move money, in either direction).
+    // simulate one (Principle 1: it does not move money, in either direction).
     let hold: { id: string; expiresAt: string; reason: string } | null = null
     if (insertedTxn && event === "payment.authorized") {
       const decision = await decideHold(account.id)

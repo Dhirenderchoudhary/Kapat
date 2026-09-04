@@ -1,6 +1,6 @@
 // Design.md §1.2's evidence panel: "a direct translation of the graph into sentences a merchant
 // can read in five seconds - don't make them infer it from the graph alone." Groups the raw
-// account_links rows (Rules.md Principle 9: every one already carries a real signal_type and
+// account_links rows (Principle 9: every one already carries a real signal_type and
 // confidence) by signal_type and turns each group into one plain sentence.
 
 export type EvidenceRow = {

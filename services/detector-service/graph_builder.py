@@ -1,9 +1,9 @@
 """Builds the account signal graph (Architecture.md §2.1).
 
-Phase 2 (Phases.md). Deliberately does NOT read account_links: in production those rows would
+Phase 2. Deliberately does NOT read account_links: in production those rows would
 not exist yet - they are what this module's output eventually populates. Here they'd also be the
 generator's ground truth for account grouping, so reading them would be scoring this detector
-against an answer key handed to it (Rules.md's "don't train the evaluation on the same synthetic
+against an answer key handed to it (the "don't train the evaluation on the same synthetic
 batch" spirit, applied one level down: don't detect signals by reading the generator's answer key
 either). Every signal below is instead re-derived independently from the same raw fields a real
 detector would have: accounts.delivery_address / payment_method_fingerprint / phone_number, and
@@ -11,14 +11,14 @@ transactions.created_at / promo_code.
 
 Nodes: accounts (accounts.id).
 Edges: one per shared signal between two accounts, each carrying a signal_type and a confidence
-in [0, 1] - never an unlabeled edge (Rules.md Principle 9). signal_type is one of:
+in [0, 1] - never an unlabeled edge (Principle 9). signal_type is one of:
 shared_address | shared_payment | shared_phone_pattern | coordinated_timing | shared_promo
 (matches the account_links.signal_type check constraint in packages/db/src/schema/fraud.ts).
 An edge with more than one signal_type keeps every one of them in its "signals" list - a ring
 sharing five signal types is stronger evidence than one sharing one, and that must stay visible,
 not get collapsed into a single opaque number.
 
-Confidence values below are fixed heuristic constants, not a calibrated model (Rules.md
+Confidence values below are fixed heuristic constants, not a calibrated model (the governing principles
 Principle 5 - say so, don't dress up a guess as a probability):
   - shared_address / shared_payment: exact-match signals, high confidence (0.9 / 0.85) - a false
     positive here means two different people typed the identical string, which is rare.
@@ -39,7 +39,7 @@ from typing import Callable
 
 import networkx as nx
 
-# Heuristic constants (Rules.md Principle 5: these are judgment calls, not fitted parameters -
+# Heuristic constants (Principle 5: these are judgment calls, not fitted parameters -
 # tuning them against real chargeback outcomes is future work, not this phase's job).
 COORDINATED_TIMING_WINDOW = timedelta(minutes=10)
 SHARED_PROMO_WINDOW = timedelta(hours=24)
@@ -95,7 +95,7 @@ def _parse_dt(value: str) -> datetime:
 
 def _add_signal(g: nx.Graph, a: str, b: str, signal_type: str, confidence: float) -> None:
     """Adds (or strengthens) one labeled signal on the edge a-b. Never creates an unlabeled edge -
-    every call site names a real signal_type (Rules.md Principle 9)."""
+    every call site names a real signal_type (Principle 9)."""
     if a == b:
         return
     confidence = round(min(max(confidence, 0.0), 1.0), 2)

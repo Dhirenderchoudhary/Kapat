@@ -1,27 +1,27 @@
-"""Held-out precision/recall and false-positive cost (Architecture.md §7, PRD.md §9).
+"""Held-out precision/recall and false-positive cost (Architecture.md §7).
 
-Phase 3 (Phases.md). Runs the full graph_builder -> clustering -> cluster_scorer pipeline
+Phase 3. Runs the full graph_builder -> clustering -> cluster_scorer pipeline
 against the held-out test split of generate_synthetic_data.py's output and prints honest
 numbers - including how many legitimate look-alikes (shared households) were wrongly flagged,
-and at what confidence (Phases.md Phase 3 exit criteria, verbatim).
+and at what confidence (Phase 3 exit criteria, verbatim).
 
-Never evaluates on the same synthetic batch the detector was tuned against (Rules.md's explicit
+Never evaluates on the same synthetic batch the detector was tuned against (the explicit
 anti-pattern): this script only ever reads data/detector_test.json, the split
 generate_synthetic_data.py (Phase 1) carved out and never touches for tuning. If that file is
 missing, this refuses to fall back to the train split silently - it errors out and says why.
 
 Cluster matching uses intersection-over-union (IOU) against ground_truth_clusters, the only place
 Phase 1's true labels exist. A predicted cluster "matches" a ground-truth group at IOU >=
-IOU_MATCH_THRESHOLD - a judgment call (Rules.md Principle 5), not a mathematical necessity: it
+IOU_MATCH_THRESHOLD - a judgment call (Principle 5), not a mathematical necessity: it
 says a predicted cluster only counts as recovering a ring if it's substantially that ring, not
 merely touching it.
 
-No fabricated rupee cost (Rules.md Principle 5): generate_synthetic_data.py does not model
+No fabricated rupee cost (Principle 5): generate_synthetic_data.py does not model
 chargebacks, merchant churn, or verification friction, so this script does not invent a currency
 figure for false positives. What it prints instead is the literal, honest thing Phase 3's exit
 criteria asks for - a count and a confidence distribution.
 
-Since Phase 4 (Phases.md), each predicted cluster's score also carries a transaction_risk
+Since Phase 4, each predicted cluster's score also carries a transaction_risk
 contribution and a chargeback_exposure_paise estimate (transaction_risk.py, chargeback_exposure.py)
 - printed alongside each ring's recovery line below, traceable to the same transactions
 throughout (see cluster_scorer.py's docstring for what "exposure" honestly means here).
@@ -149,7 +149,7 @@ def run_evaluation(data: dict) -> dict:
     )
     precision_no_threshold = unthresholded_true_positives / len(scored) if scored else None
 
-    # The number Phases.md's Phase 3 exit criteria names explicitly, by name: how many legitimate
+    # The number Phase 3's exit criteria names explicitly: how many legitimate
     # look-alikes got wrongly flagged, and at what confidence.
     lookalike_outcomes = []
     for la in lookalikes:
@@ -198,7 +198,7 @@ def run_evaluation(data: dict) -> dict:
         "cost_model_note": (
             "No calibrated false-positive cost (rupees, chargeback rate, merchant churn) exists yet: "
             "generate_synthetic_data.py does not model chargebacks or verification friction, so a "
-            "currency figure here would be invented, not measured (Rules.md Principle 5). The honest "
+            "currency figure here would be invented, not measured (Principle 5). The honest "
             "cost signal is n_lookalikes_wrongly_flagged_high_confidence and the risk_score distribution "
             "above - each one is a real household that would see a hold or verification prompt it did "
             "nothing to earn."

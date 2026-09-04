@@ -14,7 +14,7 @@ running services/detector-service container over HTTP (Architecture.md §6's doc
 "(internal) POST services/detector-service /detect-rings"), gets back real clusters with real
 evidence, and persists them. That is the one place graph_builder -> clustering -> cluster_scorer's
 real output becomes rows in Postgres - not this script, and not a local reimplementation of the
-pipeline (Memory.md decision 23/24: an earlier version of this script called that pipeline
+pipeline (an earlier version of this script called that pipeline
 directly in Python, which worked but bypassed the actual live agent entirely - this version
 doesn't, so what ends up on the dashboard is genuinely what the running agent detected).
 
@@ -46,7 +46,7 @@ POSTGRES_URL = os.environ.get("POSTGRES_URL")
 
 
 def load_combined_dataset() -> dict:
-    """Same shape/logic as run_batch.py's load_combined_dataset() (Memory.md decision 21) -
+    """Same shape/logic as run_batch.py's load_combined_dataset() -
     reimplemented here, not imported, specifically so this script stays free of run_batch.py's
     module-level `import cluster_scorer` / `clustering` / `graph_builder` chain, which pulls in
     networkx - a dependency this script has no other reason to need."""

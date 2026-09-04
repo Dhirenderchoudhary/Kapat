@@ -1,7 +1,7 @@
-"""Rules.md tdd guidance: written before cluster_scorer.py has real logic, test-first, mirroring
+"""the governing principles tdd guidance: written before cluster_scorer.py has real logic, test-first, mirroring
 tests/test_clustering.py's fixture so both suites reason about the same accounts.
 
-Directly encodes Rules.md's own example wording: "a synthetic ring of 4 accounts clusters
+Directly encodes the original specification's example wording: "a synthetic ring of 4 accounts clusters
 together, and a synthetic legitimate shared-household pair does *not* get flagged at high
 confidence."
 
@@ -50,7 +50,7 @@ class TestClusterScorer(unittest.TestCase):
         self.assertLess(self.lookalike_result["risk_score"], HIGH_CONFIDENCE_FLOOR)
 
     def test_ring_scores_meaningfully_higher_than_lookalike(self) -> None:
-        # The comparative claim Rules.md actually cares about, independent of exact thresholds.
+        # The comparative claim the governing principles actually cares about, independent of exact thresholds.
         self.assertGreater(self.ring_result["risk_score"], self.lookalike_result["risk_score"])
 
     def test_risk_score_is_bounded(self) -> None:
@@ -72,7 +72,7 @@ class TestClusterScorer(unittest.TestCase):
                 self.assertIn(acc, self.ring_ids)
 
     def test_score_notes_it_is_a_heuristic_not_a_calibrated_model(self) -> None:
-        # Rules.md Principle 5: no fabricated confidence - the output must say plainly that this
+        # Principle 5: no fabricated confidence - the output must say plainly that this
         # is a hand-built heuristic, not a trained/calibrated probability.
         self.assertIn("scoring_method", self.ring_result)
         self.assertEqual(self.ring_result["scoring_method"], "heuristic")
@@ -83,7 +83,7 @@ if __name__ == "__main__":
 
 
 class TestCorroborationGating(unittest.TestCase):
-    """Phase 10 (Memory.md decision 25): the ceiling rule that fixed precision from 41.7% to 100%
+    """Phase 10: the ceiling rule that fixed precision from 41.7% to 100%
     on the held-out split. These tests pin down the BEHAVIOUR that fix depends on, so a future
     change to the weights can't silently undo it while leaving the older, looser tests green.
 

@@ -3,11 +3,11 @@
 Script structure is fixed by Design.md §3: identify -> state the finding -> ask -> listen, one
 clarifying re-ask maximum if unclear -> close. Sample phrasing for hi-IN/en-IN/mr-IN is in
 Design.md §3 - the templates below follow that phrasing, parameterized by which signal_type
-was actually found (Rules.md Principle 9: never a vague "you're linked to another account",
+was actually found (Principle 9: never a vague "you're linked to another account",
 always the specific signal).
 
 This is a ring-linkage question ("are you aware of this other account"), not a
-transaction-authorization question - see Memory.md decision 14 before touching this file or
+transaction-authorization question - read that distinction before touching this file or
 response_parser.py: the outcome meanings are inverted from a single-transaction verifier.
 
 Have a fluent speaker sanity-check the hi-IN/mr-IN phrasing before recording (Design.md §3's own
@@ -73,7 +73,7 @@ _CLARIFYING_REASK: dict[str, str] = {
 }
 
 # Step 5 - close: tell them what happens next, worded per outcome so the closing line never
-# implies the wrong thing regardless of what was actually said (Memory.md decision 14 - saying
+# implies the wrong thing regardless of what was actually said (saying
 # something generic here risks the same inversion bug this whole module is designed to avoid).
 _CLOSING_LINES: dict[str, dict[str, str]] = {
     "en-IN": {
@@ -105,7 +105,7 @@ def build_opening_script(language_code: str, signal_type: str) -> str:
     """Steps 1-3 (identify, state the finding, ask) - the text a call harness sends to TTS."""
     lang = _language_or_default(language_code)
     phrase_map = _SIGNAL_PHRASES.get(signal_type)
-    # Never silently drop an unrecognized signal_type (Rules.md Principle 9) - fall back to the
+    # Never silently drop an unrecognized signal_type (Principle 9) - fall back to the
     # literal signal_type rather than a vague "something" the account holder can't act on.
     signal_phrase = phrase_map[lang] if phrase_map else signal_type
     return _OPENING_TEMPLATES[lang].format(signal=signal_phrase)

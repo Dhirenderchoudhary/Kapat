@@ -1,7 +1,7 @@
 """Scores a detected cluster and assembles its evidence (Architecture.md 2.1).
 
-Phase 3 (Phases.md), built test-first per Rules.md's tdd guidance. Substantially redesigned in
-Phase 10 (Memory.md decision 25) to fix a real precision failure - see below.
+Phase 3, built test-first per the project's tdd guidance. Substantially redesigned in
+Phase 10 to fix a real precision failure - see below.
 
 ============================================================================================
 THE ALGORITHM, IN ONE SENTENCE
@@ -100,7 +100,7 @@ is still capped and still never flagged, because none of its overlaps is somethi
 doesn't do. That case is tested directly in tests/test_cluster_scorer.py.
 
 ============================================================================================
-HONEST LIMITS (Rules.md Principle 5 - read before quoting any number from this file)
+HONEST LIMITS (Principle 5 - read before quoting any number from this file)
 ============================================================================================
 1. These weights are judgment calls informed by domain reasoning and the cited industry write-ups.
    They are NOT fitted, trained, or calibrated against outcome data. risk_score is a ranking
@@ -247,7 +247,7 @@ SIGNAL_LABEL = {
 
 def _explain(*, signal_types_seen: set[str], ceiling_applied: bool, raw_risk: float, risk_score: float) -> list[str]:
     """Plain-language reasons a merchant can actually read, derived from the same values that
-    produced the score - never written independently of it (Rules.md Principle 9: evidence is
+    produced the score - never written independently of it (Principle 9: evidence is
     traceable, and that includes the explanation of the score itself)."""
     reasons: list[str] = []
 

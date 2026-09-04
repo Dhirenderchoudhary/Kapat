@@ -13,8 +13,8 @@ import { verifyCheckoutSignature } from "@/lib/razorpay-signatures"
 // which is the only honest way to demonstrate live detection end to end.
 //
 // Implemented with plain fetch + node:crypto rather than the `razorpay` npm SDK: the SDK could not
-// be installed in any environment this project has run in (package registries return 403 - see
-// Memory.md), and for two endpoints and one HMAC the SDK earns nothing. Same HTTP contract either
+// be installed in any environment this project has run in (package registries return 403), and for
+// two endpoints and one HMAC the SDK earns nothing. Same HTTP contract either
 // way.
 
 const RAZORPAY_API = "https://api.razorpay.com/v1"

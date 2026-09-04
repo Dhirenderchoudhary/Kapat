@@ -1,15 +1,15 @@
-"""Parses a call transcript into a verification outcome (Design.md §3, Rules.md Principle 4).
+"""Parses a call transcript into a verification outcome (Design.md §3, Principle 4).
 
-Rule-based first, LLM-assisted only for genuinely ambiguous transcripts (Rules.md Principle 4).
+Rule-based first, LLM-assisted only for genuinely ambiguous transcripts (Principle 4).
 As of Phase 6 the LLM-assist path is NOT wired: no LLM API credential exists in this repo, and
-faking an "llm"-handled result without actually calling one would violate Rules.md Principle 5
+faking an "llm"-handled result without actually calling one would violate Principle 5
 (no fabricated confidence). So every result here is `handled_by: "rules"` - a transcript the
 keyword rules genuinely can't classify comes back `unclear` honestly, rather than a guessed
 answer dressed up as LLM output. Wiring a real LLM fallback for the unclear bucket is a
-documented next step, not a build target for this phase (Rules.md's anti-pattern warning against
+documented next step, not a build target for this phase (the anti-pattern warning against
 scope creep applies here too).
 
-Outcome meaning is inverted vs. a single-transaction verifier (Memory.md decision 14, restated
+Outcome meaning is inverted vs. a single-transaction verifier (restated
 in packages/db/src/schema/fraud.ts on the verifications table):
   - confirmed_linked: the account holder confirms awareness of the linked account - leans
     legitimate (family/shared household).
@@ -25,7 +25,7 @@ from __future__ import annotations
 
 import re
 
-# Keyword banks for Design.md §3's three demo languages only (Rules.md Principle 7: the
+# Keyword banks for Design.md §3's three demo languages only (Principle 7: the
 # architecture supports Sarvam's full language catalog, but only hi-IN/en-IN/mr-IN are ever
 # claimed to work live). Both Devanagari and common romanized spellings are included, since
 # Sarvam's STT (saaras:v3) or a human running the simulated-call demo could produce either.
@@ -78,7 +78,7 @@ def _count_all_hits(
     """Counts confirm/deny/hedge keyword hits with ONE shared non-overlapping span map across
     all three categories combined - not three independent passes.
 
-    Real bug this fixed (Memory.md decision 21): with three separate passes, a short keyword
+    Real bug this fixed: with three separate passes, a short keyword
     nested inside a longer one double-counted the same evidence within its own category (deny's
     "nahi" sitting inside "mahit nahi" made one denial phrase look like two, occasionally
     outweighing a genuine hedge signal elsewhere in the sentence), *and* a keyword from a
@@ -150,7 +150,7 @@ def parse(transcript: str | None, language_code: str) -> dict:
     )
 
     # Both signals present, or hedging language at least as strong as whatever confirm/deny
-    # signal is there - rules genuinely can't safely pick a side (Rules.md Principle 4).
+    # signal is there - rules genuinely can't safely pick a side (Principle 4).
     # Force-guessing here would be exactly the kind of fabricated confidence Principle 5 forbids.
     if confirm_hits > 0 and deny_hits > 0:
         return {"outcome": "unclear", "confidence": 0.3, "handled_by": "rules"}

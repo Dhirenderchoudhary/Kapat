@@ -14,8 +14,8 @@ This is still the *simulated* call harness (Architecture.md §9 - simulated-call
 default path, not a fallback): there's no live telephony or Sarvam STT/TTS behind it yet, so the
 caller supplies the account holder's simulated response transcript directly
 (`simulated_transcript` / `simulated_reask_transcript`). Omitting one is a legitimate way to
-simulate an unanswered call (Flow D, PRD.md §7) - it is not an error, and this endpoint never
-invents a transcript to paper over that (Rules.md Principle 5).
+simulate an unanswered call (Flow D) - it is not an error, and this endpoint never
+invents a transcript to paper over that (Principle 5).
 """
 
 from fastapi import FastAPI
@@ -36,8 +36,8 @@ def health() -> dict:
 class CallRequest(BaseModel):
     cluster_id: str
     account_id: str
-    language_code: str  # hi-IN | en-IN | mr-IN for the live demo (Rules.md Principle 7)
-    signal_type: str  # which account_links signal_type triggered this call (Rules.md Principle 9)
+    language_code: str  # hi-IN | en-IN | mr-IN for the live demo (Principle 7)
+    signal_type: str  # which account_links signal_type triggered this call (Principle 9)
     # Simulated-call-first (Architecture.md §9): the caller supplies what the account holder
     # said, since this harness doesn't run real telephony/STT. None simulates "call not
     # answered" for the initial attempt / the clarifying re-ask respectively.
@@ -49,7 +49,7 @@ class CallResponse(BaseModel):
     outcome: str  # confirmed_linked | denied_linked | unclear | no_response
     transcript: str | None = None
     confidence: float | None = None
-    handled_by: str | None = None  # "rules" - Rules.md Principle 4: log which path handled it
+    handled_by: str | None = None  # "rules" - Principle 4: log which path handled it
     opening_script: str
     closing_line: str
 

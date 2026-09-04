@@ -1,5 +1,5 @@
-"""Lightweight test coverage for transaction_risk.py (Phase 4, Phases.md). Not the tdd-mandated
-suite (Rules.md's tdd guidance names test_clustering.py/test_cluster_scorer.py specifically), but
+"""Lightweight test coverage for transaction_risk.py (Phase 4). Not the tdd-mandated
+suite (the project's tdd guidance names test_clustering.py/test_cluster_scorer.py specifically), but
 the same discipline applies: assert the two shapes this module actually needs to distinguish
 before trusting its output.
 

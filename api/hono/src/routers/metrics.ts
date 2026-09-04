@@ -11,7 +11,7 @@ import { z } from "zod"
 // clusters.ts (Design.md §4: no merchant auth/login flows in this build).
 //
 // Two very different kinds of number live in this one response, and this file is careful never
-// to blur them (Rules.md Principle 5 - no fabricated confidence):
+// to blur them (Principle 5 - no fabricated confidence):
 //
 //   - detector/verifier metrics are OFFLINE, held-out evaluation numbers, computed by
 //     evaluate.py and evaluate_verifier.py against data neither pipeline was tuned on. This
@@ -55,7 +55,7 @@ const detectorMetricsSchema = z.object({
   n_true_rings: z.number(),
   n_lookalikes: z.number(),
   n_predicted_clusters: z.number(),
-  // Phase 10 (Memory.md decision 25). Optional rather than required so a detector_metrics.json
+  // Phase 10. Optional rather than required so a detector_metrics.json
   // written by the pre-threshold evaluate.py still parses instead of collapsing the whole card to
   // "no metrics found" - an older file is stale, not corrupt, and the dashboard should say so
   // rather than pretend nothing was ever measured.
@@ -257,7 +257,7 @@ const { data, error } = await unwrap(apiClient.metrics.$get())`,
       detector: detectorParsed?.success ? detectorParsed.data : null,
       detectorNote: detectorParsed?.success
         ? null
-        : "No held-out detector metrics found. Run `python3 services/detector-service/evaluate.py` to generate data/detector_metrics.json (Rules.md Principle 5: no fabricated recall/precision).",
+        : "No held-out detector metrics found. Run `python3 services/detector-service/evaluate.py` to generate data/detector_metrics.json (Principle 5: no fabricated recall/precision).",
       verifier: verifierParsed?.success ? verifierParsed.data : null,
       verifierNote: verifierParsed?.success
         ? null
