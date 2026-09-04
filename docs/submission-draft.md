@@ -86,19 +86,25 @@ generator never produces: **8 / 10**, with both failures published rather than t
 **Would a trained model do better?** (`data/model_comparison.json`) - we measured it instead of
 assuming:
 
-| Method                                  | Held-out AP | Adversarial |
-| --------------------------------------- | ----------- | ----------- |
-| **Corroboration heuristic (shipped)**   | 1.000       | **8 / 10**  |
-| Gradient boosting                       | 1.000       | 7 / 10      |
-| Random forest                           | 1.000       | 6 / 10      |
-| Logistic regression                     | 1.000       | 6 / 10      |
-| Isolation forest (**no labels at all**) | 1.000       | n/a         |
+| Method                                        | Easy-split AP | Graded-split cost | Adversarial |
+| --------------------------------------------- | ------------- | ----------------- | ----------- |
+| **Hybrid: heuristic + random forest (ships)** | 1.000         | **4**             | **9 / 10**  |
+| Random forest                                 | 1.000         | 6                 | -           |
+| Gradient boosting                             | 1.000         | 7                 | -           |
+| Logistic regression                            | 1.000         | 12                | -           |
+| Corroboration heuristic (no training)         | 1.000         | 45                | 8 / 10      |
+| Model trained on the EASY split only          | 1.000         | -                 | 6 / 10      |
 
-The held-out column is all ties - including for a model trained with no labels - which means that
-column is measuring the split, not the method. The adversarial column separates them, and the
-hand-built scorer wins: both trained models newly flag an ordinary family sharing an address, a
-card and a dinner hour. The random forest's top features turn out to be exactly the signals the
-heuristic weights by hand; it rediscovered the heuristic rather than beating it. Full reasoning in
+The easy-split column is all ties - including for a hand-written rule that never saw a label -
+which means that column is measuring the split, not the method. Two harder evaluations separate
+them. On a graded dataset where the classes genuinely overlap, the hybrid makes 4 costly errors
+where the rule alone makes 45. On ten hand-authored adversarial populations neither generator
+produces, the hybrid scores 9/10 to the rule's 8/10, a margin of exactly one case. The model
+trained on the easy split scores 6/10, newly flagging two ordinary households: evidence that the
+harder dataset, not the bigger ensemble, is what produced the gain. The forest's top features turn
+out to be the signals the heuristic weights by hand, so it re-derived the rule rather than finding
+something the rule missed. The shipped scorer keeps the rule's plain-language explanation attached
+to every model verdict, and reports both so disagreement stays visible. Full reasoning in
 `docs/algorithm.md`.
 
 **Verifier** - 100% (39/39) on a held-out synthetic response set across three languages, after
