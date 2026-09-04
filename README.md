@@ -8,9 +8,11 @@ All data in this repository is synthetic. Accounts, phones, addresses, and verif
 
 ## Demo
 
-https://github.com/Dhirenderchoudhary/Razorpay_Buildathon/raw/main/.github/assets/AI_RISK_MANAGER.mp4
+<video src="https://github.com/Dhirenderchoudhary/Kapat/raw/canary/.github/assets/AI_RISK_MANAGER.mp4" controls="controls" muted="muted" style="max-width: 100%; height: auto; border-radius: 8px;">
+  Your browser does not support the video tag. <a href=".github/assets/AI_RISK_MANAGER.mp4">Download Demo Video</a>
+</video>
 
-> **Walkthrough video**: Demonstrating coordinated fraud ring detection, graph cluster inspection, multi-language voice verification, manual capture hold settlements, and the merchant audit trail. (File: [.github/assets/AI_RISK_MANAGER.mp4](.github/assets/AI_RISK_MANAGER.mp4))
+> **Walkthrough video**: Demonstrating coordinated fraud ring detection, graph cluster inspection, multi-language voice verification, manual capture hold settlements, and the merchant audit trail.
 
 ## Live
 
