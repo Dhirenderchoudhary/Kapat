@@ -101,12 +101,33 @@ def _load() -> dict[str, Any]:
             return _state
 
         model = joblib.load(MODEL_PATH)
+
+        # A pickle is only guaranteed to mean the same thing under the scikit-learn version that
+        # wrote it. Across versions sklearn itself warns that unpickling "might lead to breaking
+        # code or invalid results", and an estimator that loads with a warning and then returns
+        # confident-looking probabilities is the same silent-nonsense failure the feature-contract
+        # check above exists to prevent - just from a different cause. This does not disable the
+        # model on a mismatch, because refusing to score on a patch bump would be worse than
+        # scoring, but it records the mismatch so GET /model can say it out loud instead of the
+        # warning going to a log nobody reads.
+        trained_with = card.get("sklearn_version")
+        try:
+            import sklearn  # noqa: PLC0415 - optional dependency, same reason as joblib above
+
+            running = sklearn.__version__
+        except ImportError:
+            running = None
+        version_mismatch = bool(trained_with and running and trained_with != running)
+
         _state = {
             "available": True,
             "model": model,
             "card": card,
             "threshold": float(card.get("operating_threshold", 0.5)),
             "needs_heuristic_feature": bool(card.get("expects_heuristic_score_feature")),
+            "sklearn_trained_with": trained_with,
+            "sklearn_running": running,
+            "version_mismatch": version_mismatch,
         }
     except Exception as exc:  # noqa: BLE001 - any failure here must degrade, never propagate
         _state = {"available": False, "reason": f"Failed to load the trained model: {exc}"}
@@ -130,6 +151,16 @@ def model_info() -> dict[str, Any]:
         "held_out": card.get("held_out"),
         "held_out_average_precision": card.get("held_out_average_precision"),
         "caveat": card.get("honest_caveat"),
+        "sklearn_trained_with": state.get("sklearn_trained_with"),
+        "sklearn_running": state.get("sklearn_running"),
+        "sklearn_version_mismatch": state.get("version_mismatch", False),
+        "version_note": (
+            "The saved model was pickled by a different scikit-learn version than this process is "
+            "running. It still loads and scores, but sklearn does not guarantee cross-version "
+            "unpickling. Re-export with train_model.py --dataset hard --export to clear this."
+            if state.get("version_mismatch")
+            else None
+        ),
     }
 
 

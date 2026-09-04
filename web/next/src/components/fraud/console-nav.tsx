@@ -4,6 +4,7 @@ import {
   RiAlarmWarningLine,
   RiBarChartBoxLine,
   RiCloseLine,
+  RiDashboardLine,
   RiMenuLine,
   RiPauseCircleLine,
   RiPieChartLine,
@@ -23,12 +24,18 @@ import { cn } from "@/lib/utils"
 interface NavItem {
   href: string
   msgKey: MessageKey
-  icon?: RemixiconComponentType
+  icon: RemixiconComponentType
   exact?: boolean
 }
 
+/**
+ * Ordered as the work is done, not alphabetically: you look at the overview, work the queue, act
+ * on what is held, and only then go to the pages that explain how the detector reaches its
+ * verdicts. Overview used to be the one item without an icon; it has one now, because a row where
+ * five items carry a glyph and one does not reads as a mistake.
+ */
 const NAV: NavItem[] = [
-  { href: "/", msgKey: "nav.overview", exact: true },
+  { href: "/", msgKey: "nav.overview", icon: RiDashboardLine, exact: true },
   { href: "/clusters", msgKey: "nav.queue", icon: RiAlarmWarningLine },
   { href: "/holds", msgKey: "nav.holds", icon: RiPauseCircleLine },
   { href: "/analysis", msgKey: "nav.analysis", icon: RiPieChartLine },
@@ -47,62 +54,59 @@ export function ConsoleNav() {
       : pathname === item.href || pathname.startsWith(`${item.href}/`)
 
   return (
-    <header className="border-border/60 bg-background/70 sticky top-0 z-50 w-full border-b backdrop-blur-xl transition-all duration-300">
-      <div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
-        <div className="flex items-center gap-6">
-          <Link
-            href="/"
-            className="group text-foreground flex shrink-0 items-center gap-2 font-bold tracking-tight"
-          >
-            <div className="relative flex size-8 items-center justify-center rounded-lg border border-emerald-500/20 bg-emerald-500/10 text-emerald-500 shadow-[0_0_15px_-3px_rgba(16,185,129,0.3)] transition-transform group-hover:scale-105">
-              <RiShieldCheckLine className="size-5" aria-hidden />
-              <span className="absolute -top-0.5 -right-0.5 flex size-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex size-2 rounded-full bg-emerald-500"></span>
-              </span>
-            </div>
-            <div className="flex flex-col">
-              <span className="text-sm font-bold tracking-tight sm:text-base">
-                {t("nav.brand")}
-              </span>
-              <span className="-mt-1 hidden text-[10px] font-medium text-emerald-500 sm:inline dark:text-emerald-400">
-                AI Fraud Shield
-              </span>
-            </div>
-          </Link>
+    <header className="border-border bg-background/85 sticky top-0 z-50 w-full border-b backdrop-blur-md">
+      <div className="mx-auto flex h-14 w-full max-w-6xl items-center gap-6 px-4 sm:px-6">
+        {/* The mark is a mark, not a status light. It used to carry a pinging dot and a green
+            glow, both of which claimed liveness that nothing was measuring, and the glow was a
+            hardcoded emerald rgba that survived the accent change and clashed with everything
+            around it. The "AI Fraud Shield" line under the wordmark went the same way: it was
+            hardcoded English, so Hindi and Marathi readers got it untranslated, and it was
+            marketing copy in the chrome of a working console. */}
+        <Link
+          href="/"
+          className="text-foreground focus-visible:ring-ring flex shrink-0 items-center gap-2.5 rounded-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+        >
+          <span className="border-border bg-card text-primary flex size-7 items-center justify-center rounded-md border">
+            <RiShieldCheckLine className="size-4" aria-hidden />
+          </span>
+          <span className="text-[0.9375rem] font-semibold tracking-[-0.01em]">
+            {t("nav.brand")}
+          </span>
+        </Link>
 
-          <nav className="hidden items-center gap-1 md:flex" aria-label="Main">
-            {NAV.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                aria-current={isActive(item) ? "page" : undefined}
-                className={cn(
-                  "relative flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-all duration-200 lg:text-sm",
-                  isActive(item)
-                    ? "bg-accent/80 text-foreground font-semibold shadow-xs border border-border/80"
-                    : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
-                )}
-              >
-                {item.icon && <item.icon className="size-3.5 opacity-70" aria-hidden />}
-                {t(item.msgKey)}
-                {isActive(item) && (
-                  <span className="bg-primary/70 absolute right-3 bottom-0 left-3 h-[2px] rounded-full" />
-                )}
-              </Link>
-            ))}
-          </nav>
-        </div>
+        {/* One signal for "you are here", not four. The active item used to carry a background, a
+            border, a shadow, a weight change AND a separate underline bar; the underline alone is
+            unambiguous and leaves the row quiet. Labels carry the meaning, so the icons are left
+            to the mobile menu where they help scanning. */}
+        <nav className="hidden min-w-0 flex-1 items-center gap-1 md:flex" aria-label="Main">
+          {NAV.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              aria-current={isActive(item) ? "page" : undefined}
+              className={cn(
+                "relative rounded-sm px-2.5 py-4 text-sm whitespace-nowrap transition-colors",
+                "focus-visible:ring-ring focus-visible:ring-2 focus-visible:outline-none",
+                isActive(item)
+                  ? "text-foreground after:bg-primary after:absolute after:inset-x-2.5 after:bottom-0 after:h-[2px] after:content-['']"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {t(item.msgKey)}
+            </Link>
+          ))}
+        </nav>
 
-        <div className="flex items-center gap-2">
-          <div className="hidden items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/5 px-2.5 py-1 text-[11px] font-medium text-emerald-600 lg:flex dark:text-emerald-400">
-            <span className="size-1.5 animate-pulse rounded-full bg-emerald-500" />
-            <span>Telemetry Active</span>
-          </div>
+        <div className="ml-auto flex items-center gap-1">
+          {/* What used to sit here was a "Telemetry Active" pill with a pulsing dot, hardcoded to
+              say Active whether or not anything was connected, ingesting or reachable. This
+              project's own rule is that it never states what it has not measured, and an
+              always-on liveness badge is exactly that. Wiring it to real connection state would
+              be worth doing; asserting it is not. */}
           <Button
             render={<Link href="/connect" />}
             size="sm"
-            className="bg-primary hover:bg-primary/90 text-primary-foreground hidden h-8 px-3 text-xs font-semibold shadow-sm transition-all hover:scale-[1.02] sm:inline-flex"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground mr-1 hidden h-8 px-3 text-sm font-medium sm:inline-flex"
           >
             {t("nav.connect")}
           </Button>
@@ -112,8 +116,9 @@ export function ConsoleNav() {
             variant="ghost"
             size="icon"
             className="md:hidden"
-            aria-label="Toggle navigation"
+            aria-label={open ? "Close navigation" : "Open navigation"}
             aria-expanded={open}
+            aria-controls="console-nav-mobile"
             onClick={() => setOpen((v) => !v)}
           >
             {open ? (
@@ -126,34 +131,39 @@ export function ConsoleNav() {
       </div>
 
       {open && (
-        <div className="bg-background/95 border-border/80 animate-in slide-in-from-top-2 border-b px-4 py-3 backdrop-blur-2xl duration-200 md:hidden">
-          <nav className="flex flex-col gap-1.5" aria-label="Mobile">
-            {NAV.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={() => setOpen(false)}
-                className={cn(
-                  "flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors",
-                  isActive(item)
-                    ? "bg-accent font-medium text-foreground border border-border/60"
-                    : "text-muted-foreground hover:bg-muted/50 hover:text-foreground",
-                )}
-              >
-                {item.icon && <item.icon className="size-4" aria-hidden />}
-                <span>{t(item.msgKey)}</span>
-              </Link>
-            ))}
-            <div className="mt-2 border-t pt-2">
-              <Button
-                render={<Link href="/connect" />}
-                onClick={() => setOpen(false)}
-                className="w-full justify-center shadow-xs"
-                size="sm"
-              >
-                {t("nav.connect")}
-              </Button>
-            </div>
+        <div id="console-nav-mobile" className="bg-background border-border border-b md:hidden">
+          <nav className="mx-auto max-w-6xl px-4 py-2 sm:px-6" aria-label="Mobile">
+            <ul className="divide-border divide-y">
+              {NAV.map((item) => (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    onClick={() => setOpen(false)}
+                    aria-current={isActive(item) ? "page" : undefined}
+                    className={cn(
+                      "flex items-center gap-3 py-3 text-sm transition-colors",
+                      isActive(item)
+                        ? "text-foreground font-medium"
+                        : "text-muted-foreground hover:text-foreground",
+                    )}
+                  >
+                    <item.icon
+                      className={cn("size-4", isActive(item) ? "text-primary" : "opacity-60")}
+                      aria-hidden
+                    />
+                    <span>{t(item.msgKey)}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+            <Button
+              render={<Link href="/connect" />}
+              onClick={() => setOpen(false)}
+              className="mt-3 mb-2 w-full justify-center"
+              size="sm"
+            >
+              {t("nav.connect")}
+            </Button>
           </nav>
         </div>
       )}

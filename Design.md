@@ -37,6 +37,41 @@ Precision/recall on the held-out set, false-positive cost (with the specific leg
 
 ---
 
+## 1a. The evidence palette
+
+One colour system, defined once in `web/next/src/app/globals.css`. The colour that classifies
+evidence and the colour that paints the interface are the same colour, because on this product they
+mean the same thing.
+
+| Token                | Meaning                                                        |
+| -------------------- | -------------------------------------------------------------- |
+| `--evidence-benign`  | a signal an ordinary household also produces (address, card)   |
+| `--evidence-weak`    | weakly fraud-specific (coordinated timing)                     |
+| `--evidence-strong`  | no ordinary household explanation (promo funnel, SIM block)    |
+| `--primary`          | ultramarine. Links, focus, primary actions                     |
+
+Two rules hold this together:
+
+**Crimson is rationed.** `--evidence-strong` appears for strong fraud-specific evidence and for a
+flagged state, and nowhere else. Never on a heading, a button, or as decoration. On a screen where
+someone decides whether to hold a customer's money, the one red thing should always mean the same
+thing.
+
+**Green is not the accent.** In a risk queue green means "cleared", so it cannot also be the brand.
+The accent used to be `emerald-*`, hardcoded in 106 places across 16 files; the scale is now
+remapped to the ultramarine accent in the theme layer rather than rewritten at every call site. New
+code uses `primary` or the evidence tokens directly. See the comment in `globals.css`.
+
+Charts read the same tokens: `ChartPalette` in `components/fraud/charts.tsx` aliases
+`--chart-benign/-weak/-strong` onto them, so a signal class is the same colour in a chart, on a
+badge, and on a graph edge. It used to be six hex values redeclared per page, which meant a theme
+change moved the interface and left the evidence colours behind.
+
+Colour is never the sole carrier of meaning: every chart also carries a text label or a legend
+naming each class in words (see the accessibility note at the top of `charts.tsx`).
+
+---
+
 ## 2. Graph visualization design specifics
 
 - Node size proportional to account transaction volume - visually distinguishes a high-volume account from a peripheral one in the same cluster

@@ -21,6 +21,7 @@ Usage: python3 stress_test.py
 from __future__ import annotations
 
 import json
+import hashlib
 import random
 from datetime import UTC, datetime, timedelta, timezone
 from pathlib import Path
@@ -135,10 +136,31 @@ CASES = [
 ]
 
 
+def case_rng(case_name: str) -> random.Random:
+    """The RNG for one adversarial case, seeded so the case is byte-identical on every run.
+
+    This used to be `random.Random(hash(case_name) % (2**31))`. Python randomises the builtin
+    hash() of a str per process (PYTHONHASHSEED), so every execution seeded every case
+    differently: different transaction timings, therefore different time-decayed confidences for
+    coordinated_timing and shared_promo, therefore a risk_score that moved in the third and fourth
+    decimal on every run. The verdicts were stable - 8/10, and the same two failures - but the
+    scores were not reproducible, and they are quoted to four decimals in HANDOFF.md and
+    docs/algorithm.md. For a project whose central claim is that every published number is
+    re-derivable by anyone who clones the repo, a suite that cannot reproduce its own numbers is a
+    bug in exactly the thing being claimed.
+
+    sha256 is stable across processes, platforms and Python versions. train_model.py builds the
+    same cases to compare the trained models against the heuristic and MUST seed them identically,
+    which is why this lives here as one function rather than as the same line copied into both.
+    """
+    seed = int.from_bytes(hashlib.sha256(case_name.encode("utf-8")).digest()[:4], "big")
+    return random.Random(seed)
+
+
 def main() -> None:
     results = []
     for case_spec in CASES:
-        rng = random.Random(hash(case_spec["name"]) % (2**31))
+        rng = case_rng(case_spec["name"])
         spec = dict(case_spec)
         name = spec.pop("name")
         size = spec.pop("size")

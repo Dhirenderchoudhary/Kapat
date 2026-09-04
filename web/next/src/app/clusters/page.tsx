@@ -129,7 +129,7 @@ export default async function ClustersPage() {
           {clusters.length === 0 ? (
             <div className="glass-panel-elevated relative overflow-hidden rounded-2xl border p-12 text-center shadow-xl">
               <div className="bg-dot-grid pointer-events-none absolute inset-0 opacity-30" />
-              <div className="relative mx-auto flex size-20 items-center justify-center rounded-2xl border border-emerald-500/20 bg-emerald-500/10 text-emerald-500 shadow-[0_0_30px_rgba(16,185,129,0.2)]">
+              <div className="border-border bg-card text-primary relative mx-auto flex size-20 items-center justify-center rounded-2xl border">
                 <RiCheckboxCircleLine
                   className="size-10 animate-pulse text-emerald-500"
                   aria-hidden

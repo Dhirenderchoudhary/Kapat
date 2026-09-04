@@ -1,14 +1,6 @@
 "use client"
 
-import {
-  RiArrowRightLine,
-  RiCheckDoubleLine,
-  RiFlashlightLine,
-  RiNodeTree,
-  RiRadarLine,
-  RiShieldCheckLine,
-  RiSparklingLine,
-} from "@remixicon/react"
+import { RiNodeTree, RiRadarLine } from "@remixicon/react"
 import Link from "next/link"
 import { useState } from "react"
 
@@ -36,28 +28,17 @@ export function HeroSection({
 
   return (
     <section className="relative overflow-hidden border-b py-16 lg:py-24">
-      {/* Subtle Background Glow */}
-      <div
-        className="pointer-events-none absolute -top-24 left-1/2 -z-10 h-96 w-96 -translate-x-1/2 rounded-full bg-emerald-500/10 blur-3xl"
-        aria-hidden
-      />
-
       <div className="mx-auto w-full max-w-6xl px-4 sm:px-6">
         <div className="grid items-center gap-10 lg:grid-cols-12">
           {/* Left Column: Headline, Actions & Metrics */}
           <div className="space-y-6 lg:col-span-7">
-            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-600 dark:text-emerald-300">
-              <span className="relative flex size-2">
-                <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-                <span className="relative inline-flex size-2 rounded-full bg-emerald-500" />
-              </span>
-              <RiRadarLine className="size-3.5 text-emerald-500" aria-hidden />
+            <div className="text-muted-foreground inline-flex items-center gap-2 text-sm">
+              <RiRadarLine className="text-primary size-4" aria-hidden />
               <span>{t("hero.badge")}</span>
             </div>
 
-            <h1 className="text-4xl leading-[1.1] font-extrabold tracking-tight text-balance sm:text-5xl lg:text-6xl">
-              <span className="text-foreground">Stop Coordinated Fraud.</span>{" "}
-              <span className="text-emerald-500 dark:text-emerald-400">Protect Every Rupee.</span>
+            <h1 className="max-w-[19ch] text-4xl leading-[1.08] font-semibold tracking-[-0.02em] text-balance sm:text-5xl lg:text-[3.5rem]">
+              {t("hero.title")}
             </h1>
 
             <p className="text-muted-foreground max-w-2xl text-base leading-relaxed sm:text-lg">
@@ -68,13 +49,9 @@ export function HeroSection({
               <Button
                 render={<Link href="/connect" />}
                 size="lg"
-                className="group bg-primary hover:bg-primary/90 text-primary-foreground h-11 px-6 font-semibold shadow-md transition-all hover:scale-[1.01]"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground h-11 px-6 font-medium"
               >
                 <span>{t("hero.connectCta")}</span>
-                <RiArrowRightLine
-                  className="size-4 transition-transform group-hover:translate-x-0.5"
-                  aria-hidden
-                />
               </Button>
               <Button
                 render={<Link href="/clusters" />}
@@ -82,7 +59,7 @@ export function HeroSection({
                 size="lg"
                 className="h-11 px-6 backdrop-blur-md"
               >
-                <RiNodeTree className="size-4 text-emerald-500" aria-hidden />
+                <RiNodeTree className="text-primary size-4" aria-hidden />
                 <span>{t("hero.queueCta")}</span>
               </Button>
               <Button
@@ -100,41 +77,43 @@ export function HeroSection({
 
             {/* Metric Highlights with Clean, Balanced Typography */}
             {recall && precision && (
-              <div className="grid grid-cols-3 gap-3 pt-4 sm:gap-4">
-                <div className="glass-panel relative overflow-hidden rounded-xl border p-4 shadow-sm">
-                  <div className="text-muted-foreground text-[11px] font-semibold tracking-wider uppercase">
-                    True Ring Recall
-                  </div>
-                  <div className="text-foreground mt-1.5 text-2xl font-extrabold tabular-nums sm:text-3xl">
-                    {recall}
-                  </div>
-                  <div className="text-muted-foreground mt-0.5 text-xs">Full ring detection</div>
+              /* Three measurements, each labelled with what was actually measured.
+               *
+               * The labels used to read "Full ring detection", "Zero false alarms" and "Ordinary
+               * families saved" over ALL-CAPS headings. The middle one is a claim this project
+               * forbids itself: precision is 100% on one held-out split, and the adversarial suite
+               * publishes a false positive, so "zero false alarms" is not something the repo has
+               * measured or would stand behind. The strings below already existed in messages.ts
+               * in all three languages, say exactly what the number is, and were going unused.
+               *
+               * Divided by rules rather than boxed in cards: three numbers of one kind read as a
+               * row of measurements, not as three separate things. */
+              <dl className="divide-border grid grid-cols-1 gap-px pt-6 sm:grid-cols-3 sm:divide-x">
+                <div className="sm:pr-6">
+                  <dd className="text-foreground font-mono text-3xl tabular-nums">{recall}</dd>
+                  <dt className="text-muted-foreground mt-1 max-w-[22ch] text-sm">
+                    {t("hero.recallLabel")}
+                  </dt>
                 </div>
 
-                <div className="glass-panel relative overflow-hidden rounded-xl border p-4 shadow-sm">
-                  <div className="text-muted-foreground text-[11px] font-semibold tracking-wider uppercase">
-                    Precision
-                  </div>
-                  <div className="text-foreground mt-1.5 text-2xl font-extrabold tabular-nums sm:text-3xl">
-                    {precision}
-                  </div>
-                  <div className="text-muted-foreground mt-0.5 text-xs">Zero false alarms</div>
+                <div className="pt-4 sm:px-6 sm:pt-0">
+                  <dd className="text-foreground font-mono text-3xl tabular-nums">{precision}</dd>
+                  <dt className="text-muted-foreground mt-1 max-w-[22ch] text-sm">
+                    {t("hero.precisionLabel")}
+                  </dt>
                 </div>
 
-                <div className="glass-panel relative overflow-hidden rounded-xl border p-4 shadow-sm">
-                  <div className="text-muted-foreground text-[11px] font-semibold tracking-wider uppercase">
-                    Clean Households
-                  </div>
-                  <div className="text-foreground mt-1.5 text-2xl font-extrabold tabular-nums sm:text-3xl">
+                <div className="pt-4 sm:pt-0 sm:pl-6">
+                  <dd className="text-foreground font-mono text-3xl tabular-nums">
                     {wronglyFlagged !== null && totalLookalikes !== null
                       ? `${wronglyFlagged} / ${totalLookalikes}`
                       : "0 / 7"}
-                  </div>
-                  <div className="text-muted-foreground mt-0.5 text-xs">
-                    Ordinary families saved
-                  </div>
+                  </dd>
+                  <dt className="text-muted-foreground mt-1 max-w-[22ch] text-sm">
+                    {t("hero.householdsLabel")}
+                  </dt>
                 </div>
-              </div>
+              </dl>
             )}
           </div>
 
