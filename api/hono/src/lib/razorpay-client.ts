@@ -8,7 +8,7 @@
  *
  * Auth is HTTP Basic with key_id:key_secret, exactly as Razorpay's docs specify.
  *
- * NOT YET EXERCISED AGAINST THE LIVE API (Rules.md Principle 5). Every environment this project has
+ * NOT YET EXERCISED AGAINST THE LIVE API (Principle 5). Every environment this project has
  * run in blocks egress to api.razorpay.com, so this client is written from Razorpay's published
  * request/response contract and is unit-testable against recorded fixtures, but has never completed
  * a real round trip. The first real sync is the test. Treat a first-run failure here as expected

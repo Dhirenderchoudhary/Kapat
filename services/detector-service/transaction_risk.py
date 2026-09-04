@@ -1,8 +1,8 @@
-"""Lightweight per-transaction risk score (Architecture.md §2.1, PRD.md §2).
+"""Lightweight per-transaction risk score (Architecture.md §2.1).
 
-Phase 4 (Phases.md). Explicitly a simple rules-based stand-in for what a real deployment would
+Phase 4. Explicitly a simple rules-based stand-in for what a real deployment would
 get from Razorpay's own Thirdwatch - not a novel contribution, and this module, the README, and
-the demo must keep saying so (Rules.md Principle 5, PRD.md §2). This is a per-transaction signal
+the demo must keep saying so (Principle 5). This is a per-transaction signal
 that feeds into a cluster's evidence (via cluster_scorer.py) as one more input - not a standalone
 deliverable, and not a claim to have rebuilt Thirdwatch.
 
@@ -12,7 +12,7 @@ features into a single risk_score in [0, 1]:
   - amount_score: this transaction's amount vs. the account's own average (excluding itself).
     Needs at least MIN_HISTORY_FOR_AMOUNT_ANOMALY prior transactions to mean anything - with
     fewer, there is no real baseline to be anomalous against, so this scores 0 and says so in
-    "amount_basis" rather than inventing a number from an empty history (Rules.md Principle 5).
+    "amount_basis" rather than inventing a number from an empty history (Principle 5).
   - velocity_score: how many of the account's *other* transactions land within
     VELOCITY_WINDOW of this one - a burst of near-simultaneous transactions is a real,
     well-known fraud/card-testing pattern.
@@ -22,7 +22,7 @@ features into a single risk_score in [0, 1]:
 
 risk_score = WEIGHT_AMOUNT*amount_score + WEIGHT_VELOCITY*velocity_score + WEIGHT_NEWNESS*newness_score
 
-Fixed weights, a judgment call (Rules.md Principle 5) - not fitted against any labeled fraud
+Fixed weights, a judgment call (Principle 5) - not fitted against any labeled fraud
 outcome, because this dataset has none. `"scoring_method": "heuristic"` on the return value says
 so plainly, matching cluster_scorer.py's own convention.
 """
@@ -31,7 +31,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 
-# Judgment calls (Rules.md Principle 5), not fitted parameters.
+# Judgment calls (Principle 5), not fitted parameters.
 MIN_HISTORY_FOR_AMOUNT_ANOMALY = 2
 AMOUNT_ANOMALY_REFERENCE_RATIO = 5.0  # amount >= 5x the account's own average -> amount_score saturates at 1.0
 VELOCITY_WINDOW = timedelta(minutes=10)

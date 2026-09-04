@@ -1,14 +1,14 @@
 """Generates data/synthetic_response_test_set.json - synthetic account-holder call responses
 for the verifier pipeline (Architecture.md §7).
 
-Same discipline as services/detector-service/generate_synthetic_data.py (Phases.md Phase 1):
+Same discipline as services/detector-service/generate_synthetic_data.py:
 stdlib-only, deterministic (fixed seed), committed output. Scope note: this is a Phase 6 fixture
 that proves the verify -> parse -> outcome pipeline works end to end across all three demo
-languages and all four outcomes (Phases.md Phase 6 exit criteria) - it is NOT yet the held-out
+languages and all four outcomes (Phase 6 exit criteria) - it is NOT yet the held-out
 accuracy report Phase 8 calls for ("Verifier accuracy measured against
 synthetic_response_test_set.json"). That formal precision/recall-by-outcome evaluation
 (evaluate_verifier.py, only ever reading this file, never used to hand-tune response_parser.py's
-keyword banks) is real Phase 8 work, not fabricated here (Rules.md Principle 5).
+keyword banks) is real Phase 8 work, not fabricated here (Principle 5).
 
 Run from the repo root: python3 services/verifier-service/generate_synthetic_responses.py
 """

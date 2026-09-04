@@ -16,7 +16,7 @@ import { ApiError, validationErrorResponses } from "@/lib/error"
 //
 // POST /webhooks/razorpay stays the single-event path. This router is the same guarantees applied
 // to many rows at once: accounts upsert on customer_ref, transactions upsert on
-// razorpay_event_id, both ON CONFLICT DO NOTHING at the database level (Rules.md Principle 3), so
+// razorpay_event_id, both ON CONFLICT DO NOTHING at the database level (Principle 3), so
 // re-uploading the same export is a no-op rather than a duplicate-laden mess.
 
 const MAX_ROWS = 50_000
@@ -189,7 +189,7 @@ export const ingestRouter = new Hono()
     describeRoute({
       tags: ["Ingest"],
       description:
-        "Bulk-ingest mapped transaction rows (e.g. a CSV a merchant exported from their payment dashboard). Idempotent on razorpay_event_id and customer_ref at the database level, so re-uploading the same file adds nothing (Rules.md Principle 3). Ingestion only stores accounts and transactions - it does not run detection; call POST /api/clusters/detect for that.",
+        "Bulk-ingest mapped transaction rows (e.g. a CSV a merchant exported from their payment dashboard). Idempotent on razorpay_event_id and customer_ref at the database level, so re-uploading the same file adds nothing (Principle 3). Ingestion only stores accounts and transactions - it does not run detection; call POST /api/clusters/detect for that.",
       responses: {
         200: {
           description: "OK",

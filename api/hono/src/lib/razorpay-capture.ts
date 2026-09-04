@@ -2,13 +2,13 @@
  * The only two Razorpay calls in this system that change money, and both require a merchant
  * decision to reach them.
  *
- * Rules.md Principle 1 is enforced structurally rather than by convention: neither function is
+ * Principle 1 is enforced structurally rather than by convention: neither function is
  * reachable from the detector, the webhook handler, or any scheduled job. The single call site of
  * each is the holds router, inside a handler that has already loaded a merchant-supplied
  * `decidedBy` and written it to the database. There is no code path from "the agent scored
  * something" to "money moved".
  *
- * NOT YET EXERCISED AGAINST THE LIVE API (Rules.md Principle 5): every environment this project has
+ * NOT YET EXERCISED AGAINST THE LIVE API (Principle 5): every environment this project has
  * run in blocks egress to api.razorpay.com, so these are written to Razorpay's published contract
  * and unit-tested against fixtures, but no real capture or refund has been performed. The first
  * merchant decision on a real hold is the first real test.

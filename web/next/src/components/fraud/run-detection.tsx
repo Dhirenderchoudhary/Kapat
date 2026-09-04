@@ -20,7 +20,7 @@ type DetectSummary = {
  * Triggers the detector agent (POST /api/clusters/detect -> detector-service /detect-rings) and
  * reports what it actually did.
  *
- * Rules.md Principle 1 is why this is a button and not a background job that fires on ingestion:
+ * Principle 1 is why this is a button and not a background job that fires on ingestion:
  * detection is an explicit act with a visible result, and even then all it does is put clusters in
  * front of a human. Nothing here freezes, blocks, or moves money - only a merchant_decisions row
  * does that, and only a person can create one.

@@ -23,7 +23,7 @@ import { apiClient, unwrap } from "@/lib/api/client"
 // No merchant auth/login on these pages (Design.md §4) - every decision made here is attributed
 // to this placeholder identity rather than inventing a fake login system. Wiring a real merchant
 // identity is future work once auth exists on this dashboard, not something to fake now
-// (Rules.md Principle 5).
+// (Principle 5).
 const DECIDED_BY_PLACEHOLDER = "dashboard-merchant"
 
 type DecisionAction = "freeze" | "block" | "escalate" | "dismiss"
@@ -50,7 +50,7 @@ const ACTION_LABEL: Record<string, string> = {
 
 // Design.md §1.2's Decide section: Freeze / Block / Escalate / Dismiss. Freeze/Block/Escalate
 // confirm before firing (ConfirmDialog, matching every other "are you sure" in the app); Dismiss
-// requires a reason picked from a short set of options, not a free-text box (Rules.md
+// requires a reason picked from a short set of options, not a free-text box (the governing principles
 // Principle 10 - the reason is data the false-positive-cost metric depends on, enforced at the
 // schema level by merchant_decisions_dismiss_reason_check, not just this UI).
 export function ClusterDecide({
@@ -176,8 +176,8 @@ export function ClusterDecide({
           <DialogHeader>
             <DialogTitle>Dismiss this cluster</DialogTitle>
             <DialogDescription>
-              A reason is required (Rules.md Principle 10) - it feeds the false-positive-cost
-              metric, so pick the one that actually matches what you found.
+              A reason is required (Principle 10) - it feeds the false-positive-cost metric, so pick
+              the one that actually matches what you found.
             </DialogDescription>
           </DialogHeader>
 

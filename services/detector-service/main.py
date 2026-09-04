@@ -4,14 +4,14 @@ Contract (Architecture.md §6): POST /detect-rings is the single deep-module bou
 service exposes - the caller (api/hono) sends accounts/transactions, gets back clusters with
 evidence. Everything inside (graph_builder.py, clustering.py, cluster_scorer.py,
 transaction_risk.py, chargeback_exposure.py) is an implementation detail behind that one
-contract, per the codebase-design skill referenced in Rules.md.
+contract, per the codebase-design skill referenced in the governing principles.
 
 Phase 2/3/4 status: wired for real. build_graph() -> find_clusters() -> score_cluster() is the
 live pipeline (Architecture.md §2.1); score_cluster() also runs Phase 4's transaction_risk.py /
-chargeback_exposure.py when accounts/transactions are supplied, per Phases.md's Phase 4 exit
+chargeback_exposure.py when accounts/transactions are supplied, per Phase 4's exit
 criteria (a cluster's evidence includes a transaction risk contribution and a rupee exposure
 figure, both traceable to specific transactions). This mirrors evaluate.py's pipeline call
-exactly - no separate/divergent logic lives here (Rules.md: one deep module, not two).
+exactly - no separate/divergent logic lives here (one deep module, not two).
 """
 
 from typing import Any

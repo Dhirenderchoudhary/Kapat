@@ -1,6 +1,6 @@
-"""Rules.md tdd guidance: written before response_parser.py has real logic, test-first.
+"""the governing principles tdd guidance: written before response_parser.py has real logic, test-first.
 
-Directly encodes Design.md §3's response_parser outcome table and Memory.md decision 14's
+Directly encodes Design.md §3's response_parser outcome table and its
 inverted meaning (confirming awareness leans *legitimate*, denying it *strengthens* the ring
 hypothesis) - the whole point of this suite is to pin that inversion down so it can never
 silently flip back to the single-transaction verifier's original meaning.
@@ -73,7 +73,7 @@ class TestResponseParserUnclear(unittest.TestCase):
         self.assertEqual(result["outcome"], "unclear")
 
     def test_contradictory_transcript_is_unclear(self) -> None:
-        # says both "yes I know" and "no idea" - rules can't safely pick one, per Rules.md
+        # says both "yes I know" and "no idea" - rules can't safely pick one, per the governing principles
         # Principle 4 this is exactly the genuinely-ambiguous case, not a case to force-guess.
         result = response_parser.parse(
             "Yes I know them, actually no, I have no idea who that is.", "en-IN"

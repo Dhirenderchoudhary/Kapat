@@ -1,5 +1,34 @@
 # Changelog
 
+## v0.0.4
+
+[compare changes](https://github.com/Dhirenderchoudhary/Kapat/compare/v0.0.3...v0.0.4)
+
+### 🩹 Fixes
+
+- **ci:** Retry bun audit on advisory registry timeouts ([3f01280](https://github.com/Dhirenderchoudhary/Kapat/commit/3f01280))
+- **ci:** Treat npm audit 503 as a registry outage, not a vuln ([271a062](https://github.com/Dhirenderchoudhary/Kapat/commit/271a062))
+- **scripts:** Typecheck via @packages/db instead of a relative src import ([34dcd03](https://github.com/Dhirenderchoudhary/Kapat/commit/34dcd03))
+- **auth:** Include bun types so tsdown.config typechecks ([110c465](https://github.com/Dhirenderchoudhary/Kapat/commit/110c465))
+- **ci:** Do not run tsc -p when tests have no tsconfig ([3f7babb](https://github.com/Dhirenderchoudhary/Kapat/commit/3f7babb))
+- **ci:** Rename bun tests so bun test tests finds them ([ab93c54](https://github.com/Dhirenderchoudhary/Kapat/commit/ab93c54))
+
+### 📖 Documentation
+
+- Judge-facing architecture and fix CI format plus audit timeout ([f2d8df6](https://github.com/Dhirenderchoudhary/Kapat/commit/f2d8df6))
+
+### 🏡 Chore
+
+- **ci:** Bump Bun to 1.4.1 so audit no longer times out ([a97c0a7](https://github.com/Dhirenderchoudhary/Kapat/commit/a97c0a7))
+
+### 🎨 Styles
+
+- Format docs/submission-draft.md for oxfmt ([0c0f4a7](https://github.com/Dhirenderchoudhary/Kapat/commit/0c0f4a7))
+
+### ❤️ Contributors
+
+- Dhirender Choudhary @Dhirenderchoudhary
+
 ## v0.0.3
 
 [compare changes](https://github.com/Dhirenderchoudhary/Kapat/compare/v0.0.2...v0.0.3)

@@ -23,7 +23,7 @@ const HOLD_STATUSES = ["held", "released", "rejected", "expired"] as const
 
 const decisionSchema = z.object({
   decidedBy: z.string().trim().min(1).max(200),
-  // Required on reject, exactly like merchant_decisions.reason (Rules.md Principle 10): a rejection
+  // Required on reject, exactly like merchant_decisions.reason (Principle 10): a rejection
   // without a stated reason is how false-positive rates become unmeasurable.
   note: z.string().trim().max(2000).optional(),
 })

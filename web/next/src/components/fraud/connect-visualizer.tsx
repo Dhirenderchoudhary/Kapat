@@ -1,7 +1,6 @@
 "use client"
 
 import {
-  RiCheckDoubleLine,
   RiCpuLine,
   RiDatabase2Line,
   RiGitBranchLine,

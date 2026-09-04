@@ -6,6 +6,24 @@ All data in this repository is synthetic. Accounts, phones, addresses, and verif
 
 **The agent never captures, refunds, or cancels money.** Detection and voice only produce evidence. A named merchant decision is the only thing that can freeze a cluster, capture a hold, or refund a hold. If nobody decides, Razorpay's authorization window expires and the customer is refunded.
 
+## Live
+
+| Surface          | URL                                                                                                                  |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------- |
+| Console          | <https://kapat.dhirenderchoudhary.com>                                                                               |
+| API              | <https://razorpay-buildathon-api.vercel.app>                                                                         |
+| API, same origin | `https://kapat.dhirenderchoudhary.com/api/*` (the console proxies `/api`, so the browser makes no cross-origin call) |
+| Webhook          | `https://razorpay-buildathon-api.vercel.app/webhooks/razorpay`                                                       |
+| OpenAPI          | <https://razorpay-buildathon-api.vercel.app/api/openapi.json>                                                        |
+
+Point Razorpay's webhook at the API host, not the console host. The console proxies `/api` only, so
+`/webhooks/razorpay` on `kapat.dhirenderchoudhary.com` returns 404.
+
+`https://api.kapat.dhirenderchoudhary.com` is configured in DNS but **not currently serving**: it
+resolves, but the TLS handshake fails because the certificate covers `*.dhirenderchoudhary.com`, and
+a wildcard matches one label, not the two in `api.kapat`. Use the API URL above until that host has
+a certificate of its own.
+
 ## Stack
 
 | Layer               | Path                           | Role                                                                         |
@@ -129,16 +147,16 @@ Rings 0.59–0.79, households 0.28–0.30. The precision jump is a modelling bug
 
 | Method                             | Precision | Recall   | Costly errors (FP×1 + FN×4) |
 | ---------------------------------- | --------- | -------- | --------------------------- |
-| Hybrid (heuristic + random forest) | **90.9%** | **100%** | **4**                       |
-| Random forest                      | 87.0%     | 100%     | 6                           |
-| Gradient boosting                  | 85.1%     | 100%     | 7                           |
-| Hist gradient boosting             | 85.1%     | 100%     | 7                           |
-| Logistic regression                | 76.9%     | 100%     | 12                          |
-| Extra trees                        | 76.9%     | 100%     | 12                          |
+| Hybrid (heuristic + random forest) | **95.2%** | **100%** | **2**                       |
+| Random forest                      | 95.2%     | 100%     | 2                           |
+| Hist gradient boosting             | 92.9%     | 97.5%    | 7                           |
+| Extra trees                        | 80.0%     | 100%     | 10                          |
+| Gradient boosting                  | 80.0%     | 100%     | 10                          |
+| Logistic regression                | 78.4%     | 100%     | 11                          |
 | Corroboration heuristic alone      | 66.0%     | 82.5%    | 45                          |
 | Isolation forest (no labels)       | 0.645 AP  | n/a      | n/a                         |
 
-Threshold chosen on train by expected cost, not F1. The 1:4 cost ratio is a policy dial in the report, not a rupee measurement. The model always runs **next to** the heuristic; disagreement stays visible. Missing sklearn or a model-card mismatch falls back to the heuristic and `GET` on the detector's `/model` says so.
+Threshold chosen on train by expected cost, not F1, taking the midpoint of the widest band of thresholds tied at the minimum so the operating point does not sit on the edge of a plateau. The 1:4 cost ratio is a policy dial in the report, not a rupee measurement. The model always runs **next to** the heuristic; disagreement stays visible. Missing sklearn or a model-card mismatch falls back to the heuristic and `GET` on the detector's `/model` says so.
 
 These numbers validate the **implementation** on synthetic data whose generator encodes the same household-vs-ring assumption the scorer uses. They do not validate that assumption on real chargebacks.
 
@@ -190,10 +208,17 @@ python3 services/detector-service/make_figures.py
 
 ## Docs
 
-| File                                     | Contents                                 |
-| ---------------------------------------- | ---------------------------------------- |
-| [`Architecture.md`](Architecture.md)     | Components, schema, engines, env         |
-| [`Design.md`](Design.md)                 | Console screens, evidence colours, voice |
-| [`ABOUT.md`](ABOUT.md)                   | Problem and product, for a short brief   |
-| [`docs/algorithm.md`](docs/algorithm.md) | Graph, Louvain, corroboration, model     |
-| [`docs/api.md`](docs/api.md)             | HTTP contract as implemented             |
+Start at [`docs/`](docs/README.md), which orders these by what you are trying to do.
+
+| File                                           | Contents                                            |
+| ---------------------------------------------- | --------------------------------------------------- |
+| [`ABOUT.md`](ABOUT.md)                         | Problem and product, for a short brief              |
+| [`Architecture.md`](Architecture.md)           | Components, schema, engines, env                    |
+| [`Design.md`](Design.md)                       | Console screens, evidence colours, voice            |
+| [`docs/algorithm.md`](docs/algorithm.md)       | Graph, Louvain, corroboration, model                |
+| [`docs/api.md`](docs/api.md)                   | HTTP contract as implemented                        |
+| [`docs/metrics.md`](docs/metrics.md)           | Every number, its source file, how to reproduce it  |
+| [`docs/running.md`](docs/running.md)           | Local setup, seeding, webhooks, environment traps   |
+| [`docs/testing.md`](docs/testing.md)           | The three test tiers, and the ten that skip quietly |
+| [`docs/principles.md`](docs/principles.md)     | The constraints the code cites by number            |
+| [`docs/verification.md`](docs/verification.md) | What has been verified end to end, and what has not |

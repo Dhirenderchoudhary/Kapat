@@ -1,9 +1,9 @@
-"""Rules.md tdd guidance: written before call_harness/simulated_call.py has real logic.
+"""the governing principles tdd guidance: written before call_harness/simulated_call.py has real logic.
 
 Pins down the harness contract every caller (main.py's /call handler, evaluate_verifier.py in a
 later phase) depends on: {"transcript": str | None, "reached": bool}, matching a real
 Twilio/Sarvam-backed harness's shape (Architecture.md §9) even though this one never does real
-telephony/STT (Rules.md Principle 5 - it doesn't invent a transcript, the caller supplies one).
+telephony/STT (Principle 5 - it doesn't invent a transcript, the caller supplies one).
 
 Run from the repo root: python3 -m unittest tests.test_simulated_call -v
 """

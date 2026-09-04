@@ -15,7 +15,7 @@ import { runSync, startBackfill } from "@/lib/razorpay-sync"
 // The live ingestion path: a merchant connects their own Razorpay account once, and the agent pulls
 // their payments and runs detection without anyone exporting a CSV.
 //
-// Scope discipline (Rules.md Principle 1, extended to the integration boundary): this router only
+// Scope discipline (Principle 1, extended to the integration boundary): this router only
 // ever performs GET /v1/payments against Razorpay. There is no code path here that can capture,
 // refund, or reverse a payment, and the credential is never returned to any client once stored.
 

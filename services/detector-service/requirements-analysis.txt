@@ -1,6 +1,9 @@
 # Offline analysis tooling - NOT installed in the detector-service container.
 # train_model.py and make_figures.py are run by hand to produce data/model_comparison.json
 # and docs/images/*; the live /detect-rings path needs none of this.
-scikit-learn>=1.5
-numpy>=1.26
-matplotlib>=3.9
+# Pinned exactly, not floored: the model numbers in data/model_comparison.json are only
+# reproducible against a fixed scikit-learn. An open >= floor let gradient boosting drift
+# from 85.1%/7 to 78.4%/11 between versions while the docs still quoted the old row.
+scikit-learn==1.9.0
+numpy==2.5.2
+matplotlib==3.11.1

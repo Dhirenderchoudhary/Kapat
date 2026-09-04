@@ -218,10 +218,36 @@ def choose_threshold_by_cost(y_true: np.ndarray, proba: np.ndarray) -> tuple[flo
     Called ONLY with training-split scores. Returning the curve as well as the argmin matters: a
     threshold sitting on a sharp spike is fragile even when its number looks best, and a reader can
     see that from the curve and not from the scalar.
+
+    The cost curve is usually flat across a band of thresholds rather than pointed at one. Taking
+    a plain argmin over that band returns whichever tied threshold the sweep happened to reach
+    first, which puts the operating point hard against the edge of the plateau: the neighbouring
+    threshold on one side is already worse. Probabilities differ in their last bits between
+    scikit-learn/numpy builds, so an edge-sitting choice moves when the environment moves, and the
+    reported precision moves with it.
+
+    So among every threshold tied on the best (expected_cost, recall), take the widest run of
+    consecutive tied thresholds and return its midpoint. That is the same "widest margin to the
+    nearest thing that would change the answer" rule select_threshold.py applies to the heuristic,
+    and it puts the operating point as far from either edge as the data allows.
     """
     curve = [metrics_at(y_true, proba, float(t)) for t in np.arange(0.05, 0.96, 0.025)]
-    best = min(curve, key=lambda m: (m["expected_cost"], -m["recall"]))
-    return best["threshold"], curve
+
+    def rank(m: dict) -> tuple[float, float]:
+        return (m["expected_cost"], -m["recall"])
+
+    best_rank = min(rank(m) for m in curve)
+    tied = [i for i, m in enumerate(curve) if rank(m) == best_rank]
+
+    runs: list[list[int]] = [[tied[0]]]
+    for i in tied[1:]:
+        if i == runs[-1][-1] + 1:
+            runs[-1].append(i)
+        else:
+            runs.append([i])
+
+    widest = max(runs, key=len)
+    return curve[widest[len(widest) // 2]]["threshold"], curve
 
 
 def evaluate_split(name: str, train_path: Path, test_path: Path) -> dict:
@@ -252,7 +278,9 @@ def evaluate_split(name: str, train_path: Path, test_path: Path) -> dict:
             "test_average_precision": round(float(average_precision_score(y_te, proba_te)), 4),
             "test_roc_auc": round(float(roc_auc_score(y_te, proba_te)), 4) if len(set(y_te)) > 1 else None,
             "operating_threshold": thr,
-            "threshold_chosen_on": "training split, by minimum expected cost",
+            "threshold_chosen_on": (
+                "training split, midpoint of the widest threshold band tied at minimum expected cost"
+            ),
             "test_at_operating_threshold": metrics_at(y_te, proba_te, thr),
             "cost_curve_on_train": curve,
         }
@@ -299,7 +327,25 @@ def evaluate_split(name: str, train_path: Path, test_path: Path) -> dict:
         for k, v in results.items()
         if "test_at_operating_threshold" in v
     ]
-    ranked.sort(key=lambda kv: kv[1])
+
+    # Expected cost alone leaves ties, and export_model() ships ranked[0]. Sorting on cost only
+    # meant a tie fell through to dict insertion order, so which model went into production was
+    # decided by the order models() happens to declare them in. Stated in full instead:
+    #
+    #   1. lowest expected cost      - the cost model is the whole point of the ranking
+    #   2. highest recall            - a missed ring is priced at 4x a false positive, so on equal
+    #                                  cost prefer the method that misses fewer rings
+    #   3. hybrid over a bare model  - the hybrid takes the heuristic's own score as a feature, so
+    #                                  shipping it keeps the hand-built rule inside the decision
+    #                                  rather than beside it. On a genuine tie, prefer the scorer a
+    #                                  merchant can be given a reason from.
+    #   4. name                      - nothing left to decide on; break it so runs are repeatable
+    def rank_key(kv: tuple[str, float]) -> tuple[float, float, int, str]:
+        name, cost = kv
+        recall = results[name]["test_at_operating_threshold"]["recall"]
+        return (cost, -recall, 0 if name.startswith("hybrid") else 1, name)
+
+    ranked.sort(key=rank_key)
 
     # Where on the difficulty ladder does each method actually break?
     best_key = ranked[0][0]

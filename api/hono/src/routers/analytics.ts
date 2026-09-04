@@ -17,7 +17,7 @@ import { z } from "zod"
 // round of queries rather than by pulling rows into the API and reducing them in JS.
 //
 // Every figure here is a live COUNT over real rows. Nothing is sampled, estimated, or carried over
-// from a previous run: if the number is on screen, a query produced it just now (Rules.md
+// from a previous run: if the number is on screen, a query produced it just now (the governing principles
 // Principle 5). Where a percentage would be misleading on a tiny denominator, the raw counts travel
 // alongside it so the UI can show "2 of 3" rather than a confident-looking 66.7%.
 

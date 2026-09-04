@@ -1,6 +1,6 @@
 """Selects the detector's flagging threshold using ONLY the training split.
 
-Why this file exists (Rules.md Principle 5, and the AI Risk Manager track's "honest metrics" bar):
+Why this file exists (Principle 5, and the AI Risk Manager track's "honest metrics" bar):
 a detector that flags every community it finds has no decision boundary, and reporting its
 "precision" is close to meaningless. Introducing a threshold fixes that - but choosing the
 threshold by looking at test-set results would silently turn the held-out split into a tuning set

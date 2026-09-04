@@ -1,6 +1,6 @@
 # Demo script (5 minutes)
 
-Structure per `Phases.md` Phase 9: problem → live cluster detail view → voice verification
+Structure: problem → live cluster detail view → voice verification
 moment → metrics → what broke → close.
 
 ## 1. Problem (30s)
@@ -17,7 +17,7 @@ Open the Rings Overview (`/clusters`) - a table of flagged clusters, sorted by r
 Click into one cluster (`/clusters/:id`). Walk through, in order:
 
 - **Network graph** - accounts as nodes, edges labeled with the exact signal type and confidence
-  on hover (never an unlabeled connection - `Rules.md` Principle 9). Click a node to show its
+  on hover (never an unlabeled connection - `the governing principles` Principle 9). Click a node to show its
   per-account contribution.
 - **Evidence panel** - the same graph translated into plain sentences a merchant reads in five
   seconds: _"4 accounts share the same delivery address," "3 accounts used the same promo code
@@ -25,7 +25,7 @@ Click into one cluster (`/clusters/:id`). Walk through, in order:
 - **Decide** - ₹ exposure figure, verification status, four buttons: Freeze / Block / Escalate /
   Dismiss. Say explicitly: _"None of this acted on its own - every one of these numbers only
   ever informs a human. Only this decision, made by a merchant, freezes or blocks anything."_
-  Click Dismiss to show the required-reason flow (`Rules.md` Principle 10) - a short set of
+  Click Dismiss to show the required-reason flow (`the governing principles` Principle 10) - a short set of
   options, not a free-text box, because the reason is the data that makes the false-positive-cost
   metric honest.
 
@@ -59,7 +59,7 @@ Two real bugs/limitations, found by running evaluation scripts against held-out 
 inspection:
 
 1. The verifier's parser initially scored 84.6%, not 100% - two real keyword-overlap bugs
-   (documented in `Memory.md` decision 21, fixed with a single shared span map across
+   (fixed with a single shared span map across
    confirm/deny/hedge instead of three independent ones).
 2. The detector's recall drops from 5/5 to 17/18 at full dataset scale - one ring gets absorbed
    into a larger predicted cluster once the graph is denser (IoU 0.400, just under the 0.5 match

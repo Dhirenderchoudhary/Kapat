@@ -1,5 +1,5 @@
-"""One structured audit record per executed decision (Rules.md Principle 2: "full audit chain in
-one API call") and no audit record at all when a decision doesn't execute (Rules.md Principle 1:
+"""One structured audit record per executed decision (Principle 2: "full audit chain in
+one API call") and no audit record at all when a decision doesn't execute (Principle 1:
 only an executed decision may leave a trace of having triggered something downstream).
 
 Mirrors clusters.ts POST /:id/decision's actual transaction body: insert merchant_decisions FIRST,
@@ -83,7 +83,7 @@ class TestAuditLogging(unittest.TestCase):
             self.assertEqual(audit_rows.stdout.strip(), "0")
 
     def test_dismiss_without_a_reason_is_rejected_at_the_schema_level(self) -> None:
-        # Rules.md Principle 10: dismiss requires a reason, enforced by
+        # Principle 10: dismiss requires a reason, enforced by
         # merchant_decisions_dismiss_reason_check - not just a UI-layer required field.
         with FraudSchemaSandbox() as sandbox:
             sandbox.q("INSERT INTO clusters (id, risk_score) VALUES ('cl_1', 0.8)")

@@ -1,8 +1,8 @@
-"""Phase 8 batch run (Phases.md): the full graph_builder -> clustering -> cluster_scorer
+"""Phase 8 batch run: the full graph_builder -> clustering -> cluster_scorer
 pipeline against the *complete* Phase 1 synthetic dataset (train + test combined - 396 accounts,
 949 transactions - not just evaluate.py's held-out 120-account split), run unattended end to
 end. This is the phase whose whole point is to surface a genuine failure, not to re-confirm
-evaluate.py's already-reported numbers (Phases.md Phase 8: "this phase is also the most likely
+evaluate.py's already-reported numbers (Phase 8: "this phase is also the most likely
 source of your genuine 'what broke' story - leave real time for it").
 
 Deliberately does NOT touch ground_truth_clusters for anything but labeling the report
@@ -10,7 +10,7 @@ afterward (same discipline as graph_builder.py itself, decision 18) - the pipeli
 its own answer key.
 
 Writes data/batch_run_report.json: wall-clock time, cluster count/size distribution, any
-exception (caught and reported, never swallowed silently - Rules.md Principle 5), and a
+exception (caught and reported, never swallowed silently - Principle 5), and a
 best-match summary against the combined ground truth so a real reader can see whether the extra
 volume changed anything evaluate.py's 120-account run didn't already show.
 
@@ -109,7 +109,7 @@ def run_batch() -> dict:
     }
 
     # Best-match summary against the combined ground truth - not a formal precision/recall
-    # report (that stays evaluate.py's job, on the held-out split alone, per Rules.md's
+    # report (that stays evaluate.py's job, on the held-out split alone, per the
     # train/test discipline). This just checks whether more volume changed the qualitative
     # picture evaluate.py already reported.
     true_rings = [c for c in ground_truth if c["kind"] == "true_ring"]
