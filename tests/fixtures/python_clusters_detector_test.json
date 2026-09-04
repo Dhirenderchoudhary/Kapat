@@ -1,5 +1,5 @@
 {
-  "note": "Communities that services/detector-service/clustering.py (networkx Louvain, seed=42) returns for data/detector_test.json, the held-out split behind every published detector metric. Regenerate with the snippet in tests/test_detector_parity.mjs if the signal derivation ever changes on purpose.",
+  "note": "Communities that services/detector-service/clustering.py (networkx Louvain, seed=42) returns for data/detector_test.json, the held-out split behind every published detector metric. Regenerate with the snippet in tests/detector_parity.test.mjs if the signal derivation ever changes on purpose.",
   "dataset": "data/detector_test.json",
   "min_cluster_size": 2,
   "communities": [
