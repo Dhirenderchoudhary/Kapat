@@ -25,6 +25,7 @@ import {
   metricsRouter,
   razorpayRouter,
   v1Router,
+  voiceRouter,
   waitlistRouter,
   webhooksRouter,
 } from "@/routers"
@@ -176,6 +177,7 @@ socket.addEventListener("message", (event) => {
   .route("/metrics", metricsRouter)
   .route("/razorpay", razorpayRouter)
   .route("/v1", v1Router)
+  .route("/voice", voiceRouter)
   .route("/waitlist", waitlistRouter)
   // Gate both the OpenAPI document and the Scalar UI on apiDocs; the UI fetches the spec, so gating only the UI would leave the full spec public.
   .use("/openapi.json", requireFeature("apiDocs"))

@@ -136,10 +136,9 @@ distribution, reported as-is.
 | Accuracy | 100% (39/39) |
 
 Caveat that belongs next to that number, not hidden below it: 100% on a self-authored synthetic
-test set is not the same claim as accuracy on independent or adversarial transcripts. The
-still-outstanding step that would actually test that is a live Sarvam AI call in Hindi and
-Marathi, checked by a fluent speaker (Phase 0's exit criteria) - not yet done, and disclosed here
-rather than implied.
+test set is not the same claim as accuracy on independent or adversarial transcripts. The homepage
+studio now speaks live Sarvam Bulbul audio (`POST /api/voice`). A fluent-speaker review of the
+Hindi and Marathi scripts is still not done, and is disclosed here rather than implied.
 
 ### The trained model, and the dataset that made it possible
 
