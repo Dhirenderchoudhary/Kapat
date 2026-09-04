@@ -1,5 +1,29 @@
 # Changelog
 
+## v0.0.6
+
+[compare changes](https://github.com/Dhirenderchoudhary/Kapat/compare/v0.0.5...v0.0.6)
+
+### 📖 Documentation
+
+- Put request bodies in OpenAPI and link live docs in README ([4600d92](https://github.com/Dhirenderchoudhary/Kapat/commit/4600d92))
+
+### ❤️ Contributors
+
+- Dhirender Choudhary @Dhirenderchoudhary
+
+## v0.0.5
+
+[compare changes](https://github.com/Dhirenderchoudhary/Kapat/compare/v0.0.4...v0.0.5)
+
+### 📖 Documentation
+
+- Include production URLs and verification notes ([8d76833](https://github.com/Dhirenderchoudhary/Kapat/commit/8d76833))
+
+### ❤️ Contributors
+
+- Dhirender Choudhary @Dhirenderchoudhary
+
 ## v0.0.4
 
 [compare changes](https://github.com/Dhirenderchoudhary/Kapat/compare/v0.0.3...v0.0.4)
