@@ -4,10 +4,11 @@
 // high/critical finding still fails the job on the first response.
 
 const ATTEMPTS = 3
-// Past bun's own ~5m client timeout, so a hung process is killed; a slow success is not.
-const HANG_MS = 6 * 60_000
+// bun audit can sit on registry.npmjs.org for its full 5m client timeout, then print
+// `POST .../security/advisories/bulk - 503`. Kill sooner so retries still fit in CI.
+const HANG_MS = 2 * 60_000
 const TRANSIENT =
-  /Timeout: audit request failed|audit request failed|ECONNRESET|ENOTFOUND|EAI_AGAIN|socket hang up|fetch failed|network is unreachable|TLS handshake/i
+  /Timeout: audit request failed|audit request failed|ECONNRESET|ENOTFOUND|EAI_AGAIN|socket hang up|fetch failed|network is unreachable|TLS handshake|advisories\/bulk|\b429\b|\b50[0234]\b/i
 
 const readAndEcho = async (
   stream: ReadableStream<Uint8Array>,
@@ -61,7 +62,7 @@ const main = async () => {
     if (!transient) process.exit(code)
     if (attempt === ATTEMPTS) {
       console.error(
-        `bun audit: advisory registry still unreachable after ${ATTEMPTS} attempts. Not failing the job on a transport timeout. High/critical findings still fail the job when the registry responds.`,
+        `bun audit: advisory registry still unreachable after ${ATTEMPTS} attempts (timeout or HTTP 5xx/429). Not failing the job on a transport error. High/critical findings still fail the job when the registry responds.`,
       )
       return
     }
