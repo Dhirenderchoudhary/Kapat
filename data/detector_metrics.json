@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-03T21:12:51.699016+00:00",
+  "generated_at": "2026-09-04T15:38:17.705361+00:00",
   "test_data_file": "detector_test.json",
   "n_true_rings": 5,
   "n_lookalikes": 7,
@@ -13,6 +13,6 @@
   "n_lookalikes_wrongly_flagged": 0,
   "n_lookalikes_wrongly_flagged_high_confidence": 0,
   "high_confidence_threshold": 0.6,
-  "cost_model_note": "No calibrated false-positive cost (rupees, chargeback rate, merchant churn) exists yet: generate_synthetic_data.py does not model chargebacks or verification friction, so a currency figure here would be invented, not measured (Rules.md Principle 5). The honest cost signal is n_lookalikes_wrongly_flagged_high_confidence and the risk_score distribution above - each one is a real household that would see a hold or verification prompt it did nothing to earn.",
+  "cost_model_note": "No calibrated false-positive cost (rupees, chargeback rate, merchant churn) exists yet: generate_synthetic_data.py does not model chargebacks or verification friction, so a currency figure here would be invented, not measured (Principle 5). The honest cost signal is n_lookalikes_wrongly_flagged_high_confidence and the risk_score distribution above - each one is a real household that would see a hold or verification prompt it did nothing to earn.",
   "validity_caveat": "These numbers are measured on a held-out split the detector never saw, which validates the IMPLEMENTATION. They cannot independently validate the detector's core ASSUMPTION - that honest households share an address but not a sequential phone block or a funnelled promo code - because generate_synthetic_data.py encodes that same assumption. Real validation needs real merchant data with real chargeback outcomes. See data/stress_test_report.json for adversarial cases where this detector demonstrably fails, including a legitimate flatmate group it wrongly flags."
 }

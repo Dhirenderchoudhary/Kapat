@@ -1,9 +1,9 @@
-"""Held-out verifier accuracy (Architecture.md §7, Phases.md Phase 8).
+"""Held-out verifier accuracy (Architecture.md §7, Phase 8).
 
 Runs response_parser.parse() against every entry in data/synthetic_response_test_set.json
 (generate_synthetic_responses.py, Phase 6) and reports accuracy honestly - overall, broken down
 by expected_outcome and by language_code, plus every misclassification listed by id so a wrong
-answer is traceable, not just a percentage (Rules.md Principle 5).
+answer is traceable, not just a percentage (Principle 5).
 
 This is Phase 8's own deliverable, deliberately deferred from Phase 6 (see conversation_flow.py/
 generate_synthetic_responses.py's docstrings there) - Phase 6 only needed the verify -> parse ->

@@ -1,4 +1,4 @@
-"""Lightweight test coverage for chargeback_exposure.py (Phase 4, Phases.md).
+"""Lightweight test coverage for chargeback_exposure.py (Phase 4).
 
 Run from the repo root: python3 -m unittest tests.test_chargeback_exposure -v
 """
@@ -46,7 +46,7 @@ class TestChargebackExposure(unittest.TestCase):
         self.assertEqual(result["contributing_transactions"], [])
 
     def test_result_is_labeled_as_an_estimate_not_confirmed_chargebacks(self) -> None:
-        # Rules.md Principle 5: this system has no real chargeback ground truth, so the output
+        # Principle 5: this system has no real chargeback ground truth, so the output
         # must say plainly that this is an estimate of exposure, not a report of what happened.
         result = chargeback_exposure.compute_exposure(["acc_1"], [_txn("t1", "acc_1", 1000)], {"t1": 0.9})
         self.assertIn("basis", result)

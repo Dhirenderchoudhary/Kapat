@@ -1,5 +1,5 @@
-"""Rules.md tdd guidance: written before graph_builder.py/clustering.py have real logic, so it
-starts red and proves the implementation against Phases.md's Phase 2 exit criteria directly -
+"""the governing principles tdd guidance: written before graph_builder.py/clustering.py have real logic, so it
+starts red and proves the implementation against Phase 2's exit criteria directly -
 a true ring of 4 accounts clusters together, and a legitimate look-alike pair does not silently
 merge into it.
 
@@ -32,7 +32,7 @@ class TestClustering(unittest.TestCase):
     def setUp(self) -> None:
         rng = random.Random(7)
         self.ds = Dataset()
-        # Exact sizes, matching Rules.md's own example wording literally.
+        # Exact sizes, matching the original specification's example wording literally.
         self.ring_ids = generate_true_ring(self.ds, rng, 0, size=4)
         self.lookalike_ids = generate_legitimate_lookalike(self.ds, rng, 0, size=2)
         for _ in range(20):
@@ -52,7 +52,7 @@ class TestClustering(unittest.TestCase):
         self.assertFalse(overlap, f"legitimate look-alike accounts merged into the ring's cluster: {overlap}")
 
     def test_every_edge_within_the_ring_has_labeled_signals(self) -> None:
-        # Rules.md Principle 9: never an unlabeled connection.
+        # Principle 9: never an unlabeled connection.
         for a, b, data in self.graph.edges(data=True):
             if a in self.ring_ids and b in self.ring_ids:
                 self.assertTrue(data["signals"], f"edge {a}-{b} has no labeled signal_type")

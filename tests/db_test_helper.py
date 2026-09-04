@@ -6,7 +6,7 @@ These two tests exercise real guarantees of the fraud-ring schema (packages/db/d
 0004_fraud_ring_platform.sql, 0005_account_idempotency.sql) and of the exact SQL patterns
 api/hono/src/routers/webhooks.ts and clusters.ts run - compare-and-set updates, ON CONFLICT DO
 NOTHING, and CHECK constraints. There is no Python Postgres driver installed in this repo's
-Python environment (no psycopg2/asyncpg - see Memory.md decision 21: no network access to pip
+Python environment (no psycopg2/asyncpg: no network access to pip
 install one), so this shells out to the `psql` CLI directly rather than skip the guarantee
 entirely or fake it with an in-memory stand-in that wouldn't actually prove anything about
 Postgres's own constraint enforcement.
@@ -14,8 +14,8 @@ Postgres's own constraint enforcement.
 Connects using the same POSTGRES_URL environment variable the real app reads
 (packages/env/src/db.ts) - unset in most sandboxes, which is why both test modules SKIP (not
 fail) when either `psql` isn't on PATH or POSTGRES_URL isn't set or unreachable. A skip with a
-clear reason is Rules.md Principle 5's "honest placeholder": these tests ran and passed against a
-real local Postgres 16 instance during Phase 8 development (Memory.md decision 21); they are
+clear reason is Principle 5's "honest placeholder": these tests ran and passed against a
+real local Postgres 16 instance during Phase 8 development; they are
 written to run for real again wherever `docker-compose.yml`'s postgres service (or any reachable
 POSTGRES_URL) is available - most importantly, in CI or a real `bun run dev` environment - not to
 merely exist unexecuted.
@@ -56,13 +56,13 @@ def postgres_reachable() -> bool:
 SKIP_REASON = (
     "psql not on PATH, POSTGRES_URL not set, or Postgres unreachable - these tests need a real "
     "Postgres to exercise DB-level constraints (compare-and-set, ON CONFLICT, CHECK). See "
-    "tests/db_test_helper.py's docstring and Memory.md decision 21."
+    "tests/db_test_helper.py's docstring."
 )
 
 
 def run_sql(sql: str) -> subprocess.CompletedProcess:
     """Runs `sql` against POSTGRES_URL, tuples-only, unaligned, '|'-delimited output - the same
-    shape used throughout this session's manual SQL-level verification (Memory.md decision 20/21).
+    shape used throughout this session's manual SQL-level verification.
     Does not pass -v ON_ERROR_STOP=1: some of these tests deliberately expect a statement to
     raise (a bare CHECK/UNIQUE constraint violation with no app-level ON CONFLICT handling), and
     need the process to keep running so later statements in the same script can assert on that.

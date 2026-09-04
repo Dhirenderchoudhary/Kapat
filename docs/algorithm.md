@@ -228,12 +228,12 @@ stated as one.
 
 | Method                                 | Precision | Recall   | Costly errors |
 | -------------------------------------- | --------- | -------- | ------------- |
-| **Hybrid (heuristic + random forest)** | **90.9%** | **100%** | **4**         |
-| Random forest                          | 87.0%     | 100%     | 6             |
-| Gradient boosting                      | 85.1%     | 100%     | 7             |
-| Hist gradient boosting                 | 85.1%     | 100%     | 7             |
-| Logistic regression                    | 76.9%     | 100%     | 12            |
-| Extra trees                            | 76.9%     | 100%     | 12            |
+| **Hybrid (heuristic + random forest)** | **95.2%** | **100%** | **2**         |
+| Random forest                          | 95.2%     | 100%     | 2             |
+| Hist gradient boosting                 | 92.9%     | 97.5%    | 7             |
+| Extra trees                            | 80.0%     | 100%     | 10            |
+| Gradient boosting                      | 80.0%     | 100%     | 10            |
+| Logistic regression                    | 78.4%     | 100%     | 11            |
 | Corroboration heuristic alone          | 66.0%     | 82.5%    | 45            |
 | Isolation forest (no labels)           | 0.645 AP  | n/a      | n/a           |
 
@@ -258,21 +258,26 @@ uncalibrated forest's 0.8 does not mean 80%.
 
 ### The hybrid is the interesting winner
 
-The best model is the one handed the heuristic's own risk score as a final feature. It beats the
-pure random forest (4 costly errors against 6) and demolishes the rule alone (against 45). Neither
-component is sufficient: the rule encodes domain judgment the data cannot teach, and the model sees
-behavioural structure the rule never looks at.
+The best model is the one handed the heuristic's own risk score as a final feature. It ties the
+pure random forest exactly (2 costly errors each, 95.2% precision at full recall) and demolishes the
+rule alone (against 45). Neither component is sufficient: the rule encodes domain judgment the data
+cannot teach, and the model sees behavioural structure the rule never looks at.
+
+The tie with the plain forest is real, not a rounding artefact, so the ranking breaks it explicitly
+rather than letting declaration order decide which model gets exported: on equal cost, prefer higher
+recall, then prefer the hybrid. Shipping the hybrid keeps the hand-built rule inside the decision
+instead of merely beside it, which is what lets a merchant be given a reason rather than a score.
 
 ### Off-distribution, it does not regress
 
 On the ten hand-authored adversarial cases in `stress_test.py` - written before any model existed,
 never used for tuning - the trained model scores **9/10** against the heuristic's **8/10**. Its one
-failure is `flatmates_pass_around_one_coupon` at 0.3744, just over its 0.30 operating threshold;
-the heuristic fails that case too, and additionally holds back `ring_maximally_evasive`, which the
-model catches. Read that margin as one case out of ten, not as a general ranking. A model trained on
-the OLD easy split scores **6/10**, newly flagging two ordinary households including one that shares
-an address, a card and a dinner hour. That gap is the clearest evidence that the harder dataset, not
-the bigger ensemble, is what produced the improvement.
+failure is `ring_maximally_evasive`, the ring linked by coordinated timing alone, which the
+heuristic also holds back and for the same deliberate reason. Read that margin as one case out of
+ten, not as a general ranking. A model trained on the OLD easy split scores **7/10**, missing
+`ring_burner_sims_only` on top of the two cases the hard-split model and the rule both find hard.
+That gap is the clearest evidence that the harder dataset, not the bigger ensemble, is what
+produced the improvement.
 
 These case scores are reproducible. The suite used to seed each population from Python's `hash()`
 of the case name, which is randomised per process, so every run moved the scores in the third and

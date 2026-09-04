@@ -159,7 +159,8 @@ const MAX_CORROBORATION_WEIGHT = 10.5
 
 const STRONG_FRAUD_SPECIFIC = new Set(["shared_phone_pattern", "shared_promo"])
 const WEAK_FRAUD_SPECIFIC = new Set(["coordinated_timing"])
-const BENIGN_EXPLAINABLE = new Set(["shared_address", "shared_payment"])
+// The benign-explainable signals ("shared_address", "shared_payment") are the complement of
+// FRAUD_SPECIFIC below; the ceiling rule keys off the fraud-specific side, so they need no set.
 const FRAUD_SPECIFIC = new Set([...STRONG_FRAUD_SPECIFIC, ...WEAK_FRAUD_SPECIFIC])
 
 interface EdgeSignal {
@@ -567,7 +568,6 @@ export function detectRingsPure(
   }
 
   for (const members of clusters) {
-    const memberSet = new Set(members)
     const evidence: DetectedEvidence[] = []
     const signalTypesSeen = new Set<string>()
     const confidences: number[] = []

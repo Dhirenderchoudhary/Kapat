@@ -13,12 +13,12 @@ import {
 } from "drizzle-orm/pg-core"
 
 // AI Risk Manager: Fraud Ring Detection Platform - Architecture.md §5 is the logical reference
-// this file implements. Two principles from Rules.md are enforced here at the database level,
+// this file implements. Two principles from the governing principles are enforced here at the database level,
 // not just in application code or UI copy:
 //   Principle 9  - every account_links edge carries a labeled signal_type and confidence.
 //   Principle 10 - merchant_decisions.reason is required when action = "dismiss".
 // transactions.razorpay_event_id is unique so idempotent webhook ingestion is a database
-// constraint (Rules.md Principle 3), not an application-level check.
+// constraint (Principle 3), not an application-level check.
 //
 // Naming note: "accounts" here is the fraud-platform customer account (the node in the fraud
 // graph) - a different table from Better Auth's singular "account" in auth.ts (an OAuth provider
@@ -41,8 +41,8 @@ export const accounts = pgTable(
     index("accounts_delivery_address_idx").on(table.deliveryAddress),
     index("accounts_payment_method_fingerprint_idx").on(table.paymentMethodFingerprint),
     index("accounts_phone_number_idx").on(table.phoneNumber),
-    // FR-11 (PRD.md §8): idempotent ingestion covers accounts too, not just transactions -
-    // POST /webhooks/razorpay upserts on customer_ref, so this is the real guarantee (Rules.md
+    // FR-11: idempotent ingestion covers accounts too, not just transactions -
+    // POST /webhooks/razorpay upserts on customer_ref, so this is the real guarantee (the governing principles
     // Principle 3), not an application-level check (migration 0005).
     uniqueIndex("accounts_customer_ref_uidx").on(table.customerRef),
   ],
@@ -55,7 +55,7 @@ export const transactions = pgTable(
       .primaryKey()
       .$defaultFn(() => crypto.randomUUID()),
     // Unique, not just checked in application code: a redelivered Razorpay webhook event must
-    // not create a duplicate transaction (Rules.md Principle 3).
+    // not create a duplicate transaction (Principle 3).
     razorpayEventId: text("razorpay_event_id").notNull().unique(),
     accountId: text("account_id")
       .notNull()
@@ -71,7 +71,7 @@ export const transactions = pgTable(
 )
 
 // The graph edges. Every row is one specific shared signal between two accounts - never an
-// unlabeled connection (Rules.md Principle 9). The dashboard's evidence panel and graph hover
+// unlabeled connection (Principle 9). The dashboard's evidence panel and graph hover
 // tooltips (Design.md §1.2, §2) read directly off signal_type and confidence.
 export const accountLinks = pgTable(
   "account_links",
@@ -165,7 +165,7 @@ export const verifications = pgTable(
     languageCode: text("language_code").notNull(),
     transcript: text("transcript"),
     // confirmed_linked | denied_linked | unclear | no_response.
-    // Meaning is inverted vs. a single-transaction verifier (Memory.md decision 14):
+    // Meaning is inverted vs. a single-transaction verifier:
     // confirmed here leans legitimate (family/shared household), denied strengthens the ring
     // hypothesis. Get this the right way round in response_parser.py and the dashboard labels.
     outcome: text("outcome").notNull(),
@@ -191,11 +191,11 @@ export const merchantDecisions = pgTable(
       .notNull()
       .references(() => clusters.id, { onDelete: "cascade" }),
     // freeze | block | escalate | dismiss. Only this row may trigger the executor, and only
-    // after it exists (Rules.md Principle 1) - never a cluster's risk_score or a verification
+    // after it exists (Principle 1) - never a cluster's risk_score or a verification
     // outcome acting directly.
     action: text("action").notNull(),
-    // Required when action = "dismiss" (Rules.md Principle 10), enforced below so the
-    // false-positive-cost metric (PRD.md §9) can never be built on an unreasoned dismissal.
+    // Required when action = "dismiss" (Principle 10), enforced below so the
+    // false-positive-cost metric can never be built on an unreasoned dismissal.
     reason: text("reason"),
     decidedBy: text("decided_by").notNull(),
     decidedAt: timestamp("decided_at").defaultNow().notNull(),
@@ -215,7 +215,7 @@ export const merchantDecisions = pgTable(
 
 // One structured record per cluster event (decision made, executor acted, verification
 // completed, and so on), so GET /api/clusters/:id can assemble the full evidence -> verification
-// -> decision -> execution chain in one call (Rules.md Principle 2).
+// -> decision -> execution chain in one call (Principle 2).
 export const auditLog = pgTable(
   "audit_log",
   {

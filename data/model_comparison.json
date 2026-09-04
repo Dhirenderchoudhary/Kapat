@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-03T17:44:20.456181+00:00",
+  "generated_at": "2026-09-04T15:38:43.346317+00:00",
   "feature_names": [
     "size",
     "n_edges",
@@ -73,10 +73,10 @@
           "cv_average_precision_std": 0.0,
           "test_average_precision": 1.0,
           "test_roc_auc": 1.0,
-          "operating_threshold": 0.05,
-          "threshold_chosen_on": "training split, by minimum expected cost",
+          "operating_threshold": 0.5,
+          "threshold_chosen_on": "training split, midpoint of the widest threshold band tied at minimum expected cost",
           "test_at_operating_threshold": {
-            "threshold": 0.05,
+            "threshold": 0.5,
             "precision": 1.0,
             "recall": 1.0,
             "f1": 1.0,
@@ -501,10 +501,10 @@
           "cv_average_precision_std": 0.0,
           "test_average_precision": 1.0,
           "test_roc_auc": 1.0,
-          "operating_threshold": 0.05,
-          "threshold_chosen_on": "training split, by minimum expected cost",
+          "operating_threshold": 0.5,
+          "threshold_chosen_on": "training split, midpoint of the widest threshold band tied at minimum expected cost",
           "test_at_operating_threshold": {
-            "threshold": 0.05,
+            "threshold": 0.5,
             "precision": 1.0,
             "recall": 1.0,
             "f1": 1.0,
@@ -929,10 +929,10 @@
           "cv_average_precision_std": 0.0,
           "test_average_precision": 1.0,
           "test_roc_auc": 1.0,
-          "operating_threshold": 0.05,
-          "threshold_chosen_on": "training split, by minimum expected cost",
+          "operating_threshold": 0.5,
+          "threshold_chosen_on": "training split, midpoint of the widest threshold band tied at minimum expected cost",
           "test_at_operating_threshold": {
-            "threshold": 0.05,
+            "threshold": 0.5,
             "precision": 1.0,
             "recall": 1.0,
             "f1": 1.0,
@@ -1357,10 +1357,10 @@
           "cv_average_precision_std": 0.0,
           "test_average_precision": 1.0,
           "test_roc_auc": 1.0,
-          "operating_threshold": 0.05,
-          "threshold_chosen_on": "training split, by minimum expected cost",
+          "operating_threshold": 0.5,
+          "threshold_chosen_on": "training split, midpoint of the widest threshold band tied at minimum expected cost",
           "test_at_operating_threshold": {
-            "threshold": 0.05,
+            "threshold": 0.5,
             "precision": 1.0,
             "recall": 1.0,
             "f1": 1.0,
@@ -1785,10 +1785,10 @@
           "cv_average_precision_std": 0.049,
           "test_average_precision": 0.4167,
           "test_roc_auc": 0.5,
-          "operating_threshold": 0.05,
-          "threshold_chosen_on": "training split, by minimum expected cost",
+          "operating_threshold": 0.25,
+          "threshold_chosen_on": "training split, midpoint of the widest threshold band tied at minimum expected cost",
           "test_at_operating_threshold": {
-            "threshold": 0.05,
+            "threshold": 0.25,
             "precision": 0.4167,
             "recall": 1.0,
             "f1": 0.5882,
@@ -2213,10 +2213,10 @@
           "cv_average_precision_std": 0.0,
           "test_average_precision": 1.0,
           "test_roc_auc": 1.0,
-          "operating_threshold": 0.05,
-          "threshold_chosen_on": "training split, by minimum expected cost",
+          "operating_threshold": 0.5,
+          "threshold_chosen_on": "training split, midpoint of the widest threshold band tied at minimum expected cost",
           "test_at_operating_threshold": {
-            "threshold": 0.05,
+            "threshold": 0.5,
             "precision": 1.0,
             "recall": 1.0,
             "f1": 1.0,
@@ -2662,11 +2662,7 @@
       },
       "ranking_by_expected_cost": [
         {
-          "method": "logistic_regression",
-          "expected_cost": 0.0
-        },
-        {
-          "method": "random_forest",
+          "method": "hybrid_heuristic_plus_model",
           "expected_cost": 0.0
         },
         {
@@ -2678,11 +2674,15 @@
           "expected_cost": 0.0
         },
         {
-          "method": "hybrid_heuristic_plus_model",
+          "method": "heuristic_corroboration_gated",
           "expected_cost": 0.0
         },
         {
-          "method": "heuristic_corroboration_gated",
+          "method": "logistic_regression",
+          "expected_cost": 0.0
+        },
+        {
+          "method": "random_forest",
           "expected_cost": 0.0
         },
         {
@@ -2770,18 +2770,18 @@
           "cv_average_precision_std": 0.0206,
           "test_average_precision": 0.9653,
           "test_roc_auc": 0.9852,
-          "operating_threshold": 0.55,
-          "threshold_chosen_on": "training split, by minimum expected cost",
+          "operating_threshold": 0.575,
+          "threshold_chosen_on": "training split, midpoint of the widest threshold band tied at minimum expected cost",
           "test_at_operating_threshold": {
-            "threshold": 0.55,
-            "precision": 0.7692,
+            "threshold": 0.575,
+            "precision": 0.7843,
             "recall": 1.0,
-            "f1": 0.8696,
+            "f1": 0.8791,
             "true_positives": 40,
-            "false_positives": 12,
+            "false_positives": 11,
             "false_negatives": 0,
-            "true_negatives": 79,
-            "expected_cost": 12.0
+            "true_negatives": 80,
+            "expected_cost": 11.0
           },
           "cost_curve_on_train": [
             {
@@ -3198,18 +3198,18 @@
           "cv_average_precision_std": 0.0289,
           "test_average_precision": 0.9489,
           "test_roc_auc": 0.9882,
-          "operating_threshold": 0.275,
-          "threshold_chosen_on": "training split, by minimum expected cost",
+          "operating_threshold": 0.5,
+          "threshold_chosen_on": "training split, midpoint of the widest threshold band tied at minimum expected cost",
           "test_at_operating_threshold": {
-            "threshold": 0.275,
-            "precision": 0.8696,
+            "threshold": 0.5,
+            "precision": 0.9524,
             "recall": 1.0,
-            "f1": 0.9302,
+            "f1": 0.9756,
             "true_positives": 40,
-            "false_positives": 6,
+            "false_positives": 2,
             "false_negatives": 0,
-            "true_negatives": 85,
-            "expected_cost": 6.0
+            "true_negatives": 89,
+            "expected_cost": 2.0
           },
           "cost_curve_on_train": [
             {
@@ -3313,14 +3313,14 @@
             },
             {
               "threshold": 0.275,
-              "precision": 1.0,
+              "precision": 0.9811,
               "recall": 1.0,
-              "f1": 1.0,
+              "f1": 0.9905,
               "true_positives": 52,
-              "false_positives": 0,
+              "false_positives": 1,
               "false_negatives": 0,
-              "true_negatives": 157,
-              "expected_cost": 0.0
+              "true_negatives": 156,
+              "expected_cost": 1.0
             },
             {
               "threshold": 0.3,
@@ -3626,18 +3626,18 @@
           "cv_average_precision_std": 0.0282,
           "test_average_precision": 0.9439,
           "test_roc_auc": 0.9865,
-          "operating_threshold": 0.05,
-          "threshold_chosen_on": "training split, by minimum expected cost",
+          "operating_threshold": 0.375,
+          "threshold_chosen_on": "training split, midpoint of the widest threshold band tied at minimum expected cost",
           "test_at_operating_threshold": {
-            "threshold": 0.05,
-            "precision": 0.7692,
+            "threshold": 0.375,
+            "precision": 0.8,
             "recall": 1.0,
-            "f1": 0.8696,
+            "f1": 0.8889,
             "true_positives": 40,
-            "false_positives": 12,
+            "false_positives": 10,
             "false_negatives": 0,
-            "true_negatives": 79,
-            "expected_cost": 12.0
+            "true_negatives": 81,
+            "expected_cost": 10.0
           },
           "cost_curve_on_train": [
             {
@@ -4050,56 +4050,56 @@
           ]
         },
         "gradient_boosting": {
-          "cv_average_precision_mean": 0.9322,
-          "cv_average_precision_std": 0.0469,
+          "cv_average_precision_mean": 0.9306,
+          "cv_average_precision_std": 0.0458,
           "test_average_precision": 0.9684,
           "test_roc_auc": 0.9909,
-          "operating_threshold": 0.425,
-          "threshold_chosen_on": "training split, by minimum expected cost",
+          "operating_threshold": 0.375,
+          "threshold_chosen_on": "training split, midpoint of the widest threshold band tied at minimum expected cost",
           "test_at_operating_threshold": {
-            "threshold": 0.425,
-            "precision": 0.8511,
+            "threshold": 0.375,
+            "precision": 0.8,
             "recall": 1.0,
-            "f1": 0.9195,
+            "f1": 0.8889,
             "true_positives": 40,
-            "false_positives": 7,
+            "false_positives": 10,
             "false_negatives": 0,
-            "true_negatives": 84,
-            "expected_cost": 7.0
+            "true_negatives": 81,
+            "expected_cost": 10.0
           },
           "cost_curve_on_train": [
             {
               "threshold": 0.05,
-              "precision": 0.8966,
+              "precision": 0.8667,
               "recall": 1.0,
-              "f1": 0.9455,
+              "f1": 0.9286,
               "true_positives": 52,
-              "false_positives": 6,
+              "false_positives": 8,
               "false_negatives": 0,
-              "true_negatives": 151,
-              "expected_cost": 6.0
+              "true_negatives": 149,
+              "expected_cost": 8.0
             },
             {
               "threshold": 0.075,
-              "precision": 0.8966,
+              "precision": 0.8667,
               "recall": 1.0,
-              "f1": 0.9455,
+              "f1": 0.9286,
               "true_positives": 52,
-              "false_positives": 6,
+              "false_positives": 8,
               "false_negatives": 0,
-              "true_negatives": 151,
-              "expected_cost": 6.0
+              "true_negatives": 149,
+              "expected_cost": 8.0
             },
             {
               "threshold": 0.1,
-              "precision": 0.8966,
+              "precision": 0.8667,
               "recall": 1.0,
-              "f1": 0.9455,
+              "f1": 0.9286,
               "true_positives": 52,
-              "false_positives": 6,
+              "false_positives": 8,
               "false_negatives": 0,
-              "true_negatives": 151,
-              "expected_cost": 6.0
+              "true_negatives": 149,
+              "expected_cost": 8.0
             },
             {
               "threshold": 0.125,
@@ -4235,36 +4235,36 @@
             },
             {
               "threshold": 0.425,
-              "precision": 1.0,
+              "precision": 0.9811,
               "recall": 1.0,
-              "f1": 1.0,
+              "f1": 0.9905,
               "true_positives": 52,
-              "false_positives": 0,
+              "false_positives": 1,
               "false_negatives": 0,
-              "true_negatives": 157,
-              "expected_cost": 0.0
+              "true_negatives": 156,
+              "expected_cost": 1.0
             },
             {
               "threshold": 0.45,
-              "precision": 1.0,
+              "precision": 0.9811,
               "recall": 1.0,
-              "f1": 1.0,
+              "f1": 0.9905,
               "true_positives": 52,
-              "false_positives": 0,
+              "false_positives": 1,
               "false_negatives": 0,
-              "true_negatives": 157,
-              "expected_cost": 0.0
+              "true_negatives": 156,
+              "expected_cost": 1.0
             },
             {
               "threshold": 0.475,
-              "precision": 1.0,
+              "precision": 0.9808,
               "recall": 0.9808,
-              "f1": 0.9903,
+              "f1": 0.9808,
               "true_positives": 51,
-              "false_positives": 0,
+              "false_positives": 1,
               "false_negatives": 1,
-              "true_negatives": 157,
-              "expected_cost": 4.0
+              "true_negatives": 156,
+              "expected_cost": 5.0
             },
             {
               "threshold": 0.5,
@@ -4482,17 +4482,17 @@
           "cv_average_precision_std": 0.0305,
           "test_average_precision": 0.9946,
           "test_roc_auc": 0.9975,
-          "operating_threshold": 0.225,
-          "threshold_chosen_on": "training split, by minimum expected cost",
+          "operating_threshold": 0.45,
+          "threshold_chosen_on": "training split, midpoint of the widest threshold band tied at minimum expected cost",
           "test_at_operating_threshold": {
-            "threshold": 0.225,
-            "precision": 0.8511,
-            "recall": 1.0,
-            "f1": 0.9195,
-            "true_positives": 40,
-            "false_positives": 7,
-            "false_negatives": 0,
-            "true_negatives": 84,
+            "threshold": 0.45,
+            "precision": 0.9286,
+            "recall": 0.975,
+            "f1": 0.9512,
+            "true_positives": 39,
+            "false_positives": 3,
+            "false_negatives": 1,
+            "true_negatives": 88,
             "expected_cost": 7.0
           },
           "cost_curve_on_train": [
@@ -4910,18 +4910,18 @@
           "cv_average_precision_std": 0.0298,
           "test_average_precision": 0.9501,
           "test_roc_auc": 0.9885,
-          "operating_threshold": 0.3,
-          "threshold_chosen_on": "training split, by minimum expected cost",
+          "operating_threshold": 0.525,
+          "threshold_chosen_on": "training split, midpoint of the widest threshold band tied at minimum expected cost",
           "test_at_operating_threshold": {
-            "threshold": 0.3,
-            "precision": 0.9091,
+            "threshold": 0.525,
+            "precision": 0.9524,
             "recall": 1.0,
-            "f1": 0.9524,
+            "f1": 0.9756,
             "true_positives": 40,
-            "false_positives": 4,
+            "false_positives": 2,
             "false_negatives": 0,
-            "true_negatives": 87,
-            "expected_cost": 4.0
+            "true_negatives": 89,
+            "expected_cost": 2.0
           },
           "cost_curve_on_train": [
             {
@@ -5036,14 +5036,14 @@
             },
             {
               "threshold": 0.3,
-              "precision": 1.0,
+              "precision": 0.9811,
               "recall": 1.0,
-              "f1": 1.0,
+              "f1": 0.9905,
               "true_positives": 52,
-              "false_positives": 0,
+              "false_positives": 1,
               "false_negatives": 0,
-              "true_negatives": 157,
-              "expected_cost": 0.0
+              "true_negatives": 156,
+              "expected_cost": 1.0
             },
             {
               "threshold": 0.325,
@@ -5360,27 +5360,27 @@
       "ranking_by_expected_cost": [
         {
           "method": "hybrid_heuristic_plus_model",
-          "expected_cost": 4.0
+          "expected_cost": 2.0
         },
         {
           "method": "random_forest",
-          "expected_cost": 6.0
-        },
-        {
-          "method": "gradient_boosting",
-          "expected_cost": 7.0
+          "expected_cost": 2.0
         },
         {
           "method": "hist_gradient_boosting",
           "expected_cost": 7.0
         },
         {
-          "method": "logistic_regression",
-          "expected_cost": 12.0
+          "method": "extra_trees",
+          "expected_cost": 10.0
         },
         {
-          "method": "extra_trees",
-          "expected_cost": 12.0
+          "method": "gradient_boosting",
+          "expected_cost": 10.0
+        },
+        {
+          "method": "logistic_regression",
+          "expected_cost": 11.0
         },
         {
           "method": "heuristic_corroboration_gated",
@@ -5405,7 +5405,7 @@
         },
         "H3_flatmates_coupon": {
           "n": 6,
-          "model_correct": 5,
+          "model_correct": 6,
           "heuristic_correct": 0
         },
         "H4_office": {
@@ -5527,7 +5527,7 @@
             "correct": true
           },
           "best_model_easy_split": {
-            "score": 0.0103,
+            "score": 0.0,
             "flagged": false,
             "correct": true
           },
@@ -5549,9 +5549,9 @@
             "correct": true
           },
           "best_model_easy_split": {
-            "score": 0.1723,
-            "flagged": true,
-            "correct": false
+            "score": 0.2089,
+            "flagged": false,
+            "correct": true
           },
           "best_model_hard_split": {
             "score": 0.0,
@@ -5571,9 +5571,9 @@
             "correct": true
           },
           "best_model_easy_split": {
-            "score": 0.4897,
-            "flagged": true,
-            "correct": false
+            "score": 0.4406,
+            "flagged": false,
+            "correct": true
           },
           "best_model_hard_split": {
             "score": 0.0,
@@ -5593,14 +5593,14 @@
             "correct": false
           },
           "best_model_easy_split": {
-            "score": 0.9519,
+            "score": 0.6781,
             "flagged": true,
             "correct": false
           },
           "best_model_hard_split": {
-            "score": 0.3744,
-            "flagged": true,
-            "correct": false
+            "score": 0.3999,
+            "flagged": false,
+            "correct": true
           }
         }
       },
@@ -5615,7 +5615,7 @@
             "correct": true
           },
           "best_model_easy_split": {
-            "score": 0.9983,
+            "score": 0.9689,
             "flagged": true,
             "correct": true
           },
@@ -5637,7 +5637,7 @@
             "correct": true
           },
           "best_model_easy_split": {
-            "score": 0.9967,
+            "score": 0.9067,
             "flagged": true,
             "correct": true
           },
@@ -5659,7 +5659,7 @@
             "correct": true
           },
           "best_model_easy_split": {
-            "score": 0.9769,
+            "score": 0.7721,
             "flagged": true,
             "correct": true
           },
@@ -5681,12 +5681,12 @@
             "correct": true
           },
           "best_model_easy_split": {
-            "score": 0.6153,
+            "score": 0.5004,
             "flagged": true,
             "correct": true
           },
           "best_model_hard_split": {
-            "score": 0.617,
+            "score": 0.6175,
             "flagged": true,
             "correct": true
           }
@@ -5703,9 +5703,9 @@
             "correct": true
           },
           "best_model_easy_split": {
-            "score": 0.3263,
-            "flagged": true,
-            "correct": true
+            "score": 0.4446,
+            "flagged": false,
+            "correct": false
           },
           "best_model_hard_split": {
             "score": 1.0,
@@ -5725,14 +5725,14 @@
             "correct": false
           },
           "best_model_easy_split": {
-            "score": 0.0316,
+            "score": 0.1144,
             "flagged": false,
             "correct": false
           },
           "best_model_hard_split": {
             "score": 0.375,
-            "flagged": true,
-            "correct": true
+            "flagged": false,
+            "correct": false
           }
         }
       }
@@ -5758,32 +5758,26 @@
         ]
       },
       "best_model_easy_split": {
-        "correct": 6,
+        "correct": 7,
         "total": 10,
-        "accuracy": 0.6,
+        "accuracy": 0.7,
         "failures": [
-          {
-            "case": "household_address_and_card",
-            "expected": "not_flagged",
-            "score": 0.1723,
-            "kind": "false_positive"
-          },
-          {
-            "case": "household_shares_card_and_orders_together",
-            "expected": "not_flagged",
-            "score": 0.4897,
-            "kind": "false_positive"
-          },
           {
             "case": "flatmates_pass_around_one_coupon",
             "expected": "not_flagged",
-            "score": 0.9519,
+            "score": 0.6781,
             "kind": "false_positive"
+          },
+          {
+            "case": "ring_burner_sims_only",
+            "expected": "flagged",
+            "score": 0.4446,
+            "kind": "false_negative"
           },
           {
             "case": "ring_maximally_evasive",
             "expected": "flagged",
-            "score": 0.0316,
+            "score": 0.1144,
             "kind": "false_negative"
           }
         ]
@@ -5794,10 +5788,10 @@
         "accuracy": 0.9,
         "failures": [
           {
-            "case": "flatmates_pass_around_one_coupon",
-            "expected": "not_flagged",
-            "score": 0.3744,
-            "kind": "false_positive"
+            "case": "ring_maximally_evasive",
+            "expected": "flagged",
+            "score": 0.375,
+            "kind": "false_negative"
           }
         ]
       }
@@ -5808,7 +5802,7 @@
     "hard_split_is_the_real_number": "On the graded split, where rings range from sloppy to careful and households share up to four signals, the methods separate and nothing reaches 1.000. Those are the numbers worth quoting.",
     "best_on_hard": {
       "method": "hybrid_heuristic_plus_model",
-      "expected_cost": 4.0
+      "expected_cost": 2.0
     },
     "heuristic_on_hard": {
       "method": "heuristic_corroboration_gated",
@@ -5820,6 +5814,6 @@
   "exported_model": {
     "exported": true,
     "method": "hybrid_heuristic_plus_model",
-    "path": "F:\\personal\\Helping\\Razorpay_Buildathon\\data\\ring_model.joblib"
+    "path": "/Users/kaiser/Desktop/Razorpay/data/ring_model.joblib"
   }
 }

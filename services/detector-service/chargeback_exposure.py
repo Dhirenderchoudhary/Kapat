@@ -1,15 +1,15 @@
-"""Chargeback exposure (Rupees at risk) for a cluster (Architecture.md §2.1, PRD.md §2).
+"""Chargeback exposure (Rupees at risk) for a cluster (Architecture.md §2.1).
 
-Phase 4 (Phases.md). Feeds the dashboard's ₹-exposure figure (Design.md §1.1, §1.2) -
+Phase 4. Feeds the dashboard's ₹-exposure figure (Design.md §1.1, §1.2) -
 explicitly not a full evidence-assembly system competing with Razorpay's own Dispute Responder
-Agent (PRD.md §2, §4, §11), and explicitly not "a full chargeback evidence system" (Rules.md's
+Agent, and explicitly not "a full chargeback evidence system" (the
 own anti-pattern list names this directly - stay lightweight).
 
-Important, and stated plainly rather than glossed over (Rules.md Principle 5): this platform has
+Important, and stated plainly rather than glossed over (Principle 5): this platform has
 no real or synthetic record of chargebacks actually happening. generate_synthetic_data.py (Phase
 1) does not model them, and the schema's transactions table carries no chargeback field - the
 same gap cluster_scorer.py's docstring already flagged. Inventing a chargeback-occurred flag with
-a made-up probability would itself be exactly the kind of fabricated data Rules.md forbids: it
+a made-up probability would itself be exactly the kind of fabricated data Principle 5 forbids: it
 would put a number on the dashboard that looks like a fact but is actually a guess dressed up as
 history.
 
@@ -36,7 +36,7 @@ chargebacks that already occurred.
 
 from __future__ import annotations
 
-# Judgment call (Rules.md Principle 5): a transaction counts toward exposure once
+# Judgment call (Principle 5): a transaction counts toward exposure once
 # transaction_risk.py's own risk_score crosses this bar. Deliberately a different number from
 # cluster_scorer.py's HIGH_CONFIDENCE_THRESHOLD (0.6) - that's a cluster-level judgment about a
 # different question (is this cluster a ring), not a transaction-level one.
@@ -95,7 +95,7 @@ def compute_exposure(
         "contributing_transactions": contributing,
         "note": (
             "This is an estimate of money exposed to risk, not a report of confirmed chargebacks - "
-            "this platform models no chargeback ground truth (Rules.md Principle 5). Every rupee "
+            "this platform models no chargeback ground truth (Principle 5). Every rupee "
             "above is traceable to the specific transaction_id listed in contributing_transactions."
         ),
     }

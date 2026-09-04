@@ -171,8 +171,6 @@ export default async function LandingPage() {
     highlight: HAND_WEIGHTED.has(f.feature),
   }))
 
-  const adversarial = mc?.adversarial_evaluation.summary ?? {}
-
   // Headline numbers: the shipped scorer's own row on the graded split.
   const bestMethod = hard?.ranking_by_expected_cost[0]?.method
   const headline = bestMethod ? hard?.results[bestMethod]?.test_at_operating_threshold : undefined

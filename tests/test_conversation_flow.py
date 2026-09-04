@@ -1,7 +1,7 @@
-"""Rules.md tdd guidance: written before conversation_flow.py has real logic, test-first.
+"""the governing principles tdd guidance: written before conversation_flow.py has real logic, test-first.
 
 Pins down Design.md §3's script structure (identify -> state the finding -> ask -> listen, one
-clarifying re-ask maximum -> close) across the three demo languages (Rules.md Principle 7).
+clarifying re-ask maximum -> close) across the three demo languages (Principle 7).
 
 Run from the repo root: python3 -m unittest tests.test_conversation_flow -v
 """
@@ -48,7 +48,7 @@ class TestOpeningScript(unittest.TestCase):
         self.assertNotEqual(address_script, payment_script)
 
     def test_unrecognized_signal_type_falls_back_to_the_literal_rather_than_crashing(self) -> None:
-        # Rules.md Principle 9: never silently drop an unlabeled signal - fall back to stating
+        # Principle 9: never silently drop an unlabeled signal - fall back to stating
         # the raw signal_type rather than pretending it doesn't exist or raising.
         script = conversation_flow.build_opening_script("en-IN", "some_future_signal")
         self.assertIn("some_future_signal", script)
