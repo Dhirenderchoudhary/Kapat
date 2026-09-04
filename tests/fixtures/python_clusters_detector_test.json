@@ -1,0 +1,73 @@
+{
+  "note": "Communities that services/detector-service/clustering.py (networkx Louvain, seed=42) returns for data/detector_test.json, the held-out split behind every published detector metric. Regenerate with the snippet in tests/test_detector_parity.mjs if the signal derivation ever changes on purpose.",
+  "dataset": "data/detector_test.json",
+  "min_cluster_size": 2,
+  "communities": [
+    [
+      "acc_06bfd9c4-0dc7-8104-8c66-27667922b440",
+      "acc_4db6f475-27dd-1ac4-4282-b6e46986305a",
+      "acc_dc412176-5b59-f28e-a9de-5b2608ffeab0"
+    ],
+    [
+      "acc_07e67cb0-90bd-e900-1529-e6f52ad11fe8",
+      "acc_3f5e3b8c-c058-2da5-a757-075bd47f83b1",
+      "acc_49e64c22-89a0-b7eb-398f-569b465cc2cb",
+      "acc_8bddcee3-70fd-6672-b80f-16c5c28fa16b",
+      "acc_8cbadae5-7ecc-daf4-c413-4dc2c5c5ae8a",
+      "acc_fdab3441-d2c2-a960-8b09-01abc66dceb3"
+    ],
+    [
+      "acc_09ce3cfb-2339-ba19-2563-7cc3ca97ebf5",
+      "acc_1c76bdf6-6c5a-6c93-871c-08849bdf90f2",
+      "acc_3735262d-4184-3b03-04dd-7054144823f7",
+      "acc_5fbbf0b1-8083-89c8-657e-01c90da23e5c",
+      "acc_b49e04cc-c243-69e7-2387-eaf6d4c3a832",
+      "acc_ee4a9b5d-5195-54e3-0737-4c86397b5f51"
+    ],
+    [
+      "acc_0d99c071-f7c8-435f-8c83-bc68e6ace59a",
+      "acc_d7e4527a-6274-d240-8e30-1bcc302fa247"
+    ],
+    [
+      "acc_13087974-ec95-b3ac-0beb-7c3445667c48",
+      "acc_152aeaec-2bdf-cb41-b3ed-a8f1026b5383",
+      "acc_2dea2d2d-086c-405f-a879-d8f890422eb7",
+      "acc_d218c9d6-c093-bfb0-24e9-bcfd9647ff9f",
+      "acc_dba3496f-fa32-3f69-90db-fad654ce26be",
+      "acc_e6b9d31a-361f-6d90-3ad1-fa330ae4ac11"
+    ],
+    [
+      "acc_27c7655a-7b43-4a72-22c0-c475a54976d0",
+      "acc_5982aa44-5573-68cf-0ba5-605069fe99a9",
+      "acc_9d421bae-2134-e15b-ed56-c7145a9621f5"
+    ],
+    [
+      "acc_4fe66636-f612-1d2c-ae73-00eb639d8fe7",
+      "acc_e54c8739-3133-839e-2e7d-952b785b8a07"
+    ],
+    [
+      "acc_5071e5f0-a7ac-590c-42f9-0f921036ca81",
+      "acc_973b6977-e946-2820-6a80-cac21a8cf13c"
+    ],
+    [
+      "acc_54f5df70-05d2-d205-789f-ed9673373c2f",
+      "acc_e9b1c4a1-da22-1b85-a9b9-2a1d457498ca"
+    ],
+    [
+      "acc_55cee5db-9e87-e04c-a208-6977a9f25336",
+      "acc_71316269-7118-e364-7709-7749527eecfa",
+      "acc_bc67f831-cbc8-4759-f5b7-8cc7e6b3c944",
+      "acc_ce7ae7f6-3982-0cff-4f77-a665ac3c5640",
+      "acc_d98868dd-9c7c-7377-79a2-8903fbe33b24"
+    ],
+    [
+      "acc_6108ffcc-8186-722b-a355-ad05c6a28e4e",
+      "acc_7d76ab58-b271-115b-8af0-9ec34b726a7c"
+    ],
+    [
+      "acc_9f294a8b-d184-6c39-c476-7556f97be2dd",
+      "acc_d4578ad9-a867-a096-edd8-77c89be71737",
+      "acc_ebe9e207-4f19-9ec0-c32d-4526b3e4110a"
+    ]
+  ]
+}

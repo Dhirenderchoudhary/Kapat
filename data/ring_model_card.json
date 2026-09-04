@@ -1,7 +1,8 @@
 {
   "method": "hybrid_heuristic_plus_model",
-  "trained_at": "2026-09-02T17:05:23.333962+00:00",
+  "trained_at": "2026-09-03T17:44:23.646828+00:00",
   "trained_on": "hard_train.json",
+  "sklearn_version": "1.9.0",
   "feature_names": [
     "size",
     "n_edges",
@@ -46,23 +47,23 @@
   ],
   "expects_heuristic_score_feature": true,
   "n_features": 41,
-  "operating_threshold": 0.35,
+  "operating_threshold": 0.3,
   "threshold_chosen_on": "training split, by minimum expected cost",
   "cost_model": {
     "false_positive_cost": 1.0,
     "false_negative_cost": 4.0
   },
   "held_out": {
-    "threshold": 0.35,
-    "precision": 0.9474,
+    "threshold": 0.3,
+    "precision": 0.9091,
     "recall": 1.0,
-    "f1": 0.973,
-    "true_positives": 36,
-    "false_positives": 2,
+    "f1": 0.9524,
+    "true_positives": 40,
+    "false_positives": 4,
     "false_negatives": 0,
-    "true_negatives": 82,
-    "expected_cost": 2.0
+    "true_negatives": 87,
+    "expected_cost": 4.0
   },
-  "held_out_average_precision": 0.9985,
+  "held_out_average_precision": 0.9501,
   "honest_caveat": "These numbers come from synthetic data whose generator encodes an assumption about how rings behave. They validate the implementation, not the assumption. Real merchant traffic with real chargeback outcomes is what would validate the latter."
 }

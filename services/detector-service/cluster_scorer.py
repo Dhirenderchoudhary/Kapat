@@ -83,7 +83,18 @@ never be flagged, because a family is a complete explanation for that. Getting f
 at least one signal a family does not produce."
 
 Condition (b) lets weak evidence combine into a flag; condition (a) lets one unmistakable signal
-suffice. The deliberate consequence: a household sharing an address AND a payment method AND
+suffice.
+
+A property of TODAY'S signal set worth stating so nobody mistakes it for a bug or deletes the
+wrong half: condition (b) is currently unreachable. WEAK_FRAUD_SPECIFIC has exactly one member
+(coordinated_timing), so "two distinct fraud-specific types" always includes a strong one, and the
+gate reduces to condition (a) alone. It is kept because it is the rule that is actually meant, not
+a redundant clause: the moment a second weak fraud-specific signal exists (shared device
+fingerprint and burst signup are the two obvious candidates), two weak signals SHOULD be able to
+combine into a flag without either being individually damning, and condition (b) is what makes
+that happen without anyone having to remember to re-derive this reasoning.
+
+The deliberate consequence: a household sharing an address AND a payment method AND
 sometimes ordering at the same time - three overlaps, fully dense, the hardest legitimate case -
 is still capped and still never flagged, because none of its overlaps is something a family
 doesn't do. That case is tested directly in tests/test_cluster_scorer.py.
@@ -325,7 +336,9 @@ def score_cluster(
     raw_risk = WEIGHT_CORROBORATION * corroboration_score + WEIGHT_SUPPORT * support_score
     raw_risk = round(min(max(raw_risk, 0.0), 1.0), 4)
 
-    # --- The ceiling rule. See "THE CEILING RULE" in the module docstring.
+    # --- The ceiling rule. See "THE CEILING RULE" in the module docstring, including why the
+    # second clause below is unreachable with today's single weak fraud-specific signal and is
+    # deliberately kept anyway.
     has_strong = bool(signal_types_seen & STRONG_FRAUD_SPECIFIC)
     n_fraud_specific_types = len(signal_types_seen & FRAUD_SPECIFIC)
     qualifies_for_full_score = has_strong or n_fraud_specific_types >= 2

@@ -34,20 +34,26 @@ export const CHART_COLORS = {
   strong_fraud_specific: "var(--chart-strong)",
 } as const
 
+/**
+ * Aliases the chart variables onto the evidence tokens in globals.css.
+ *
+ * These used to be six hardcoded hex values redeclared inside an inline <style> on every page that
+ * drew a chart, which meant the charts had their own private palette that the rest of the console
+ * knew nothing about. A theme change moved the interface and left the evidence colours behind.
+ * Now there is one definition (--evidence-benign / -weak / -strong) and this maps the chart names
+ * onto it, so a signal class is the same colour in a chart, on a badge, and on a graph edge.
+ *
+ * Kept as a component rather than deleted so the existing call sites stay valid, and because
+ * scoping the aliases here documents which pages actually draw charts.
+ */
 export function ChartPalette() {
   return (
     <style>{`
       :root {
-        --chart-benign: #4a7bb8;
-        --chart-weak: #f59e0b;
-        --chart-strong: #b91c3c;
-        --chart-grid: rgba(0,0,0,0.08);
-      }
-      .dark {
-        --chart-benign: #5a8ec9;
-        --chart-weak: #c08a1c;
-        --chart-strong: #e0455f;
-        --chart-grid: rgba(255,255,255,0.10);
+        --chart-benign: var(--evidence-benign);
+        --chart-weak: var(--evidence-weak);
+        --chart-strong: var(--evidence-strong);
+        --chart-grid: var(--evidence-grid);
       }
     `}</style>
   )

@@ -255,18 +255,27 @@ uncalibrated forest's 0.8 does not mean 80%.
 
 ### The hybrid is the interesting winner
 
-The best model is the one handed the heuristic's own risk score as a 41st feature. It beats the
-pure random forest (2 costly errors against 3) and demolishes the rule alone (against 35). Neither
+The best model is the one handed the heuristic's own risk score as a final feature. It beats the
+pure random forest (4 costly errors against 6) and demolishes the rule alone (against 45). Neither
 component is sufficient: the rule encodes domain judgment the data cannot teach, and the model sees
 behavioural structure the rule never looks at.
 
 ### Off-distribution, it does not regress
 
 On the ten hand-authored adversarial cases in `stress_test.py` - written before any model existed,
-never used for tuning - the trained model scores **8/10, exactly matching the heuristic**, failing
-on the same two cases. A model trained on the OLD easy split scores **6/10**, newly flagging an
-ordinary family that shares an address, a card and a dinner hour. That gap is the clearest evidence
-that the harder dataset, not the bigger ensemble, is what produced the improvement.
+never used for tuning - the trained model scores **9/10** against the heuristic's **8/10**. Its one
+failure is `flatmates_pass_around_one_coupon` at 0.3744, just over its 0.30 operating threshold;
+the heuristic fails that case too, and additionally holds back `ring_maximally_evasive`, which the
+model catches. Read that margin as one case out of ten, not as a general ranking. A model trained on
+the OLD easy split scores **6/10**, newly flagging two ordinary households including one that shares
+an address, a card and a dinner hour. That gap is the clearest evidence that the harder dataset, not
+the bigger ensemble, is what produced the improvement.
+
+These case scores are reproducible. The suite used to seed each population from Python's `hash()`
+of the case name, which is randomised per process, so every run moved the scores in the third and
+fourth decimal while leaving the verdicts intact. `stress_test.case_rng` now seeds from sha256, and
+`train_model.py` calls the same function so the models and the rule are compared on byte-identical
+populations.
 
 ### It actually runs in the agent
 

@@ -234,7 +234,10 @@ detect. Recall _after_ an account has been seen once is **1.0**. Always report t
 0.75 alone understates a detector that is working correctly.
 
 **`data/stress_test_report.json`** - 10 hand-authored adversarial cases: **8 correct**. The two
-failures are in section 7.
+failures are in section 7. These scores are reproducible as of the fix to `case_rng`: the suite
+used to seed each case from Python's `hash()` of the case name, which is randomised per process, so
+every run produced slightly different scores in the third and fourth decimal. The verdicts were
+always stable; the numbers were not. Re-run it and you now get the same values byte for byte.
 
 **`data/threshold_selection.json`** - selected 0.45, margin 0.2937 (see section 3).
 
@@ -252,52 +255,83 @@ mr-IN, after finding and fixing two real keyword-overlap bugs during evaluation.
 
 ## 6. The ML comparison, and what it actually shows
 
-`train_model.py` extracts 21 features from the same live graph the detector builds (size, density,
+`train_model.py` extracts 40 features from the same live graph the detector builds (size, density,
 average edge confidence, per-signal presence and confidence, counts of benign vs fraud-specific
-signal types, transaction statistics). No feature reads a label. Three models are trained on the
-TRAIN split only (27 clusters), selected by stratified 5-fold cross-validation **inside** that
-split, scored by average precision rather than accuracy. The TEST split (12 clusters) is read once,
-at the end.
+signal types, transaction statistics). No feature reads a label. Six supervised models plus an
+unsupervised isolation forest are trained on the TRAIN split only, selected by stratified 5-fold
+cross-validation **inside** that split, scored by average precision rather than accuracy. The TEST
+split is read once, at the end. Everything below is read from `data/model_comparison.json`.
 
-**Result 1: the held-out split cannot rank anything.**
+**Result 1: the easy split cannot rank anything.**
 
-| Method                                  | Held-out average precision |
-| --------------------------------------- | -------------------------- |
-| Logistic regression                     | 1.000                      |
-| Random forest                           | 1.000                      |
-| Gradient boosting                       | 1.000                      |
-| Corroboration heuristic (no training)   | 1.000                      |
-| **Isolation forest (no labels at all)** | **1.000**                  |
+| Method on the easy split (held-out AP)      | Value     |
+| ------------------------------------------- | --------- |
+| Logistic regression                         | 1.000     |
+| Random forest                               | 1.000     |
+| Extra trees                                 | 1.000     |
+| Gradient boosting                           | 1.000     |
+| Hybrid (heuristic + random forest)          | 1.000     |
+| **Corroboration heuristic (no training)**   | **1.000** |
+| Hist gradient boosting                      | 0.417     |
+| Isolation forest (no labels at all)         | 0.517     |
 
-The last row is the finding. An unsupervised model that never saw a label matches every supervised
-one. **A score an unlabelled model also reaches is measuring the split, not the method.** Train and
-test come from one generator, so memorising the generator is enough. Never quote "100% average
-precision, beats four baselines" from this table.
+The heuristic row is the finding. A hand-written rule that never saw a label, a training example or
+a gradient step ties every supervised model at a perfect score. **A number an untrained rule also
+reaches is measuring the split, not the method.** Train and test come from one generator that gives
+every ring all five signals and every household exactly one, so a single feature separates the
+classes. Never quote "100% average precision, beats four baselines" from this table.
 
-**Result 2: the adversarial suite ranks them, and the hand-built scorer wins.**
+(An earlier version of this section reported the isolation forest at 1.000 and made the same
+argument through it. That was true when features.py produced 21 features; with 40 it scores 0.517,
+so the argument now runs through the heuristic instead. The point is unchanged and the table is
+what the current code produces.)
 
-| Method                                | Adversarial | New failures vs the heuristic                                              |
-| ------------------------------------- | ----------- | -------------------------------------------------------------------------- |
-| **Corroboration heuristic (shipped)** | **8 / 10**  | -                                                                          |
-| Gradient boosting                     | 7 / 10      | `ring_promo_abuse_only` (missed)                                           |
-| Random forest                         | 6 / 10      | above + `household_shares_card_and_orders_together` (**flagged a family**) |
-| Logistic regression                   | 6 / 10      | same as random forest                                                      |
+**Result 2: the graded split ranks them, and the hybrid wins.**
 
-Both the tree and the linear model newly flag an ordinary family sharing an address, a card and a
-dinner hour: the exact case the ceiling rule exists for. They learned "dense group = ring", because
-in the generated data it always is.
+| Method on the hard split                | Precision | Recall | Costly errors |
+| --------------------------------------- | --------- | ------ | ------------- |
+| **Hybrid (heuristic + random forest)**  | **90.9%** | **100%** | **4**       |
+| Random forest                           | 87.0%     | 100%   | 6             |
+| Gradient boosting                       | 85.1%     | 100%   | 7             |
+| Hist gradient boosting                  | 85.1%     | 100%   | 7             |
+| Logistic regression                     | 76.9%     | 100%   | 12            |
+| Extra trees                             | 76.9%     | 100%   | 12            |
+| Corroboration heuristic alone           | 66.0%     | 82.5%  | 45            |
 
-**Result 3: the forest rediscovered the heuristic.** Top importances are
-`has_shared_phone_pattern` (0.133), `conf_shared_phone_pattern` (0.130), `n_benign_types` (0.117),
-`n_fraud_types` (0.117), `avg_confidence` (0.105), `has_strong_signal` (0.101). Those are the terms
-the heuristic weights by hand. It re-derived what was encoded, it did not find a missed signal.
+Costly errors is `false_positives x 1 + false_negatives x 4`, a policy dial stated in the report,
+not a measurement.
 
-**Why the heuristic ships:** not because trained models are worse in principle, but because on the
-only evaluation not drawn from the generator it made fewer costly errors, and its errors are
-explainable to the merchant who has to act on them. **This changes with real data.** On real
-merchant traffic with real chargeback outcomes a trained model would have something to learn that
-the heuristic does not already encode. Re-run `train_model.py` then; the comparison is written to
-be repeated, not won once.
+**Result 3: off-distribution, the hybrid does not regress.** On the ten hand-authored adversarial
+cases the hard-split model scores **9/10** against the heuristic's **8/10**, its only failure being
+`flatmates_pass_around_one_coupon` (0.3744, just over its 0.30 threshold). It catches
+`ring_maximally_evasive`, which the rule deliberately holds back. Read that as one case, not as a
+general ranking: the margin is a single population out of ten. A model trained on the OLD easy
+split scores **6/10**, newly flagging two ordinary households including one sharing an address, a
+card and a dinner hour. That gap is the clearest evidence that the harder dataset, not the bigger
+ensemble, produced the improvement.
+
+**Result 4: the forest rediscovered the heuristic.** Top importances are dominated by the terms the
+heuristic weights by hand: the phone-pattern signal and its confidence, the counts of benign versus
+fraud-specific signal types, average confidence, and whether a strong signal is present. It
+re-derived what was encoded; it did not find a missed signal. Read the current ordering from
+`feature_importance` in the report rather than quoting it from here.
+
+**What ships, and where to look:** the **hybrid model decides `flagged`**. `main.py`'s
+`/detect-rings` calls `model_scorer.score()` and, when a usable model is on disk, its verdict
+replaces the heuristic's while `heuristic_risk_score`, `heuristic_flagged`, `scorer` and
+`scorers_agree` are all preserved beside it. The heuristic always runs, and its plain-language
+explanation always survives, because "the ensemble said 0.91" is not a reason a merchant can act
+on. With no scikit-learn, no model file, or a feature list that no longer matches the card, the
+service degrades to the heuristic and `GET /model` says so.
+
+An earlier version of this file said the heuristic ships and the models lose 6-7/10. That has not
+been true since `model_scorer.py` was added, and the current measurements do not support it either.
+If you find that claim anywhere else in the repo, it is stale: check `GET /model` for what is
+actually running.
+
+**This all changes with real data.** On real merchant traffic with real chargeback outcomes there
+is far more for a model to learn than either generator can teach. Re-run `train_model.py` then; the
+comparison is written to be repeated, not won once.
 
 ---
 
@@ -309,7 +343,7 @@ signals this is genuinely indistinguishable from promo abuse. Better weighting d
 information is not there. This is the case voice verification exists for: ask the account holder,
 in their language, rather than act on a guess.
 
-**False negative, scored 0.3872 - `ring_maximally_evasive`.** Different addresses, different cards,
+**False negative, scored 0.3876 - `ring_maximally_evasive`.** Different addresses, different cards,
 ordinary phone numbers, no promo reuse. Only coordinated timing links them. Held back deliberately:
 ordering at the same time is what families do, and flagging on that alone would put real customers
 in the review queue every day. This is the intended side of the trade.
@@ -406,11 +440,13 @@ is the one place raw rows become clusters, and it goes through the real service 
 
 ## 11. Current state
 
-**Uncommitted.** The working tree carries the full body of recent work: `train_model.py`,
+**Committed.** The body of work this section used to list as uncommitted - `train_model.py`,
 `make_figures.py`, `requirements-analysis.txt`, `data/model_comparison.json`, `docs/images/`,
 `animated-charts.tsx`, `model-labels.ts`, the rewritten `app/page.tsx`, the extended
-`app/evidence/page.tsx`, `metrics.ts`, `evidence.ts`, and the updated `README.md`,
-`docs/algorithm.md`, `docs/submission-draft.md`. Nothing is committed. Ask before committing.
+`app/evidence/page.tsx`, `metrics.ts`, `evidence.ts`, `README.md`, `docs/algorithm.md`,
+`docs/submission-draft.md` - is all on `canary`. Run `git status` rather than trusting this
+paragraph: the tree is often left dirty on purpose, and the working rule still stands, **do not
+commit or push unless explicitly asked.**
 
 **Recently removed on purpose:** `web/next/public/figures/` and
 `web/next/src/components/marketing/figure.tsx` (static SVGs became dead once the app drew its own

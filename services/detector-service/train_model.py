@@ -52,6 +52,7 @@ from pathlib import Path
 
 import joblib
 import numpy as np
+import sklearn
 from sklearn.calibration import CalibratedClassifierCV
 from sklearn.ensemble import (
     ExtraTreesClassifier,
@@ -360,7 +361,9 @@ def adversarial_evaluation(fitted_by_split: dict) -> dict:
 
     rows = []
     for case_spec in stress_test.CASES:
-        rng = random.Random(hash(case_spec["name"]) % (2**31))
+        # Same seeding as stress_test.py, from the same function, so the cases this compares the
+        # models on are byte-identical to the ones the heuristic is scored against. See case_rng.
+        rng = stress_test.case_rng(case_spec["name"])
         spec = dict(case_spec)
         name, size = spec.pop("name"), spec.pop("size")
         expectation, note = spec.pop("expectation"), spec.pop("note")
@@ -456,6 +459,10 @@ def export_model(split: dict, train_path: Path) -> dict:
         "method": best,
         "trained_at": datetime.now(UTC).isoformat(),
         "trained_on": train_path.name,
+        # scikit-learn only guarantees a pickle under the version that wrote it. Recording the
+        # version lets model_scorer.py report a mismatch instead of scoring on an estimator that
+        # unpickled with a warning nobody saw. See model_scorer._load.
+        "sklearn_version": sklearn.__version__,
         "feature_names": F.FEATURE_NAMES,
         # The hybrid appends the heuristic's own risk score as a final column. The live scorer has
         # to know that, or it will hand the model a vector one short.

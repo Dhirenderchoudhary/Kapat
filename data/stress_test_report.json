@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-29T23:06:57.536292+00:00",
+  "generated_at": "2026-09-03T21:12:52.000964+00:00",
   "flag_threshold": 0.45,
   "n_cases": 10,
   "n_correct": 8,
@@ -13,7 +13,9 @@
       "risk_score": 0.2992,
       "raw_risk_score": 0.2992,
       "ceiling_applied": true,
-      "signal_types_present": ["shared_address"],
+      "signal_types_present": [
+        "shared_address"
+      ],
       "flagged": false,
       "correct": true,
       "explanation": [
@@ -29,7 +31,10 @@
       "risk_score": 0.364,
       "raw_risk_score": 0.364,
       "ceiling_applied": true,
-      "signal_types_present": ["shared_address", "shared_payment"],
+      "signal_types_present": [
+        "shared_address",
+        "shared_payment"
+      ],
       "flagged": false,
       "correct": true,
       "explanation": [
@@ -46,7 +51,11 @@
       "risk_score": 0.4,
       "raw_risk_score": 0.4987,
       "ceiling_applied": true,
-      "signal_types_present": ["coordinated_timing", "shared_address", "shared_payment"],
+      "signal_types_present": [
+        "coordinated_timing",
+        "shared_address",
+        "shared_payment"
+      ],
       "flagged": false,
       "correct": true,
       "explanation": [
@@ -85,8 +94,8 @@
       "size": 5,
       "expectation": "flagged",
       "note": "Textbook ring: every signal fires. What the main test set contains.",
-      "risk_score": 0.9675,
-      "raw_risk_score": 0.9675,
+      "risk_score": 0.9677,
+      "raw_risk_score": 0.9677,
       "ceiling_applied": false,
       "signal_types_present": [
         "coordinated_timing",
@@ -103,7 +112,7 @@
         "Weaker fraud-specific signal: transactions repeatedly firing within minutes of each other - real households do sometimes do this.",
         "Benign-explainable signal: a shared delivery address - common among families and flatmates.",
         "Benign-explainable signal: a shared payment method - common among families and flatmates.",
-        "FLAGGED: scored 0.9675, at or above the 0.45 threshold selected on the training split."
+        "FLAGGED: scored 0.9677, at or above the 0.45 threshold selected on the training split."
       ]
     },
     {
@@ -111,8 +120,8 @@
       "size": 5,
       "expectation": "flagged",
       "note": "Evasive ring: uses different delivery addresses, but still one card, sequential SIM block, coordinated timing, one promo.",
-      "risk_score": 0.8998,
-      "raw_risk_score": 0.8998,
+      "risk_score": 0.9001,
+      "raw_risk_score": 0.9001,
       "ceiling_applied": false,
       "signal_types_present": [
         "coordinated_timing",
@@ -127,7 +136,7 @@
         "Strong fraud-specific signal: the same promo code funnelled through several accounts - no ordinary household produces this.",
         "Weaker fraud-specific signal: transactions repeatedly firing within minutes of each other - real households do sometimes do this.",
         "Benign-explainable signal: a shared payment method - common among families and flatmates.",
-        "FLAGGED: scored 0.8998, at or above the 0.45 threshold selected on the training split."
+        "FLAGGED: scored 0.9001, at or above the 0.45 threshold selected on the training split."
       ]
     },
     {
@@ -135,17 +144,21 @@
       "size": 5,
       "expectation": "flagged",
       "note": "More evasive: different addresses AND different cards. Only the SIM block, timing and promo reuse remain.",
-      "risk_score": 0.8324,
-      "raw_risk_score": 0.8324,
+      "risk_score": 0.8321,
+      "raw_risk_score": 0.8321,
       "ceiling_applied": false,
-      "signal_types_present": ["coordinated_timing", "shared_phone_pattern", "shared_promo"],
+      "signal_types_present": [
+        "coordinated_timing",
+        "shared_phone_pattern",
+        "shared_promo"
+      ],
       "flagged": true,
       "correct": true,
       "explanation": [
         "Strong fraud-specific signal: phone numbers from one sequential block (a disposable-range pattern) - no ordinary household produces this.",
         "Strong fraud-specific signal: the same promo code funnelled through several accounts - no ordinary household produces this.",
         "Weaker fraud-specific signal: transactions repeatedly firing within minutes of each other - real households do sometimes do this.",
-        "FLAGGED: scored 0.8324, at or above the 0.45 threshold selected on the training split."
+        "FLAGGED: scored 0.8321, at or above the 0.45 threshold selected on the training split."
       ]
     },
     {
@@ -153,16 +166,19 @@
       "size": 4,
       "expectation": "flagged",
       "note": "Pure promo-abuse ring: no shared address, no shared card, ordinary phone numbers. Only coordinated timing + one promo funnelled through all accounts.",
-      "risk_score": 0.5831,
-      "raw_risk_score": 0.5831,
+      "risk_score": 0.5826,
+      "raw_risk_score": 0.5826,
       "ceiling_applied": false,
-      "signal_types_present": ["coordinated_timing", "shared_promo"],
+      "signal_types_present": [
+        "coordinated_timing",
+        "shared_promo"
+      ],
       "flagged": true,
       "correct": true,
       "explanation": [
         "Strong fraud-specific signal: the same promo code funnelled through several accounts - no ordinary household produces this.",
         "Weaker fraud-specific signal: transactions repeatedly firing within minutes of each other - real households do sometimes do this.",
-        "FLAGGED: scored 0.5831, at or above the 0.45 threshold selected on the training split."
+        "FLAGGED: scored 0.5826, at or above the 0.45 threshold selected on the training split."
       ]
     },
     {
@@ -173,7 +189,9 @@
       "risk_score": 0.4708,
       "raw_risk_score": 0.4708,
       "ceiling_applied": false,
-      "signal_types_present": ["shared_phone_pattern"],
+      "signal_types_present": [
+        "shared_phone_pattern"
+      ],
       "flagged": true,
       "correct": true,
       "explanation": [
@@ -186,15 +204,17 @@
       "size": 4,
       "expectation": "flagged",
       "note": "Hardest ring: coordinated timing only. Different addresses, cards, phones, no promo reuse. Deliberately at the edge of what these five signals can see at all.",
-      "risk_score": 0.3872,
-      "raw_risk_score": 0.3872,
+      "risk_score": 0.3876,
+      "raw_risk_score": 0.3876,
       "ceiling_applied": true,
-      "signal_types_present": ["coordinated_timing"],
+      "signal_types_present": [
+        "coordinated_timing"
+      ],
       "flagged": false,
       "correct": false,
       "explanation": [
         "Weaker fraud-specific signal: transactions repeatedly firing within minutes of each other - real households do sometimes do this.",
-        "CAPPED at 0.4: every connection in this group has an ordinary household explanation, so it is held below the 0.45 flagging threshold and never shown to the merchant as a ring. Uncapped it would have scored 0.3872."
+        "CAPPED at 0.4: every connection in this group has an ordinary household explanation, so it is held below the 0.45 flagging threshold and never shown to the merchant as a ring. Uncapped it would have scored 0.3876."
       ]
     }
   ],
