@@ -10,6 +10,7 @@ import { describeRoute, resolver } from "hono-openapi"
 import { z } from "zod"
 
 import { ApiError, validationErrorResponses } from "@/lib/error"
+import { jsonRequestBody } from "@/lib/openapi"
 
 // Bulk ingestion (Architecture.md §6's webhook contract, widened for the case a merchant actually
 // has on day one: a CSV exported from their payment dashboard, not a live webhook subscription).
@@ -190,6 +191,7 @@ export const ingestRouter = new Hono()
       tags: ["Ingest"],
       description:
         "Bulk-ingest mapped transaction rows (e.g. a CSV a merchant exported from their payment dashboard). Idempotent on razorpay_event_id and customer_ref at the database level, so re-uploading the same file adds nothing (Principle 3). Ingestion only stores accounts and transactions - it does not run detection; call POST /api/clusters/detect for that.",
+      ...jsonRequestBody(ingestBodySchema),
       responses: {
         200: {
           description: "OK",

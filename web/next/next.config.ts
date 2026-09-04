@@ -97,6 +97,10 @@ const nextConfig: NextConfig = {
               source: "/api/:path*",
               destination: `${targetApiUrl.replace(/\/$/, "")}/api/:path*`,
             },
+            {
+              source: "/webhooks/:path*",
+              destination: `${targetApiUrl.replace(/\/$/, "")}/webhooks/:path*`,
+            },
           ]
         : []),
       {

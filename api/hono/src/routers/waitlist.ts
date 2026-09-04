@@ -5,6 +5,7 @@ import { describeRoute, resolver } from "hono-openapi"
 import { z } from "zod"
 
 import { ApiError, validationErrorResponses } from "@/lib/error"
+import { jsonRequestBody } from "@/lib/openapi"
 import { requireFeature } from "@/middlewares"
 
 const joinSchema = z.object({
@@ -25,7 +26,7 @@ export const waitlistRouter = new Hono()
     describeRoute({
       tags: ["Waitlist"],
       description:
-        "Approximate waitlist count once it passes a display threshold (0 below it), rounded down in steps of 5",
+        "Approximate waitlist count once it passes a display threshold (0 below it), rounded down in steps of 5. 404 when the waitlist feature is off.",
       ...({
         "x-codeSamples": [
           {
@@ -60,7 +61,8 @@ const { data, error } = await unwrap(apiClient.waitlist.$get())`,
     "/",
     describeRoute({
       tags: ["Waitlist"],
-      description: "Join the waitlist",
+      description: "Join the waitlist. 404 when the waitlist feature is off.",
+      ...jsonRequestBody(joinSchema),
       ...({
         "x-codeSamples": [
           {

@@ -11,10 +11,12 @@ All data in this repository is synthetic. Accounts, phones, addresses, and verif
 | Surface          | URL                                                                                                                  |
 | ---------------- | -------------------------------------------------------------------------------------------------------------------- |
 | Console          | <https://kapat.dhirenderchoudhary.com>                                                                               |
+| Docs             | <https://kapat.dhirenderchoudhary.com/docs>                                                                          |
+| API docs         | <https://kapat.dhirenderchoudhary.com/api/docs>                                                                      |
 | API              | <https://razorpay-buildathon-api.vercel.app>                                                                         |
 | API, same origin | `https://kapat.dhirenderchoudhary.com/api/*` (the console proxies `/api`, so the browser makes no cross-origin call) |
 | Webhook          | `https://razorpay-buildathon-api.vercel.app/webhooks/razorpay`                                                       |
-| OpenAPI          | <https://razorpay-buildathon-api.vercel.app/api/openapi.json>                                                        |
+| OpenAPI          | <https://kapat.dhirenderchoudhary.com/api/openapi.json>                                                              |
 
 Point Razorpay's webhook at the API host, not the console host. The console proxies `/api` only, so
 `/webhooks/razorpay` on `kapat.dhirenderchoudhary.com` returns 404.
@@ -76,7 +78,7 @@ Razorpay webhook / CSV ingest
 
 Same-origin `/api/*` is rewritten to the Hono process. Production hosts are **env only** (`NEXT_PUBLIC_APP_URL`, `NEXT_PUBLIC_API_URL`, `INTERNAL_API_URL`). There is no baked `*.vercel.app` fallback. If the public API origin equals the site origin and `INTERNAL_API_URL` is missing, the rewrite is skipped and calls fail closed.
 
-In-app docs: `/docs`. Live API reference: `/api/docs` (Scalar, from OpenAPI).
+In-app docs: <https://kapat.dhirenderchoudhary.com/docs>. Live API reference: <https://kapat.dhirenderchoudhary.com/api/docs> (Scalar, from OpenAPI).
 
 ## Backend API
 
@@ -103,7 +105,7 @@ Mounted under `/api` except Razorpay webhooks, which stay at `/webhooks/razorpay
 | POST   | `/api/voice/listen`          | Saaras v3 STT + rule parse                                              |
 | POST   | `/api/razorpay/connect`      | Store merchant keys (AES-256-GCM)                                       |
 
-Full table: [`docs/api.md`](docs/api.md). Typed contract: `GET /api/openapi.json`.
+Full table: [`docs/api.md`](docs/api.md). Live: <https://kapat.dhirenderchoudhary.com/api/docs>. Typed contract: `GET /api/openapi.json`.
 
 ## Detector
 

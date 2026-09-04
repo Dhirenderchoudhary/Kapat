@@ -2,9 +2,11 @@ import { accounts, db, transactions } from "@packages/db"
 import { eq } from "drizzle-orm"
 import { Hono } from "hono"
 import { describeRoute } from "hono-openapi"
+import { z } from "zod"
 
 import { ApiError } from "@/lib/error"
 import { decideHold, recordHold } from "@/lib/hold-decision"
+import { jsonRequestBody } from "@/lib/openapi"
 import { mapPayment, type RazorpayPayment } from "@/lib/razorpay-client"
 import { verifyWebhookSignature } from "@/lib/razorpay-signatures"
 
@@ -52,6 +54,25 @@ export const webhooksRouter = new Hono().post(
     tags: ["Webhooks"],
     description:
       "Receives Razorpay webhook events (payment.authorized / payment.captured / payment.failed), verifies X-Razorpay-Signature as HMAC-SHA256 of the raw body using RAZORPAY_WEBHOOK_SECRET, ingests the payment idempotently, and re-runs ring detection so a new ring surfaces on the dashboard within seconds. Idempotent end to end: Razorpay retries failed deliveries, and a redelivered event is a no-op (Principle 3).",
+    parameters: [
+      {
+        name: "X-Razorpay-Signature",
+        in: "header",
+        required: true,
+        description: "HMAC-SHA256 of the raw body, keyed with RAZORPAY_WEBHOOK_SECRET.",
+        schema: { type: "string" },
+      },
+    ],
+    ...jsonRequestBody(
+      z.object({
+        event: z.string().meta({ example: "payment.authorized" }),
+        payload: z
+          .object({
+            payment: z.object({ entity: z.record(z.string(), z.unknown()) }).optional(),
+          })
+          .optional(),
+      }),
+    ),
     responses: {
       200: { description: "Accepted" },
       400: { description: "Signature mismatch or malformed payload" },

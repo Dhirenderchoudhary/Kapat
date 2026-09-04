@@ -190,6 +190,9 @@ socket.addEventListener("message", (event) => {
           title: site.name,
           description: site.apiReferenceDescription,
         },
+        // Env only: Scalar Try It and curl samples need an absolute server or they emit
+        // `curl /webhooks/razorpay` with no host. HONO_APP_URL is the API process (not the website).
+        servers: [{ url: new URL(env.HONO_APP_URL).origin, description: "API" }],
       },
       // Always-reachable errors (429/500) on every method the API serves; routes add 400/401 in their own responses. Add a method here the day a route starts using it, or its responses ship undocumented.
       defaultOptions: {
