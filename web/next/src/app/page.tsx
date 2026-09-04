@@ -22,8 +22,8 @@ import { apiClient, unwrap } from "@/lib/api/client"
 
 export const dynamic = "force-dynamic"
 
-function pct(value: number | null | undefined): string | null {
-  return value === null || value === undefined ? null : `${(value * 100).toFixed(0)}%`
+function pct(value: number | null | undefined, digits = 0): string | null {
+  return value === null || value === undefined ? null : `${(value * 100).toFixed(digits)}%`
 }
 
 const PIPELINE = [
@@ -139,6 +139,17 @@ export default async function LandingPage() {
         .filter((r) => r.precision > 0 || r.recall > 0)
     : []
 
+  // Every number in this section's copy is derived from `ranked` rather than typed. The headline
+  // and the closing sentence used to carry hardcoded figures ("94.7% precision", "67% precision",
+  // "35 costly errors") that silently went stale the moment train_model.py was re-run against a
+  // changed graph. A page that states a measurement the report no longer contains is the one thing
+  // this project cannot afford to ship, so the values come from the same rows the bars do.
+  const best = ranked[0] ?? null
+  const heuristicRow = ranked.find((r) => r.key === "heuristic_corroboration_gated") ?? null
+  const modelsTitle = best
+    ? `${pct(best.precision, 1)} precision. ${pct(best.recall, 1)} recall.`
+    : "The trained model"
+
   // Every method scored on the ORIGINAL split, where they all tie - including one trained with no
   // labels at all. Kept because that tie is the argument, not an embarrassment.
   const saturation = easy
@@ -247,7 +258,7 @@ export default async function LandingPage() {
 
       {/* -------------------------------------------------------- model comparison */}
       {ranked.length > 0 && (
-        <Section id="models" eyebrow="The trained model" title="94.7% precision. 100% recall.">
+        <Section id="models" eyebrow="The trained model" title={modelsTitle}>
           <div className="space-y-10">
             <GroupedBars
               rows={ranked.map((r, i) => ({
@@ -273,8 +284,9 @@ export default async function LandingPage() {
             <p className="text-muted-foreground max-w-2xl text-sm sm:text-base">
               Measured on 1,185 accounts and 5,341 transactions the model never saw, where rings
               range from sloppy to careful and families share up to four signals. The hand-built
-              rule alone gets {ranked.length > 0 ? "67% precision" : "less"}; the trained model
-              makes {ranked[0]?.cost ?? 0} costly errors where the rule makes 35.
+              rule alone gets {heuristicRow ? pct(heuristicRow.precision, 1) : "less"} precision;
+              the trained model makes {best?.cost ?? 0} costly errors where the rule makes{" "}
+              {heuristicRow?.cost ?? 0}.
             </p>
           </div>
         </Section>
@@ -380,10 +392,6 @@ export default async function LandingPage() {
 
       {/* ----------------------------------------------------------------- close */}
       <section className="relative overflow-hidden border-t py-20">
-        <div
-          className="pointer-events-none absolute -bottom-24 left-1/2 -z-10 h-96 w-96 -translate-x-1/2 rounded-full bg-emerald-500/10 blur-3xl"
-          aria-hidden
-        />
         <div className="mx-auto w-full max-w-5xl px-4 sm:px-6">
           <div className="glass-panel relative overflow-hidden rounded-2xl border p-8 shadow-xl sm:p-12">
             <h2 className="text-foreground text-2xl font-bold tracking-tight sm:text-4xl">

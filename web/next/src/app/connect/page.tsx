@@ -27,10 +27,6 @@ export default function ConnectPage() {
   return (
     <main>
       <section className="relative overflow-hidden border-b py-16 sm:py-20">
-        <div
-          className="pointer-events-none absolute -top-24 left-1/2 -z-10 h-96 w-96 -translate-x-1/2 rounded-full bg-emerald-500/10 blur-3xl"
-          aria-hidden
-        />
         <div className="mx-auto w-full max-w-4xl px-4 sm:px-6">
           <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl">
             Connect Razorpay. The agent does the rest.

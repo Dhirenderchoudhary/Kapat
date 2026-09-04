@@ -49,78 +49,146 @@
   --radius-2xl: calc(var(--radius) + 8px);
   --radius-3xl: calc(var(--radius) + 12px);
   --radius-4xl: calc(var(--radius) + 16px);
+
+  /* Evidence classes, exposed to Tailwind so a component can write text-evidence-strong instead of
+   * reaching for a raw palette colour that means nothing to this product. */
+  --color-evidence-benign: var(--evidence-benign);
+  --color-evidence-weak: var(--evidence-weak);
+  --color-evidence-strong: var(--evidence-strong);
+
+  /* ------------------------------------------------------------------ the emerald remap
+   * The product accent was written as `emerald-*` in 106 places across 16 files, hardcoded to
+   * Tailwind's palette rather than to any token. Green is the wrong accent for this console:
+   * in a risk queue green means "cleared", so it cannot also be the colour of the brand, the
+   * headline and the primary button on a page about fraud. It also fought the evidence palette,
+   * which is the system that actually carries meaning here.
+   *
+   * Redefining the scale is the change with the least blast radius: a 106-site rewrite across
+   * badges, buttons, borders, glows and chart fills would risk layout in files this change has no
+   * reason to touch, and every one of those sites already means "the accent" rather than "green".
+   * So `emerald` in this codebase IS the accent ramp, in the ultramarine of --primary.
+   *
+   * New code should use `primary` or the evidence tokens. This mapping exists to retire the old
+   * usages safely, not to be built on. */
+  --color-emerald-300: oklch(0.78 0.12 268);
+  --color-emerald-400: oklch(0.7 0.15 268);
+  --color-emerald-500: oklch(0.56 0.18 268);
+  --color-emerald-600: oklch(0.48 0.17 268);
+  --color-emerald-700: oklch(0.41 0.15 268);
 }
 
 :root {
-  --radius: 0.625rem;
+  /* ------------------------------------------------------------------ evidence palette
+   * One system, not three. This console's whole job is to show a merchant WHY a group of
+   * accounts was flagged, so the colour that classifies evidence and the colour that paints the
+   * interface are the same colour. A signal an ordinary household also produces is slate; a
+   * signal only weakly tied to fraud is amber; a signal no household produces is crimson. Those
+   * three are declared here as first-class tokens, and the charts, the network graph edges, the
+   * badges and the risk states all read from them.
+   *
+   * The discipline that makes it work: crimson is rationed. It appears for strong fraud-specific
+   * evidence and for a flagged state, and nowhere else - never as decoration, never on a heading,
+   * never on a button. On a screen where someone is deciding whether to hold a customer's money,
+   * the one red thing should always mean the same thing.
+   *
+   * The neutrals carry real chroma (a navy lean) rather than being pure greys. Ink on cool paper,
+   * not a colourless shell. */
+  --paper: oklch(0.982 0.005 250);
+  --ink: oklch(0.2 0.03 262);
+
+  --evidence-benign: oklch(0.55 0.1 245);
+  --evidence-weak: oklch(0.63 0.14 66);
+  --evidence-strong: oklch(0.52 0.2 22);
+  --evidence-grid: oklch(0.2 0.03 262 / 8%);
+
+  --radius: 0.5rem;
+  --background: var(--paper);
+  --foreground: var(--ink);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
+  --card-foreground: var(--ink);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --success: oklch(0.627 0.194 149.214);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.809 0.105 251.813);
-  --chart-2: oklch(0.623 0.214 259.815);
-  --chart-3: oklch(0.546 0.245 262.881);
-  --chart-4: oklch(0.488 0.243 264.376);
-  --chart-5: oklch(0.424 0.199 265.638);
+  --popover-foreground: var(--ink);
+
+  /* Ultramarine. The working ink of the console: links, focus, primary actions. Deliberately not
+   * green - green means "cleared" in a risk queue, so it cannot also be the brand accent. */
+  --primary: oklch(0.48 0.17 268);
+  --primary-foreground: oklch(0.99 0.004 250);
+  --secondary: oklch(0.955 0.008 255);
+  --secondary-foreground: oklch(0.28 0.03 262);
+  --muted: oklch(0.958 0.007 255);
+  --muted-foreground: oklch(0.5 0.025 258);
+  --accent: oklch(0.95 0.014 258);
+  --accent-foreground: oklch(0.3 0.04 264);
+  --destructive: var(--evidence-strong);
+  --success: oklch(0.55 0.13 155);
+  --border: oklch(0.9 0.012 255);
+  --input: oklch(0.9 0.012 255);
+  --ring: oklch(0.48 0.17 268);
+
+  /* Sequential ramp along the same benign -> strong axis the evidence classes use, so a chart and
+   * a badge never disagree about what a colour means. */
+  --chart-1: oklch(0.62 0.09 245);
+  --chart-2: oklch(0.55 0.13 262);
+  --chart-3: oklch(0.48 0.17 268);
+  --chart-4: oklch(0.63 0.14 66);
+  --chart-5: oklch(0.52 0.2 22);
+
   --sidebar: var(--background);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar-foreground: var(--ink);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: oklch(0.99 0.004 250);
+  --sidebar-accent: oklch(0.95 0.014 258);
+  --sidebar-accent-foreground: oklch(0.3 0.04 264);
+  --sidebar-border: oklch(0.9 0.012 255);
+  --sidebar-ring: oklch(0.48 0.17 268);
   --fd-banner-height: 3.5rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --success: oklch(0.723 0.219 149.579);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.809 0.105 251.813);
-  --chart-2: oklch(0.623 0.214 259.815);
-  --chart-3: oklch(0.546 0.245 262.881);
-  --chart-4: oklch(0.488 0.243 264.376);
-  --chart-5: oklch(0.424 0.199 265.638);
+  /* Ink becomes the ground. Same hue family, so the two themes are one design rather than a
+   * palette and its inversion. */
+  --paper: oklch(0.17 0.022 262);
+  --ink: oklch(0.96 0.008 250);
+
+  --evidence-benign: oklch(0.68 0.1 245);
+  --evidence-weak: oklch(0.76 0.13 72);
+  --evidence-strong: oklch(0.66 0.19 22);
+  --evidence-grid: oklch(0.96 0.008 250 / 10%);
+
+  --background: var(--paper);
+  --foreground: var(--ink);
+  --card: oklch(0.215 0.024 262);
+  --card-foreground: var(--ink);
+  --popover: oklch(0.215 0.024 262);
+  --popover-foreground: var(--ink);
+  --primary: oklch(0.7 0.15 268);
+  --primary-foreground: oklch(0.17 0.022 262);
+  --secondary: oklch(0.27 0.026 262);
+  --secondary-foreground: var(--ink);
+  --muted: oklch(0.27 0.026 262);
+  --muted-foreground: oklch(0.72 0.02 255);
+  --accent: oklch(0.3 0.035 264);
+  --accent-foreground: var(--ink);
+  --destructive: var(--evidence-strong);
+  --success: oklch(0.7 0.15 155);
+  --border: oklch(0.96 0.008 250 / 12%);
+  --input: oklch(0.96 0.008 250 / 16%);
+  --ring: oklch(0.7 0.15 268);
+
+  --chart-1: oklch(0.72 0.09 245);
+  --chart-2: oklch(0.66 0.13 262);
+  --chart-3: oklch(0.7 0.15 268);
+  --chart-4: oklch(0.76 0.13 72);
+  --chart-5: oklch(0.66 0.19 22);
+
   --sidebar: var(--background);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --sidebar-foreground: var(--ink);
+  --sidebar-primary: oklch(0.7 0.15 268);
+  --sidebar-primary-foreground: oklch(0.17 0.022 262);
+  --sidebar-accent: oklch(0.3 0.035 264);
+  --sidebar-accent-foreground: var(--ink);
+  --sidebar-border: oklch(0.96 0.008 250 / 12%);
+  --sidebar-ring: oklch(0.7 0.15 268);
 }
 
 @layer base {
@@ -292,87 +360,53 @@
 }
 
 .glass-panel {
-  background: rgba(255, 255, 255, 0.03);
+  /* Theme-aware. These were white-on-white in the light theme: a 3% white fill and an 8% white
+   * border are invisible on paper, so all 24 panels using this class had no visible surface or
+   * edge in light mode and only appeared once you switched to dark. Built from the design tokens
+   * now, so a panel is a panel in both themes. */
+  background: color-mix(in oklab, var(--card) 92%, var(--muted));
+  border: 1px solid var(--border);
+}
+
+.dark .glass-panel {
+  background: color-mix(in oklab, var(--card) 70%, transparent);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border);
 }
 
 .glass-panel-elevated {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%);
+  background: var(--card);
+  border: 1px solid var(--border);
+  box-shadow:
+    0 1px 2px oklch(0.2 0.03 262 / 6%),
+    0 12px 32px -16px oklch(0.2 0.03 262 / 18%);
+}
+
+.dark .glass-panel-elevated {
+  background: color-mix(in oklab, var(--card) 80%, transparent);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  box-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.5);
+  border: 1px solid var(--border);
+  box-shadow: 0 20px 50px -12px oklch(0 0 0 / 50%);
 }
 
 .glass-card-hover {
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 .glass-card-hover:hover {
-  transform: translateY(-3px) scale(1.008);
-  border-color: rgba(255, 255, 255, 0.28);
-  box-shadow:
-    0 16px 36px -10px rgba(0, 0, 0, 0.4),
-    0 0 25px -5px rgba(16, 185, 129, 0.15);
+  /* Was a 3px lift plus a 1.008 scale plus a green glow. The glow was a hardcoded emerald rgba,
+   * which the accent remap in the theme layer could not reach, so it stayed green after the
+   * palette changed. Hover on a card should say "this is interactive", not animate the layout. */
+  border-color: color-mix(in oklab, var(--primary) 45%, var(--border));
 }
 
 .bg-dot-grid {
-  background-image: radial-gradient(rgba(255, 255, 255, 0.14) 1px, transparent 1px);
+  /* Also white-only before, so the grid did not exist in the light theme. */
+  background-image: radial-gradient(var(--evidence-grid) 1px, transparent 1px);
   background-size: 24px 24px;
-}
-
-.bg-radial-gradient {
-  background: radial-gradient(
-    circle at 50% 0%,
-    rgba(16, 185, 129, 0.15) 0%,
-    rgba(59, 130, 246, 0.08) 35%,
-    transparent 70%
-  );
-}
-
-.glow-blue {
-  box-shadow: 0 0 25px -3px rgba(59, 130, 246, 0.35);
-}
-
-.glow-purple {
-  box-shadow: 0 0 25px -3px rgba(168, 85, 247, 0.35);
-}
-
-.glow-emerald {
-  box-shadow: 0 0 25px -3px rgba(16, 185, 129, 0.35);
-}
-
-.glow-rose {
-  box-shadow: 0 0 25px -3px rgba(244, 63, 94, 0.35);
-}
-
-.glow-amber {
-  box-shadow: 0 0 25px -3px rgba(245, 158, 11, 0.35);
-}
-
-.text-gradient-primary {
-  background: linear-gradient(135deg, #34d399 0%, #38bdf8 50%, #818cf8 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.text-gradient-danger {
-  background: linear-gradient(135deg, #f87171 0%, #fb923c 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.text-gradient-cyan {
-  background: linear-gradient(135deg, #38bdf8 0%, #818cf8 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.text-gradient-amber {
-  background: linear-gradient(135deg, #fbbf24 0%, #f97316 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
 }
 
 @keyframes shimmer {
