@@ -1,123 +1,89 @@
-# DESIGN - AI Risk Manager: Fraud Ring Detection Platform
+# Design
 
-The dashboard is the product. This document is weighted accordingly.
+The dashboard is the product. Screens match `web/next/src/app` and `web/next/src/components/fraud/console-nav.tsx`.
 
----
+## Console
 
-## 1. Dashboard views
+Ordered as the work is done: overview, queue, holds, then the pages that show how the detector reached a verdict.
 
-### 1.1 Rings Overview (`/clusters`)
+### Overview (`/`)
 
-A table, one row per open cluster, sorted by risk score descending by default:
+Hero numbers from the shipped scorer's held-out row. Charts from `data/*.json`. Voice studio on this page: play a Sarvam line, speak a reply, see the parse. The studio does not capture or cancel.
 
-| Column              | Content                                                             |
-| ------------------- | ------------------------------------------------------------------- |
-| Flagged at          | timestamp                                                           |
-| Accounts involved   | count                                                               |
-| Risk score          | 0-1, colored band                                                   |
-| ₹ exposure          | chargeback_exposure figure                                          |
-| Verification status | verified-linked / verified-legitimate / unclear / not yet triggered |
-| ->                  | link to detail                                                      |
+### Queue (`/clusters`)
 
-### 1.2 Ring Detail (`/clusters/:id`) - the core screen
+One row per open cluster, risk descending: flagged at, account count, risk, exposure, verification status, link to detail.
 
-Three sections, in this order:
+### Ring detail (`/clusters/[id]`)
 
-1. **Network graph** (`react-force-graph-2d`) - accounts as nodes, edges as the shared signals connecting them. Node color = individual account risk contribution. Edge labeled on hover with the exact `signal_type` and confidence (Rules.md Principle 9 - never an unlabeled line). Clicking a node opens the account drill-down.
-2. **Evidence panel** - plain-language list: _"4 accounts share the same delivery address," "3 accounts used the same promo code within 6 minutes of each other," "2 accounts share a payment method fingerprint."_ This is a direct translation of the graph into sentences a merchant can read in five seconds - don't make them infer it from the graph alone.
-3. **Decide** - ₹ exposure figure, verification status/transcript if triggered, four buttons: Freeze / Block / Escalate / Dismiss. Dismiss opens a required reason field (Rules.md Principle 10) - not a free-text box, a short set of options (e.g., "legitimate shared household," "coincidental overlap," "other" with text).
+1. **Network graph.** Accounts as nodes, shared signals as edges. Hover shows `signal_type` and confidence. No unlabeled edge.
+2. **Evidence.** Sentences a merchant can read: "4 accounts share a delivery address." Direct translation of `account_links`, not a separate model.
+3. **Decide.** Exposure, transcript if any, Freeze / Block / Escalate / Dismiss. Dismiss requires a reason (database CHECK, not only UI).
 
-### 1.3 Account drill-down (`/accounts/:id`)
+There is no `/accounts/:id` page in this build. Account facts live on the cluster detail.
 
-Transaction history, which clusters this account has appeared in (past and present), verification history if any.
+### Holds (`/holds`)
 
-### 1.4 Metrics view
+Payments in `authorized` that the agent did not capture. Countdown from `expires_at`. Release captures. Reject refunds. Both require a named person.
 
-Precision/recall on the held-out set, false-positive cost (with the specific legitimate-look-alike cases that were wrongly/rightly handled), verifier accuracy, funnel counts (clusters flagged -> verified -> merchant decision breakdown). This is the screen the demo lingers on.
+### Analysis (`/analysis`)
 
----
+Live counts from `GET /api/analytics`. If a percentage would rest on a tiny denominator, the raw counts travel with it.
 
-## 1a. The evidence palette
+### Evidence (`/evidence`)
 
-One colour system, defined once in `web/next/src/app/globals.css`. The colour that classifies
-evidence and the colour that paints the interface are the same colour, because on this product they
-mean the same thing.
+Everything the repo has measured, including adversarial failures. Same JSON as `GET /api/evidence`.
 
-| Token                | Meaning                                                        |
-| -------------------- | -------------------------------------------------------------- |
-| `--evidence-benign`  | a signal an ordinary household also produces (address, card)   |
-| `--evidence-weak`    | weakly fraud-specific (coordinated timing)                     |
-| `--evidence-strong`  | no ordinary household explanation (promo funnel, SIM block)    |
-| `--primary`          | ultramarine. Links, focus, primary actions                     |
+### Accuracy (`/metrics`)
 
-Two rules hold this together:
+Offline held-out numbers next to live funnel counts. The API keeps those two families in separate fields so a dashboard cannot present a research score as today's production precision.
 
-**Crimson is rationed.** `--evidence-strong` appears for strong fraud-specific evidence and for a
-flagged state, and nowhere else. Never on a heading, a button, or as decoration. On a screen where
-someone decides whether to hold a customer's money, the one red thing should always mean the same
-thing.
+### Connect (`/connect`)
 
-**Green is not the accent.** In a risk queue green means "cleared", so it cannot also be the brand.
-The accent used to be `emerald-*`, hardcoded in 106 places across 16 files; the scale is now
-remapped to the ultramarine accent in the theme layer rather than rewritten at every call site. New
-code uses `primary` or the evidence tokens directly. See the comment in `globals.css`.
+Merchant Razorpay key id and secret. Secret stored AES-256-GCM. Without `RAZORPAY_CREDENTIAL_KEY` the API refuses to store a credential.
 
-Charts read the same tokens: `ChartPalette` in `components/fraud/charts.tsx` aliases
-`--chart-benign/-weak/-strong` onto them, so a signal class is the same colour in a chart, on a
-badge, and on a graph edge. It used to be six hex values redeclared per page, which meant a theme
-change moved the interface and left the evidence colours behind.
+## Evidence colours
 
-Colour is never the sole carrier of meaning: every chart also carries a text label or a legend
-naming each class in words (see the accessibility note at the top of `charts.tsx`).
+One palette in `web/next/src/app/globals.css`. The colour that classifies a signal is the colour the UI uses.
 
----
+| Token               | Meaning                                                     |
+| ------------------- | ----------------------------------------------------------- |
+| `--evidence-benign` | Household-plausible (address, card)                         |
+| `--evidence-weak`   | Weakly fraud-specific (coordinated timing)                  |
+| `--evidence-strong` | No ordinary household explanation (promo funnel, SIM block) |
+| `--primary`         | Ultramarine. Links, focus, primary actions                  |
 
-## 2. Graph visualization design specifics
+Crimson (`--evidence-strong`) is for strong fraud evidence and a flagged state. Not headings, not decorative buttons. Green is not the brand accent: on a risk queue green means cleared.
 
-- Node size proportional to account transaction volume - visually distinguishes a high-volume account from a peripheral one in the same cluster
-- Edge thickness proportional to confidence - a thin line for a weak signal, thick for strong
-- Color, not just position, distinguishes risk tiers - don't rely on layout alone to communicate severity
-- Hover tooltips are mandatory, not decorative - Principle 9 is enforced here specifically
+`ChartPalette` in `components/fraud/charts.tsx` aliases the same tokens. Colour is never the only carrier: every chart has a text label or legend.
 
----
+## Graph
 
-## 3. Voice conversation design (ring-verification context)
+- Node size follows transaction volume
+- Edge thickness follows confidence
+- Hover is required, not ornamental
 
-### Script structure
+## Voice
 
-1. Identify - who's calling and why
-2. State the finding - "your account shares [signal] with another account"
-3. Ask - are you aware of this, is it someone you know (family/roommate) or not
-4. Listen, one clarifying re-ask maximum if unclear
-5. Close - tell them what happens next
+Languages: `en-IN`, `hi-IN`, `mr-IN`. Native script for Hindi and Marathi (romanized lines degrade Bulbul).
 
-### Sample - Hindi (hi-IN)
+Merchant opening (English), from `api/hono/src/lib/voice-scripts.ts`:
 
-> "Namaste, main Razorpay ki taraf se baat kar raha hoon. Humne dekha ki aapka account ek doosre account ke saath same [address/payment method] share karta hai. Kya aap is doosre account ke baare mein jaante hain - kya yeh aapke parivar ka koi sadasya hai?"
+> Hello, this is Razorpay Risk Manager. We held a payment because it looks like coordinated fraud, not a normal transaction. Should we cancel this payment, or release the hold?
 
-### Sample - English (en-IN)
+The agent records cancel / release / unclear. A human still confirms in the dashboard.
 
-> "Hi, this is an automated call from Razorpay. We noticed your account shares the same [address/payment method] with another account. Are you aware of this other account - is it a family member or someone you know?"
+Customer outcomes on the ring question:
 
-### Sample - Marathi (mr-IN)
+| Outcome            | Meaning                                       |
+| ------------------ | --------------------------------------------- |
+| `confirmed_linked` | Aware of the other account. Often household   |
+| `denied_linked`    | No knowledge. Strengthens the ring hypothesis |
+| `unclear`          | No confident span                             |
+| `no_response`      | Unreachable                                   |
 
-> "Namaskar, hi Razorpay kadun call ahe. Tumcha account ek dusrya account sobat [address/payment method] share karto ase amhala disla. Tumhala ha dusra account mahit ahe ka - to tumcha kutumbiya ahe ka?"
+That mapping is the inverse of a single-payment "did you buy this" verifier. Get it the wrong way round and the dashboard labels lie.
 
-_(Same note as before - have a fluent speaker sanity-check phrasing before recording.)_
+## What this build does not include
 
-### response_parser outcomes
-
-| Outcome            | Meaning                                                                                     |
-| ------------------ | ------------------------------------------------------------------------------------------- |
-| `confirmed_linked` | Account holder confirms awareness - likely legitimate (family/shared household)             |
-| `denied_linked`    | Account holder denies any knowledge of the linked account - strengthens the ring hypothesis |
-| `unclear`          | Ambiguous, one clarifying re-ask exhausted                                                  |
-| `no_response`      | Unreachable                                                                                 |
-
-Note this is the inverse of what might feel intuitive: a _confirmed_ link often points _toward_ legitimacy here, while a _denied_ link strengthens suspicion - opposite of the earlier single-transaction verifier design where "confirmed" meant the transaction was legitimate. Get this the right way round in `response_parser.py` and in the dashboard's status labels - it's an easy place to introduce a silent logic bug.
-
----
-
-## 4. What NOT to design
-
-Same as before: no merchant auth/login flows, no mobile-responsive polish, no landing page, no animated transitions. Every hour here is an hour not spent on Phase 8 (Phases.md), where your actual differentiation and your genuine "what broke" story both live.
+No merchant login as a product surface (Better Auth exists on the API; the fraud console is usable without it for the demo). No mobile-first polish pass. No Twilio/Exotel in the critical path. Simulated or Sarvam-in-process voice first.

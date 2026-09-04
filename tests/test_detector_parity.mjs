@@ -45,7 +45,9 @@ const txn = (id, accountId, minutes, promo = null) => ({
 
 // A ring: one address, one card, a sequential SIM block, and one promo code funnelled through the
 // group on two separate days (two occasions, so the corroboration floor is genuinely cleared).
-const RING_ACCOUNTS = [0, 1, 2].map((i) => account(`r${i + 1}`, "12 MG Road", "visa_4242", `+91987654321${i}`))
+const RING_ACCOUNTS = [0, 1, 2].map((i) =>
+  account(`r${i + 1}`, "12 MG Road", "visa_4242", `+91987654321${i}`),
+)
 const RING_TXNS = [
   txn("t1", "r1", 0, "WELCOME50"),
   txn("t2", "r2", 2, "WELCOME50"),
@@ -55,7 +57,9 @@ const RING_TXNS = [
 ]
 
 // A household: one address and one family card, and nothing else. The ceiling rule's whole point.
-const HOUSEHOLD_ACCOUNTS = [0, 1].map((i) => account(`h${i + 1}`, "8 Linking Road", "mc_1111", `+91900000${i}00`))
+const HOUSEHOLD_ACCOUNTS = [0, 1].map((i) =>
+  account(`h${i + 1}`, "8 Linking Road", "mc_1111", `+91900000${i}00`),
+)
 const HOUSEHOLD_TXNS = [txn("t6", "h1", 0), txn("t7", "h2", 900)]
 
 const signalMap = (cluster) => {
@@ -86,7 +90,11 @@ test("household: capped by the ceiling rule, exactly as the Python detector caps
   assert.equal(rest.length, 0, "expected exactly one cluster")
   assert.equal(cluster.score.risk_score, 0.344)
   assert.equal(cluster.score.flagged, false)
-  assert.equal(cluster.score.ceiling_applied, true, "an address plus a card has a complete innocent explanation")
+  assert.equal(
+    cluster.score.ceiling_applied,
+    true,
+    "an address plus a card has a complete innocent explanation",
+  )
   assert.deepEqual(signalMap(cluster), { shared_address: 0.9, shared_payment: 0.85 })
 })
 
@@ -124,7 +132,9 @@ import { readFileSync } from "node:fs"
 import { fileURLToPath } from "node:url"
 
 const here = fileURLToPath(new URL(".", import.meta.url))
-const fixture = JSON.parse(readFileSync(`${here}fixtures/python_clusters_detector_test.json`, "utf8"))
+const fixture = JSON.parse(
+  readFileSync(`${here}fixtures/python_clusters_detector_test.json`, "utf8"),
+)
 const dataset = JSON.parse(readFileSync(`${here}../data/detector_test.json`, "utf8"))
 
 test("clustering: the fallback finds the same communities as networkx Louvain on the held-out split", () => {

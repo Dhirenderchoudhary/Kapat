@@ -228,21 +228,24 @@ stated as one.
 
 | Method                                 | Precision | Recall   | Costly errors |
 | -------------------------------------- | --------- | -------- | ------------- |
-| **Hybrid (heuristic + random forest)** | **94.7%** | **100%** | **2**         |
-| Random forest                          | 92.3%     | 100%     | 3             |
-| Hist gradient boosting                 | 83.7%     | 100%     | 7             |
-| Extra trees                            | 89.7%     | 97.2%    | 8             |
-| Logistic regression                    | 87.5%     | 97.2%    | 9             |
-| Corroboration heuristic alone          | 67.4%     | 86.1%    | 35            |
-| Isolation forest (no labels)           | 0.840 AP  | -        | -             |
+| **Hybrid (heuristic + random forest)** | **90.9%** | **100%** | **4**         |
+| Random forest                          | 87.0%     | 100%     | 6             |
+| Gradient boosting                      | 85.1%     | 100%     | 7             |
+| Hist gradient boosting                 | 85.1%     | 100%     | 7             |
+| Logistic regression                    | 76.9%     | 100%     | 12            |
+| Extra trees                            | 76.9%     | 100%     | 12            |
+| Corroboration heuristic alone          | 66.0%     | 82.5%    | 45            |
+| Isolation forest (no labels)           | 0.645 AP  | n/a      | n/a           |
 
-The unlabelled control drops from 1.000 to 0.840, which is the proof that the labels are now doing
-real work.
+The unlabelled control drops from a saturated easy-split AP to **0.645 AP** on the graded split
+(`isolation_forest_unsupervised.test_average_precision` in `data/model_comparison.json`). That drop
+is the proof the labels are now doing real work.
 
-**40 features**, in three families: the five signals and their confidences (what the heuristic
-already uses), graph shape (density, clustering coefficient, degree spread, edge-signal entropy),
-and behavioural structure (the four above, plus transaction spans, inter-arrival gaps and
-Goh-Barabasi burstiness). See `features.py`.
+**41 features** (40 cluster features plus the heuristic's own risk score), in three families: the
+five signals and their confidences (what the heuristic already uses), graph shape (density, clustering
+coefficient, degree spread, edge-signal entropy), and behavioural structure (the four above, plus
+transaction spans, inter-arrival gaps and Goh-Barabasi burstiness). See `features.py` and
+`data/ring_model_card.json`.
 
 **The threshold is chosen by expected cost**, on the training split, not by F1. F1 asserts that a
 false positive and a false negative hurt equally; for a merchant holding a real customer's money

@@ -6,7 +6,27 @@ const docsConfig = {
       {
         "/docs": {
           title: "Introduction",
-          description: "Documentation.",
+          description: "AI Risk Manager: coordinated fraud rings, not single payments.",
+        },
+      },
+    ],
+    Architecture: [
+      {
+        "/docs/architecture": {
+          title: "Architecture",
+          description: "Dashboard, Hono API, Postgres, Python detector, TypeScript fallback.",
+        },
+      },
+      {
+        "/docs/api": {
+          title: "HTTP API",
+          description: "Clusters, holds, ingest, voice, metrics.",
+        },
+      },
+      {
+        "/docs/detector": {
+          title: "Detector",
+          description: "Graph, Louvain, corroboration scoring, hybrid model.",
         },
       },
     ],
@@ -15,8 +35,8 @@ const docsConfig = {
     "Getting Started": [
       {
         "/console/docs": {
-          title: "Introduction",
-          description: "Internal documentation.",
+          title: "Console",
+          description: "Operator screens and what each one is for.",
         },
       },
     ],

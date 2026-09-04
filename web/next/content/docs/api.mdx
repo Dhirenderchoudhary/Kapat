@@ -1,0 +1,28 @@
+---
+slug: /docs/api
+title: HTTP API
+description: Clusters, holds, ingest, voice, metrics.
+---
+
+# HTTP API
+
+Prefix `/api`, except `POST /webhooks/razorpay`.
+
+Machine-readable spec: `/api/openapi.json`. Human UI: `/api/docs`.
+
+| Method | Path                         | Role                                      |
+| ------ | ---------------------------- | ----------------------------------------- |
+| GET    | `/api/clusters`              | Queue                                     |
+| GET    | `/api/clusters/:id`          | Graph, evidence, audit                    |
+| POST   | `/api/clusters/detect`       | Run detector                              |
+| POST   | `/api/clusters/:id/decision` | Freeze / block / escalate / dismiss       |
+| GET    | `/api/holds`                 | Authorized, not captured                  |
+| POST   | `/api/holds/:id/release`     | Capture (only capture in this system)     |
+| POST   | `/api/holds/:id/reject`      | Refund                                    |
+| POST   | `/api/ingest/demo`           | Load synthetic data                       |
+| GET    | `/api/metrics`               | Offline eval + live funnel                |
+| GET    | `/api/evidence`              | Full measurement pack, including failures |
+| POST   | `/api/voice/speak`           | TTS. Does not move money                  |
+| POST   | `/api/voice/listen`          | STT + rule parse                          |
+
+Dismiss and hold-reject require a reason. Full table: `docs/api.md` in the repo.

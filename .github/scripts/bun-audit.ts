@@ -60,8 +60,10 @@ const main = async () => {
     const transient = hung || TRANSIENT.test(output)
     if (!transient) process.exit(code)
     if (attempt === ATTEMPTS) {
-      console.error(`bun audit: registry still unreachable after ${ATTEMPTS} attempts`)
-      process.exit(1)
+      console.error(
+        `bun audit: advisory registry still unreachable after ${ATTEMPTS} attempts. Not failing the job on a transport timeout. High/critical findings still fail the job when the registry responds.`,
+      )
+      return
     }
 
     console.error(

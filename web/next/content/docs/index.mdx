@@ -1,9 +1,15 @@
 ---
 slug: /docs
 title: Introduction
-description: Documentation.
+description: "AI Risk Manager: coordinated fraud rings, not single payments."
 ---
 
 # Introduction
 
-This is your documentation home. Start writing, this page is yours.
+AI Risk Manager finds groups of accounts that share fraud-specific signals. It does not score a single Razorpay payment in isolation. That is Thirdwatch's job.
+
+The pipeline is: ingest accounts and transactions, build a labeled graph, cluster with Louvain, score corroboration, stop. A merchant then freezes a cluster or releases a payment hold. Voice (English, Hindi, Marathi) can ask; it cannot capture or cancel.
+
+All evaluation data in this repository is synthetic. Numbers on `/metrics` and `/evidence` are files produced by scripts under `services/`, plus live Postgres counts, kept in separate fields.
+
+Read next: [Architecture](/docs/architecture), [HTTP API](/docs/api), [Detector](/docs/detector). The GitHub README is the full brief, including held-out tables and the cases that still fail.
