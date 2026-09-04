@@ -24,6 +24,7 @@ import {
   notFoundErrorResponses,
   validationErrorResponses,
 } from "@/lib/error"
+import { jsonRequestBody } from "@/lib/openapi"
 import { paging, pagingFields } from "@/lib/paging"
 
 // Architecture.md §6: GET /api/clusters, GET /api/clusters/:id. Deliberately no auth middleware
@@ -219,6 +220,26 @@ export const clustersRouter = new Hono()
     describeRoute({
       tags: ["Clusters"],
       description: "List flagged clusters, sorted by risk score descending (Design.md §1.1)",
+      parameters: [
+        {
+          name: "status",
+          in: "query",
+          required: false,
+          schema: { type: "string", enum: [...CLUSTER_STATUSES] },
+        },
+        {
+          name: "page",
+          in: "query",
+          required: false,
+          schema: { type: "integer", minimum: 1, default: 1 },
+        },
+        {
+          name: "perPage",
+          in: "query",
+          required: false,
+          schema: { type: "integer", minimum: 1, maximum: 100, default: 25 },
+        },
+      ],
       ...({
         "x-codeSamples": [
           {
@@ -670,6 +691,7 @@ const { data, error } = await unwrap(apiClient.clusters[":id"].$get({ param: { i
       tags: ["Clusters"],
       description:
         "Merchant decision on a flagged cluster - freeze/block/escalate/dismiss (Principle 1: only this row may trigger the executor). Idempotent: a cluster that already has a final decision returns 409 rather than executing a second time (Principle 3's database-level-guarantee spirit, extended past the webhook case it names).",
+      ...jsonRequestBody(decisionBodySchema),
       ...({
         "x-codeSamples": [
           {

@@ -4,6 +4,7 @@ import { describeRoute, resolver } from "hono-openapi"
 import { z } from "zod"
 
 import { ApiError, validationErrorResponses } from "@/lib/error"
+import { jsonRequestBody } from "@/lib/openapi"
 import { sarvamKey, synthesizeSpeech, transcribeSpeech } from "@/lib/sarvam"
 import {
   parseReply,
@@ -63,6 +64,7 @@ export const voiceRouter = new Hono()
       tags: ["Voice"],
       description:
         "Synthesize one agent line with Sarvam Bulbul v3 (English, Hindi, or Marathi). Does not cancel or capture a payment; it only speaks.",
+      ...jsonRequestBody(speakSchema),
       responses: {
         200: {
           description: "OK",
@@ -93,6 +95,7 @@ export const voiceRouter = new Hono()
       tags: ["Voice"],
       description:
         "Transcribe a spoken reply with Sarvam Saaras and map it to a merchant cancel/release or a customer confirm/deny. Never executes the payment action.",
+      ...jsonRequestBody(listenSchema),
       responses: {
         200: {
           description: "OK",

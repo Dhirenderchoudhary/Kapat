@@ -11,6 +11,7 @@ import {
   notFoundErrorResponses,
   validationErrorResponses,
 } from "@/lib/error"
+import { jsonRequestBody } from "@/lib/openapi"
 import { capturePayment, refundPayment } from "@/lib/razorpay-capture"
 
 // The merchant decision surface for held payments.
@@ -123,6 +124,14 @@ export const holdsRouter = new Hono()
       tags: ["Holds"],
       description:
         "Payments the agent is holding for review, newest first. A held payment has the customer's funds reserved but NOT settled to the merchant - Razorpay auto-refunds it if nobody decides within 3 days, so msUntilExpiry is the number that matters.",
+      parameters: [
+        {
+          name: "status",
+          in: "query",
+          required: false,
+          schema: { type: "string", enum: [...HOLD_STATUSES] },
+        },
+      ],
       responses: {
         200: {
           description: "OK",
@@ -151,6 +160,7 @@ export const holdsRouter = new Hono()
       tags: ["Holds"],
       description:
         "Merchant releases a held payment: captures it via Razorpay so the funds settle. This is the ONLY path in the system that captures money, and it requires a named human decision.",
+      ...jsonRequestBody(decisionSchema),
       responses: {
         200: { description: "OK" },
         ...validationErrorResponses,
@@ -230,6 +240,7 @@ export const holdsRouter = new Hono()
       tags: ["Holds"],
       description:
         "Merchant rejects a held payment: refunds the customer. Note what this is not - the customer gets their money back. Even the most negative decision available returns funds to the person who paid. A reason is required.",
+      ...jsonRequestBody(decisionSchema),
       responses: {
         200: { description: "OK" },
         ...validationErrorResponses,

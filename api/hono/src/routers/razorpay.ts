@@ -8,6 +8,7 @@ import { z } from "zod"
 
 import { credentialEncryptionAvailable, encryptSecret, maskKeyId } from "@/lib/crypto"
 import { ApiError, validationErrorResponses } from "@/lib/error"
+import { jsonRequestBody } from "@/lib/openapi"
 import { verifyCredentials } from "@/lib/razorpay-client"
 import { SESSION_DAYS, sessionExpiry } from "@/lib/razorpay-session"
 import { runSync, startBackfill } from "@/lib/razorpay-sync"
@@ -128,6 +129,7 @@ export const razorpayRouter = new Hono()
       tags: ["Razorpay"],
       description:
         "Stores a merchant's own Razorpay API credentials after verifying them against Razorpay with a single read-only call. The secret is encrypted at rest (AES-256-GCM) and is never returned by any endpoint. Requires RAZORPAY_CREDENTIAL_KEY to be set - without it this refuses to store anything rather than falling back to plaintext.",
+      ...jsonRequestBody(connectBodySchema),
       responses: {
         200: {
           description: "OK",
@@ -196,6 +198,16 @@ export const razorpayRouter = new Hono()
       tags: ["Razorpay"],
       description:
         "The agent run: pulls payments from the connected Razorpay account, maps them onto detector inputs, ingests them idempotently, then runs ring detection and persists what it flagged. Incremental - after a successful sync it only asks Razorpay for payments created since the last one. Safe to re-run; already-ingested payments are skipped at the database level.",
+      parameters: [
+        {
+          name: "full",
+          in: "query",
+          required: false,
+          description:
+            "Set to 1 to rescan the full payment history instead of the incremental window.",
+          schema: { type: "string", enum: ["1"] },
+        },
+      ],
       responses: {
         200: {
           description: "OK",
@@ -236,6 +248,7 @@ export const razorpayRouter = new Hono()
       tags: ["Razorpay"],
       description:
         "Pause or resume automatic background detection without disconnecting. Pausing keeps the stored credential and the session clock running; it only stops the poller.",
+      ...jsonRequestBody(z.object({ enabled: z.boolean() })),
       responses: {
         200: {
           description: "OK",
