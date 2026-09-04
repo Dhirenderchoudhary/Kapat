@@ -42,7 +42,7 @@ which specifically names GNNs as necessary for this exact problem). It's also th
 deliberate trade-off this build did **not** make: a GNN needs more labeled training data and
 engineering time than a 10-day solo build allows. Louvain community detection on the shared-signal
 graph is the MVP choice, stated as a trade-off rather than hidden as a limitation, with a GNN as
-the explicit next step (see `Memory.md` decision 13).
+the explicit next step (see `Architecture.md` §3).
 
 ## Why a rule-based parser, not an LLM, for voice verification
 
@@ -61,7 +61,7 @@ in the _original_ single-transaction fraud design, a customer confirming a trans
 was legitimate. In _this_ ring-verification context, the meaning inverts - confirming awareness of
 the linked account (`confirmed_linked`) leans **legitimate** (a family member, a shared
 household), while denying any knowledge (`denied_linked`) **strengthens** the fraud-ring
-hypothesis. `Design.md` §3 and `Memory.md` decision 14 both call this out by name.
+hypothesis. `Design.md` §3 calls this out by name.
 
 ## Honest metrics
 
@@ -166,13 +166,14 @@ hand-built rule does not look at. That is an assumption about fraud, disclosed a
 
 | Method                                 | Precision | Recall   | Costly errors |
 | -------------------------------------- | --------- | -------- | ------------- |
-| **Hybrid (heuristic + random forest)** | **94.7%** | **100%** | **2**         |
-| Random forest                          | 92.3%     | 100%     | 3             |
-| Hist gradient boosting                 | 83.7%     | 100%     | 7             |
-| Extra trees                            | 89.7%     | 97.2%    | 8             |
-| Logistic regression                    | 87.5%     | 97.2%    | 9             |
-| Corroboration heuristic alone          | 67.4%     | 86.1%    | 35            |
-| Isolation forest (**no labels**)       | 0.840 AP  | -        | -             |
+| **Hybrid (heuristic + random forest)** | **90.9%** | **100%** | **4**         |
+| Random forest                          | 87.0%     | 100%     | 6             |
+| Gradient boosting                      | 85.1%     | 100%     | 7             |
+| Hist gradient boosting                 | 85.1%     | 100%     | 7             |
+| Logistic regression                    | 76.9%     | 100%     | 12            |
+| Extra trees                            | 76.9%     | 100%     | 12            |
+| Corroboration heuristic alone          | 66.0%     | 82.5%    | 45            |
+| Isolation forest (**no labels**)       | 0.645 AP  | -        | -             |
 
 "Costly errors" is `false_positives x 1 + false_negatives x 4`, and the operating threshold is
 chosen to minimise it on the TRAINING split - not by F1, which silently asserts that holding a real
@@ -180,9 +181,12 @@ customer's payment and letting a fraudulent one settle hurt equally. The 1:4 rat
 stated in the report, not a measurement; there is still no calibrated rupee figure and inventing
 one would be fabricated confidence.
 
-On the ten hand-authored adversarial cases the trained model scores **8/10, the same as the
-heuristic** - no regression off-distribution. A model trained on the OLD easy split scores 6/10 on
-the same cases, which is the clearest evidence that the harder dataset is what produced the gain.
+On the ten hand-authored adversarial cases the trained model scores **9/10 against the heuristic's
+8/10** - no regression off-distribution, and one case better: it catches `ring_maximally_evasive`,
+which the rule deliberately holds back. That margin is a single case and should be read as one, not
+as a general ranking. A model trained on the OLD easy split scores 6/10 on the same cases, newly
+flagging two ordinary households, which is the clearest evidence that the harder dataset rather
+than the bigger ensemble is what produced the gain.
 
 **The model runs in the live agent.** `train_model.py --dataset hard --export` writes
 `data/ring_model.joblib` plus a model card; `model_scorer.py` loads it inside detector-service and
@@ -234,7 +238,7 @@ pip install -r services/verifier-service/requirements.txt
 
 Or run the whole stack, including a local Postgres, with `docker compose up` (see
 `docker-compose.yml`) - not smoke-tested this session (no Docker daemon reachable in either
-environment that touched this repo; see `Memory.md`'s disclosed environment constraints).
+environment that touched this repo; see `HANDOFF.md` §10 for the environment constraints).
 
 ## Running the tests
 
@@ -286,8 +290,12 @@ the metrics screen (the honest numbers above) → the `ring_010` "what broke" st
 ## Architecture
 
 See `Architecture.md` for the full component/route/schema breakdown, `Design.md` for the
-dashboard's UI/UX contract, `PRD.md` for the product spec, `Rules.md` for the engineering
-principles this build holds itself to (no autonomous action, full audit trail, database-level
-idempotency, rule-based-first parsing, no fabricated confidence, honest "synthetic" labeling
-throughout), and `Memory.md` for the full chronological decision log - every non-obvious choice
-in this repository, and why, in the order it was made.
+dashboard's UI/UX contract, `docs/algorithm.md` for the detector in full, and `HANDOFF.md` for the
+complete briefing: the engineering principles this build holds itself to (no autonomous action,
+full audit trail, database-level idempotency, rule-based-first parsing, no fabricated confidence,
+honest "synthetic" labeling throughout), every measured number and the file it comes from, the
+known failures, and the environment traps.
+
+`PRD.md`, `Rules.md`, `Phases.md` and `Memory.md` were removed from this repository. Code comments
+and older docs still cite them by name; treat those citations as historical pointers, not as files
+to go looking for. What they contained that still matters lives in `HANDOFF.md`.
