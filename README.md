@@ -6,6 +6,12 @@ All data in this repository is synthetic. Accounts, phones, addresses, and verif
 
 **The agent never captures, refunds, or cancels money.** Detection and voice only produce evidence. A named merchant decision is the only thing that can freeze a cluster, capture a hold, or refund a hold. If nobody decides, Razorpay's authorization window expires and the customer is refunded.
 
+## Demo
+
+https://github.com/Dhirenderchoudhary/Razorpay_Buildathon/raw/main/.github/assets/AI_RISK_MANAGER.mp4
+
+> **Walkthrough video**: Demonstrating coordinated fraud ring detection, graph cluster inspection, multi-language voice verification, manual capture hold settlements, and the merchant audit trail. (File: [.github/assets/AI_RISK_MANAGER.mp4](.github/assets/AI_RISK_MANAGER.mp4))
+
 ## Live
 
 | Surface          | URL                                                                                                                  |
