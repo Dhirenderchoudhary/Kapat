@@ -264,16 +264,16 @@ split is read once, at the end. Everything below is read from `data/model_compar
 
 **Result 1: the easy split cannot rank anything.**
 
-| Method on the easy split (held-out AP)      | Value     |
-| ------------------------------------------- | --------- |
-| Logistic regression                         | 1.000     |
-| Random forest                               | 1.000     |
-| Extra trees                                 | 1.000     |
-| Gradient boosting                           | 1.000     |
-| Hybrid (heuristic + random forest)          | 1.000     |
-| **Corroboration heuristic (no training)**   | **1.000** |
-| Hist gradient boosting                      | 0.417     |
-| Isolation forest (no labels at all)         | 0.517     |
+| Method on the easy split (held-out AP)    | Value     |
+| ----------------------------------------- | --------- |
+| Logistic regression                       | 1.000     |
+| Random forest                             | 1.000     |
+| Extra trees                               | 1.000     |
+| Gradient boosting                         | 1.000     |
+| Hybrid (heuristic + random forest)        | 1.000     |
+| **Corroboration heuristic (no training)** | **1.000** |
+| Hist gradient boosting                    | 0.417     |
+| Isolation forest (no labels at all)       | 0.517     |
 
 The heuristic row is the finding. A hand-written rule that never saw a label, a training example or
 a gradient step ties every supervised model at a perfect score. **A number an untrained rule also
@@ -288,15 +288,15 @@ what the current code produces.)
 
 **Result 2: the graded split ranks them, and the hybrid wins.**
 
-| Method on the hard split                | Precision | Recall | Costly errors |
-| --------------------------------------- | --------- | ------ | ------------- |
-| **Hybrid (heuristic + random forest)**  | **90.9%** | **100%** | **4**       |
-| Random forest                           | 87.0%     | 100%   | 6             |
-| Gradient boosting                       | 85.1%     | 100%   | 7             |
-| Hist gradient boosting                  | 85.1%     | 100%   | 7             |
-| Logistic regression                     | 76.9%     | 100%   | 12            |
-| Extra trees                             | 76.9%     | 100%   | 12            |
-| Corroboration heuristic alone           | 66.0%     | 82.5%  | 45            |
+| Method on the hard split               | Precision | Recall   | Costly errors |
+| -------------------------------------- | --------- | -------- | ------------- |
+| **Hybrid (heuristic + random forest)** | **90.9%** | **100%** | **4**         |
+| Random forest                          | 87.0%     | 100%     | 6             |
+| Gradient boosting                      | 85.1%     | 100%     | 7             |
+| Hist gradient boosting                 | 85.1%     | 100%     | 7             |
+| Logistic regression                    | 76.9%     | 100%     | 12            |
+| Extra trees                            | 76.9%     | 100%     | 12            |
+| Corroboration heuristic alone          | 66.0%     | 82.5%    | 45            |
 
 Costly errors is `false_positives x 1 + false_negatives x 4`, a policy dial stated in the report,
 not a measurement.
@@ -464,7 +464,7 @@ is only used where it explains something.
   delivery are implemented against the documented API and unit-tested, but never observed against
   the live service. Disclosed in the code, on the connect page, and in the README. Do not describe
   them as verified.
-- Live Sarvam AI voice validation in Hindi and Marathi, checked by a fluent speaker, is not done.
+- Live Sarvam TTS/STT is wired (`POST /api/voice/speak` and `/listen`, homepage studio). A fluent-speaker review of the Hindi and Marathi scripts is still not done.
 - `docker compose up` has been built and reviewed but not smoke-tested on a machine with a Docker
   daemon.
 - The app has not been visually verified since the charts became animated. Run `bun run dev:local`
