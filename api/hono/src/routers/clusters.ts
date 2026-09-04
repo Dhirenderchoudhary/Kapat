@@ -306,7 +306,7 @@ const { data, error } = await unwrap(apiClient.clusters.$get())`,
     describeRoute({
       tags: ["Clusters"],
       description:
-        "Runs the real detector agent (services/detector-service's live POST /detect-rings, Architecture.md §6) against every account/transaction currently in Postgres, and persists what it finds - the one place graph_builder -> clustering -> cluster_scorer's actual output becomes clusters/account_links/cluster_members rows. Called automatically by POST /webhooks/razorpay whenever a webhook ingests a genuinely new transaction (a redelivered event changes no data and re-runs nothing), and callable manually or from a scheduled job for catch-up over imported history. Idempotent: cluster/account_links ids are derived from their own content, so re-running after new data arrives only ever adds what's genuinely new, never a duplicate. The response reports `engine` and `clusteringMethod`: when the Python detector-service is unreachable this falls back to a TypeScript detector that clusters by connected components rather than Louvain, which is a different algorithm from the one every published metric was measured on, so the run says which one produced it.",
+        "Runs the detector against every account/transaction in Postgres and persists clusters and labeled edges. Prefers services/detector-service (Python Louvain). If that sidecar is unreachable, uses the TypeScript Louvain port. Those paths can still disagree on the densest graphs because node visit order differs; the response always includes `engine` and `clusteringMethod`. Published metrics in data/*.json were measured on the Python path.",
       ...({
         "x-codeSamples": [
           {

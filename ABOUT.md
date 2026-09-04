@@ -1,82 +1,23 @@
-# About AI Risk Manager
+# About
 
-## The Problem: Coordinated Fraud Rings
+## Problem
 
-Traditional payment fraud solutions look at transactions **one at a time**. If a transaction is under ₹5,000, has a valid card, and uses a legitimate promo code, traditional rules approve it.
+Per-transaction fraud rules miss coordinated rings. Ten accounts, each placing one modest order with a welcome promo, all look fine alone. Weeks later they charge back together.
 
-However, organized fraud rings exploit this exact blindspot:
+Naive graph rules ("block any shared address") hit families, flatmates, and office deliveries. That is a false-positive product, not a detector.
 
-- A fraudster creates **10 to 50 fake accounts**.
-- Each account places one modest order using a high-value welcome discount or promo code.
-- Orders are placed within minutes of each other.
-- Weeks later, all transactions result in chargebacks, leaving the merchant with substantial financial losses.
+## Product
 
-If a merchant creates naive rules to catch them (e.g., "block any shared address or Wi-Fi"), they trigger **mass false positives**:
+AI Risk Manager builds a graph of **labeled** account-to-account signals, clusters with Louvain, and scores **how many independent kinds of evidence** exist. A shared address is one fact, not a dense fraud clique. A sequential SIM block or a funnelled promo is the kind of fact a household does not produce.
 
-- Families sharing an apartment or home address get blocked.
-- College roommates sharing a Wi-Fi network get blocked.
-- Legitimate customers churn, hurting conversion and brand trust.
+Borderline groups can be asked, in English, Hindi, or Marathi, whether they know the linked account. Confirming the link often means family. Denying it supports the ring hypothesis. The parser is rules, not an LLM, and it is allowed to say unclear.
 
----
+Nothing in the agent captures or cancels a payment. The lever is declining to capture (Razorpay manual capture). A merchant releases the hold to settle, or rejects it to refund. A forgotten hold expires in the customer's favour.
 
-## The Solution: Corroboration Graph Intelligence
+## Who it is for
 
-**AI Risk Manager** introduces a graph corroboration architecture that distinguishes organized fraud rings from innocent households with mathematical precision.
+D2C and e-commerce teams losing welcome-coupon inventory to multi-account abuse. Digital goods and gaming where disposable accounts drain value. Anyone whose current tool scores one `payment.captured` at a time.
 
-```
-       [ Razorpay Transactions / Webhooks ]
-                        │
-                        ▼
-           [ Entity Resolution & Graph ]
-                        │
-         ┌──────────────┴──────────────┐
-         ▼                             ▼
-  [ Innocent Household ]        [ Fraud Ring ]
-  - Shared Address only         - Sequential Phone Numbers
-  - Shared Wi-Fi only           - Device Fingerprint overlap
-  - Varied cards / timing       - Coordinated velocity
-         │                             │
-         ▼                             ▼
-    [ Approved ]               [ Corroboration Engine ]
-                                       │
-                                       ▼
-                         [ Multilingual Voice AI Call ]
-                         - English / Hindi / Marathi
-                         - "Did you authorize this transaction?"
-                                       │
-                                       ▼
-                           [ Merchant Review & Hold ]
-```
+## What the numbers mean
 
----
-
-## 3 Core Pillars
-
-### 1. Corroboration, Not Accumulation
-
-Naive graph scoring adds up edge density and average confidence. If three flatmates live at the same address, a naive graph sees 3 connections and flags them as a "dense fraud cluster".
-
-Our corroboration engine recognizes that shared address is only **one fact in evidence**. A cluster is only flagged when **independent, fraud-specific signals** corroborate each other (e.g., matching device fingerprint + sequential phone numbers + coordinated order velocity).
-
-### 2. Autonomous Multilingual Voice AI Verification
-
-When a borderline cluster is detected, an autonomous AI voice verification agent calls the customer in their preferred language (**English, Hindi, or Marathi**).
-
-- **Legitimate Customer**: Confirms knowledge of the account and purchase. Risk score decreases.
-- **Fraudster / Fake Account**: Denies knowing the linked account or fails to respond. Fraud hypothesis is confirmed.
-
-### 3. Human-in-the-Loop Safeguards
-
-The AI Risk Manager calculates risk scores and prepares evidence dossiers, but **never acts destructively on its own**. Merchant operators retain final control with clear, one-click actions:
-
-- **Place 24-Hour Settlement Hold**: Temporarily holds payouts via Razorpay API to prevent chargebacks before goods ship.
-- **Release Hold**: Instantly releases funds if verified legitimate.
-- **Refund & Block**: Issues a clean refund before costly chargeback fees hit.
-
----
-
-## Target Audience
-
-- **E-Commerce & D2C Brands**: Stop welcome coupon abuse and coordinated inventory draining.
-- **Digital Goods & Gaming**: Prevent virtual currency theft across disposable accounts.
-- **Fintech & Lending Apps**: Detect synthetic identity rings before disbursement.
+Held-out and adversarial figures in the README are synthetic, regenerated from scripts in this repo. They test that the implementation does what it claims. They do not claim calibrated rupee savings on live Razorpay traffic.

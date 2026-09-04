@@ -1,0 +1,23 @@
+---
+slug: /docs/architecture
+title: Architecture
+description: Dashboard, Hono API, Postgres, Python detector, TypeScript fallback.
+---
+
+# Architecture
+
+| Piece             | Path                                                |
+| ----------------- | --------------------------------------------------- |
+| Console           | `web/next`                                          |
+| API               | `api/hono`                                          |
+| Schema            | `packages/db`                                       |
+| Measured detector | `services/detector-service` (Python Louvain)        |
+| Fallback detector | `api/hono/src/lib/detector.ts` (TypeScript Louvain) |
+| Voice             | Sarvam via `POST /api/voice`                        |
+| Holds             | Razorpay manual capture: agent does not capture     |
+
+`POST /api/clusters/detect` records `engine` and `clusteringMethod`. Published precision and recall describe the Python engine.
+
+Production hosts and secrets are environment variables. They are not compiled into the Next bundle as fallbacks.
+
+The long form is `Architecture.md` in the repository root.

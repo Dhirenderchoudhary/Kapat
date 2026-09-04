@@ -7,5 +7,5 @@
   // reflows their arrays and leaves the committed copy no longer byte-identical to what the
   // script wrote - so re-running a script to verify a number reports a diff that is pure
   // formatting noise. These files are script output, not source: leave them exactly as written.
-  "ignorePatterns": [".agents/**", "data/**"],
+  "ignorePatterns": [".agents/**", "data/**", ".nanocoder/**"],
 }

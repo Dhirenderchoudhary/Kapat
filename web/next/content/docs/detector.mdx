@@ -1,0 +1,17 @@
+---
+slug: /docs/detector
+title: Detector
+description: Graph, Louvain, corroboration scoring, hybrid model.
+---
+
+# Detector
+
+Five edge types: shared address, shared payment, sequential phone, coordinated timing, shared promo. Every edge keeps `signal_type` and `confidence`.
+
+Louvain finds connected groups. Scoring asks how many **independent kinds** of evidence exist. A family that shares an address and a card is capped below the flag line. A funnelled promo or a SIM block is not a household pattern.
+
+Threshold 0.45, chosen on the training split only. Live scoring can attach a hybrid model (`data/ring_model.joblib`) beside the heuristic. Disagreement is reported, not averaged away.
+
+The TypeScript fallback implements Louvain too. Node order differs from Python on the densest graph (9 of 209 communities on `hard_train.json`). Metrics pages quote the Python run.
+
+Full derivation, bugs found, and tables: `docs/algorithm.md`.

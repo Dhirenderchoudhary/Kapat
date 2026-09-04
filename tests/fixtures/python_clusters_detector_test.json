@@ -24,10 +24,7 @@
       "acc_b49e04cc-c243-69e7-2387-eaf6d4c3a832",
       "acc_ee4a9b5d-5195-54e3-0737-4c86397b5f51"
     ],
-    [
-      "acc_0d99c071-f7c8-435f-8c83-bc68e6ace59a",
-      "acc_d7e4527a-6274-d240-8e30-1bcc302fa247"
-    ],
+    ["acc_0d99c071-f7c8-435f-8c83-bc68e6ace59a", "acc_d7e4527a-6274-d240-8e30-1bcc302fa247"],
     [
       "acc_13087974-ec95-b3ac-0beb-7c3445667c48",
       "acc_152aeaec-2bdf-cb41-b3ed-a8f1026b5383",
@@ -41,18 +38,9 @@
       "acc_5982aa44-5573-68cf-0ba5-605069fe99a9",
       "acc_9d421bae-2134-e15b-ed56-c7145a9621f5"
     ],
-    [
-      "acc_4fe66636-f612-1d2c-ae73-00eb639d8fe7",
-      "acc_e54c8739-3133-839e-2e7d-952b785b8a07"
-    ],
-    [
-      "acc_5071e5f0-a7ac-590c-42f9-0f921036ca81",
-      "acc_973b6977-e946-2820-6a80-cac21a8cf13c"
-    ],
-    [
-      "acc_54f5df70-05d2-d205-789f-ed9673373c2f",
-      "acc_e9b1c4a1-da22-1b85-a9b9-2a1d457498ca"
-    ],
+    ["acc_4fe66636-f612-1d2c-ae73-00eb639d8fe7", "acc_e54c8739-3133-839e-2e7d-952b785b8a07"],
+    ["acc_5071e5f0-a7ac-590c-42f9-0f921036ca81", "acc_973b6977-e946-2820-6a80-cac21a8cf13c"],
+    ["acc_54f5df70-05d2-d205-789f-ed9673373c2f", "acc_e9b1c4a1-da22-1b85-a9b9-2a1d457498ca"],
     [
       "acc_55cee5db-9e87-e04c-a208-6977a9f25336",
       "acc_71316269-7118-e364-7709-7749527eecfa",
@@ -60,10 +48,7 @@
       "acc_ce7ae7f6-3982-0cff-4f77-a665ac3c5640",
       "acc_d98868dd-9c7c-7377-79a2-8903fbe33b24"
     ],
-    [
-      "acc_6108ffcc-8186-722b-a355-ad05c6a28e4e",
-      "acc_7d76ab58-b271-115b-8af0-9ec34b726a7c"
-    ],
+    ["acc_6108ffcc-8186-722b-a355-ad05c6a28e4e", "acc_7d76ab58-b271-115b-8af0-9ec34b726a7c"],
     [
       "acc_9f294a8b-d184-6c39-c476-7556f97be2dd",
       "acc_d4578ad9-a867-a096-edd8-77c89be71737",
