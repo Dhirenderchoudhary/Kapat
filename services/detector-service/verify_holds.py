@@ -8,7 +8,7 @@ runtime: when this payment arrives, does the agent hold it or let it through?
 
 It does NOT call Razorpay. No environment this project has run in can reach api.razorpay.com, so
 this verifies the DECISION LOGIC, not the HTTP integration. The Razorpay client and signature
-verification are covered separately by tests/test_razorpay.mjs (24 tests, all executing). Anyone
+verification are covered separately by tests/razorpay.test.mjs (24 tests, all executing). Anyone
 quoting the numbers below should say "the agent's hold decision was verified on N synthetic
 payments", not "the integration was verified end to end against Razorpay".
 
@@ -200,7 +200,7 @@ def run(n_payments: int, seed: int) -> dict:
             "graph_builder -> clustering -> cluster_scorer pipeline, rebuilt after every payment from "
             "only the payments seen so far. It does NOT verify the Razorpay HTTP integration - no "
             "environment this ran in can reach api.razorpay.com. Signature verification and payment "
-            "mapping are covered by tests/test_razorpay.mjs."
+            "mapping are covered by tests/razorpay.test.mjs."
         ),
         "known_limitation": (
             "Recall is bounded by design, not by a bug: a ring is invisible until enough of its "

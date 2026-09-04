@@ -112,7 +112,7 @@ data/                         every run report, committed. The source of truth f
 docs/algorithm.md             the full algorithm writeup, including the ML comparison
 docs/submission-draft.md      what goes in the buildathon form
 docs/images/                  static figures for docs and slides only. The app does NOT use these.
-tests/                        Python unittest + tests/test_razorpay.mjs (24 node tests)
+tests/                        Python unittest + tests/razorpay.test.mjs (24 node tests)
 ```
 
 Note: several code comments reference `Memory.md` and `Rules.md`. **Those files no longer exist.**
@@ -381,7 +381,7 @@ bun install
 bun run db:migrate                 # needs POSTGRES_URL
 bun run dev:local                  # THE ONE TO USE. See the portless note below.
 bun run test                       # bun test tests
-node tests/test_razorpay.mjs       # 24 Razorpay signature/crypto/mapping tests
+bun test tests/razorpay.test.mjs   # 24 Razorpay signature/crypto/mapping tests
 python3 -m unittest discover -s tests -v
 ```
 

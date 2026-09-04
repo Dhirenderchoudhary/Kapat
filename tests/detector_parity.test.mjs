@@ -18,7 +18,7 @@
  * services/detector-service/{graph_builder,clustering,cluster_scorer}.py return for these exact
  * accounts and transactions.
  *
- * Run: node tests/test_detector_parity.mjs
+ * Run: bun test tests/detector_parity.test.mjs
  */
 import assert from "node:assert/strict"
 import { test } from "node:test"
