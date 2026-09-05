@@ -12,7 +12,7 @@ import {
   transactions,
   verifications,
 } from "@packages/db"
-import { and, count, desc, eq, inArray, ne } from "drizzle-orm"
+import { and, asc, count, desc, eq, inArray, ne } from "drizzle-orm"
 import { Hono } from "hono"
 import { describeRoute, resolver } from "hono-openapi"
 import { z } from "zod"
@@ -554,16 +554,28 @@ const { data, error } = await unwrap(apiClient.clusters[":id"].$get({ param: { i
         throw new ApiError(404, "NOT_FOUND", "Cluster not found")
       }
 
+      // Every list below is explicitly ordered. Without an ORDER BY, Postgres is free to return
+      // the same rows in a different order on two identical queries, and it does: the detail page
+      // renders once for the HTML and again for the RSC payload, so the graph came back with its
+      // edges in a different order each time and React threw a hydration mismatch and re-rendered
+      // the whole SVG on the client. It also broke the promise in cluster-network-graph.tsx's own
+      // docstring, that one cluster always draws the same picture - which matters when a merchant
+      // screenshots this screen and attaches it to a dispute.
       const memberRows = await db
         .select({ accountId: clusterMembers.accountId })
         .from(clusterMembers)
         .where(eq(clusterMembers.clusterId, id))
+        .orderBy(asc(clusterMembers.accountId))
       const memberIds = memberRows.map((r) => r.accountId)
 
       const [memberAccounts, links, verificationRows, decisionRows, auditRows, txnCounts] =
         await Promise.all([
           memberIds.length
-            ? db.select().from(accounts).where(inArray(accounts.id, memberIds))
+            ? db
+                .select()
+                .from(accounts)
+                .where(inArray(accounts.id, memberIds))
+                .orderBy(asc(accounts.id))
             : Promise.resolve([]),
           // Evidence is every account_links row strictly between two members of this cluster - the
           // same graph edges graph_builder.py produced, never an unlabeled connection (Principle 9).
@@ -577,8 +589,16 @@ const { data, error } = await unwrap(apiClient.clusters[":id"].$get({ param: { i
                     inArray(accountLinks.accountB, memberIds),
                   ),
                 )
+                .orderBy(asc(accountLinks.id))
             : Promise.resolve([]),
-          db.select().from(verifications).where(eq(verifications.clusterId, id)),
+          // Ordered because verificationRows[0] below picks the status shown on the cluster:
+          // unordered, which of several calls decides the label was whatever Postgres returned
+          // first.
+          db
+            .select()
+            .from(verifications)
+            .where(eq(verifications.clusterId, id))
+            .orderBy(asc(verifications.id)),
           db
             .select()
             .from(merchantDecisions)
