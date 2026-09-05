@@ -12,6 +12,9 @@ merchant, customer, or transaction data was used anywhere in this build.
 > every measured number and the file it comes from, the known failures, and the environment traps
 > that have already cost hours.
 
+Rendering behavior, database query improvements and verification commands are documented in
+[`docs/performance.md`](docs/performance.md).
+
 ## What this actually is
 
 Razorpay's existing Thirdwatch product scores individual transactions for fraud. This project

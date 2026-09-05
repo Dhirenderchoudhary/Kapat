@@ -3,6 +3,7 @@
   "compilerOptions": {
     "incremental": true,
     "paths": {
+      "@/reports/*": ["../../data/*"],
       "@/*": ["./src/*"],
       "collections/*": ["./.source/*"],
       "generated/*": ["../../.generated/*"]

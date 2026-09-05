@@ -30,20 +30,18 @@ export function DemoBanner() {
   const [dbNotReady, setDbNotReady] = useState(false)
 
   useEffect(() => {
+    const controller = new AbortController()
     void (async () => {
-      const [statusRes, analyticsRes] = await Promise.all([
-        unwrap(apiClient.razorpay.status.$get()),
-        unwrap(apiClient.analytics.$get()),
-      ])
+      const statusRes = await unwrap(
+        apiClient.razorpay.status.$get({}, { init: { signal: controller.signal } }),
+      )
+      if (controller.signal.aborted) return
 
       // If the API itself is unreachable, say so once, here, instead of letting every screen show
       // its own bare "Network request failed". The overwhelmingly common cause in development is
       // that the web app is running but the API server is not - `bun run dev` starts both, a lone
       // `next dev` does not.
-      if (
-        statusRes.error?.code === "NETWORK_ERROR" ||
-        analyticsRes.error?.code === "NETWORK_ERROR"
-      ) {
+      if (statusRes.error?.code === "NETWORK_ERROR") {
         setApiDown(true)
         setConnected(false)
         setHasData(false)
@@ -58,17 +56,17 @@ export function DemoBanner() {
         e?.code === "INTERNAL_SERVER_ERROR" &&
         /failed query|does not exist|relation .* does not exist/i.test(e.message ?? "")
 
-      if (queryFailed(statusRes.error) || queryFailed(analyticsRes.error)) {
+      if (queryFailed(statusRes.error)) {
         setDbNotReady(true)
         setConnected(false)
         setHasData(false)
         return
       }
 
-      setConnected(Boolean((statusRes.data as { connected?: boolean } | null)?.connected))
-      const totals = (analyticsRes.data as { totals?: { transactions?: number } } | null)?.totals
-      setHasData((totals?.transactions ?? 0) > 0)
+      setConnected(Boolean(statusRes.data?.connected))
+      setHasData(Boolean(statusRes.data?.hasData))
     })()
+    return () => controller.abort()
   }, [])
 
   async function loadDemo() {

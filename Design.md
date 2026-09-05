@@ -94,10 +94,17 @@ naming each class in words (see the accessibility note at the top of `charts.tsx
 
 ## 1b. Navigating between pages
 
-Every console page is `force-dynamic` and reads a separate API deployment, so a navigation costs a
+Live data pages are `force-dynamic` and read a separate API deployment, so a navigation costs a
 real server round trip: about 1.5s warm, and over 5s on a cold API. That is worth fixing at the
 source, but it is not a reason for the interface to look broken while it happens, and it did. A
 reviewer clicking Inspect thought the page had frozen, and said the same of the back button.
+
+The landing page and `/connect` are now prerendered. The landing page reads the committed
+evaluation reports during the build, without querying the live metrics funnel. Report changes
+invalidate the Turbo build cache through `data/*.json`; rebuild the web app to publish new numbers.
+The global demo banner reads `hasData` from `/api/razorpay/status`, which checks for one transaction
+instead of fetching the entire analytics dashboard. Live decisions and payment data still use
+fresh API reads and the existing mutation refresh behavior. See [performance notes](docs/performance.md).
 
 Three things, in the order they matter:
 
@@ -117,6 +124,11 @@ Three things, in the order they matter:
 On top of that, `components/common/route-progress.tsx` puts a bar at the top of the window and a
 spinner on the control that was clicked, for the moment between the click and the skeleton. It uses
 `useLinkStatus`, so it is only ever on screen while a navigation is genuinely in flight.
+
+On narrow screens the hero uses a shrinkable single-column grid and wraps its preview controls.
+Grouped model bars keep labels aligned in a keyboard-focusable horizontal scroll region instead
+of widening the whole page. CSS-only report charts render on the server with their existing
+animations and reduced-motion support.
 
 ---
 

@@ -19,9 +19,7 @@ import { FEATURE_LABEL, HAND_WEIGHTED, METHOD_LABEL } from "@/components/fraud/m
 import { VoiceStudio } from "@/components/fraud/voice-studio"
 import { CompareTable, Section } from "@/components/marketing/sections"
 import { Button } from "@/components/ui/button"
-import { apiClient, unwrap } from "@/lib/api/client"
-
-export const dynamic = "force-dynamic"
+import { landingReports } from "@/lib/landing-reports"
 
 function pct(value: number | null | undefined, digits = 0): string | null {
   return value === null || value === undefined ? null : `${(value * 100).toFixed(digits)}%`
@@ -47,22 +45,17 @@ const SIGNALS = [
 /**
  * The landing page.
  *
- * Charts do the explaining. Every number in them is read from the evidence endpoint, which reads
+ * Charts do the explaining. Every number in them is read from the committed reports in
  * the JSON files evaluate.py / verify_holds.py / stress_test.py / train_model.py write - nothing
  * on this page is typed by hand, because a marketing page that has drifted from the detector's
  * measured behaviour destroys exactly the trust it exists to build.
  */
-export default async function LandingPage() {
-  const [metricsRes, evidenceRes] = await Promise.all([
-    unwrap(apiClient.metrics.$get()),
-    unwrap(apiClient.evidence.$get()),
-  ])
-
-  const d = metricsRes.data?.detector ?? null
+export default function LandingPage() {
+  const d = landingReports.detectorMetrics
   const precision = pct(d?.precision_predicted_clusters)
   const precisionBefore = pct(d?.precision_without_threshold)
 
-  const ev = evidenceRes.data as {
+  const ev = landingReports as {
     holdVerification: {
       n_payments: number
       results: { truth: string; held: boolean }[]
@@ -171,8 +164,6 @@ export default async function LandingPage() {
     valueText: f.importance.toFixed(3),
     highlight: HAND_WEIGHTED.has(f.feature),
   }))
-
-  const adversarial = mc?.adversarial_evaluation.summary ?? {}
 
   // Headline numbers: the shipped scorer's own row on the graded split.
   const bestMethod = hard?.ranking_by_expected_cost[0]?.method
