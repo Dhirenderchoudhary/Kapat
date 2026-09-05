@@ -159,3 +159,10 @@ Every one of these degrades loudly. None of them silently pretends to work.
 - **matplotlib bakes text into paths**, so one SVG cannot recolour its labels for dark mode. That is
   why `make_figures.py` renders a light and a dark variant, and why the app draws its own charts
   instead of shipping the images.
+- **`NODE_ENV=production` in `.env` forces SSL on every database connection.** Pointing at a local
+  Postgres container without overriding `NODE_ENV` fails with a TLS error that reads like a network
+  fault. Prefix local runs with `NODE_ENV=development`.
+- **The browser talks to the API cross-origin.** A local API needs
+  `HONO_TRUSTED_ORIGINS` set to the web origin or every client call fails while SSR keeps working.
+  The root `.env` `POSTGRES_URL` is the shared Neon instance canary and production both read. Do not
+  migrate or seed against it.
