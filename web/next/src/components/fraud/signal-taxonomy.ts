@@ -43,6 +43,33 @@ export const SIGNAL_INNOCENT_EXPLANATION: Record<string, string> = {
     "Families do not buy consecutive SIM ranges. Bulk disposable-number vendors sell exactly this.",
 }
 
+/** The signal as a noun phrase that can be dropped into a sentence, mirroring cluster_scorer.py's
+ *  own SIGNAL_PHRASE. SIGNAL_LABEL is a column heading and does not read as English mid-sentence
+ *  ("6 accounts share sequential phone block"). */
+export const SIGNAL_PHRASE: Record<string, string> = {
+  shared_address: "a shared delivery address",
+  shared_payment: "a shared payment method",
+  shared_phone_pattern: "phone numbers from one sequential block",
+  coordinated_timing: "transactions repeatedly firing within minutes of each other",
+  shared_promo: "the same promo code funnelled through several accounts",
+}
+
+/** The fraud-side half of the same pair: in one plain sentence, why this signal counts for as
+ *  much (or as little) as it does. The detail page leads with these because a merchant asking
+ *  "why is this flagged" wants the driver, not the taxonomy. */
+export const SIGNAL_WHY_IT_MATTERS: Record<string, string> = {
+  shared_promo:
+    "One promo code funnelled through several accounts. A household has no reason to split one code across separate accounts.",
+  shared_phone_pattern:
+    "Consecutive phone numbers. Families do not buy SIM ranges; bulk disposable-number vendors sell exactly this.",
+  coordinated_timing:
+    "Orders repeatedly firing within minutes of each other. Real households do this too, so it counts for less on its own.",
+  shared_address:
+    "One delivery address. Families, flatmates and hostels all share one, so alone this is not evidence of anything.",
+  shared_payment:
+    "One card or UPI handle across the accounts. Ordinary in a family, so alone this is not evidence of anything.",
+}
+
 export const SIGNAL_CLASS_LABEL: Record<SignalClass, string> = {
   benign_explainable: "Benign-explainable",
   weak_fraud_specific: "Weak fraud signal",
