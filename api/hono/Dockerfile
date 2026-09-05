@@ -11,6 +11,8 @@ COPY --from=prepare /app/.github/scripts .github/scripts
 COPY --from=prepare /app/out/json/ .
 RUN bun install --frozen-lockfile --ignore-scripts
 COPY --from=prepare /app/out/full/ .
+# Evaluation reports are imported by the API but are outside Turbo's workspace packages.
+COPY --from=prepare /app/data ./data
 RUN --mount=type=secret,id=dotenv,target=/app/.env,required=true bunx turbo run build --filter=@api/hono --force
 
 FROM base AS runner

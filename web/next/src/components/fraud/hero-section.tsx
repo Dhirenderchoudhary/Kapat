@@ -30,9 +30,9 @@ export function HeroSection({
   return (
     <section className="relative overflow-hidden border-b py-16 lg:py-24">
       <div className="mx-auto w-full max-w-6xl px-4 sm:px-6">
-        <div className="grid items-center gap-10 lg:grid-cols-12">
+        <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-12">
           {/* Left Column: Headline, Actions & Metrics */}
-          <div className="space-y-6 lg:col-span-7">
+          <div className="min-w-0 space-y-6 lg:col-span-7">
             <div className="text-muted-foreground inline-flex items-center gap-2 text-sm">
               <RiRadarLine className="text-primary size-4" aria-hidden />
               <span>{t("hero.badge")}</span>
@@ -122,9 +122,9 @@ export function HeroSection({
           </div>
 
           {/* Right Column: Live Case Dossier Preview */}
-          <div className="lg:col-span-5">
+          <div className="min-w-0 lg:col-span-5">
             <Card className="glass-panel overflow-hidden rounded-2xl border shadow-xl">
-              <div className="bg-muted/40 flex items-center justify-between border-b px-4 py-3">
+              <div className="bg-muted/40 flex flex-wrap items-center justify-between gap-3 border-b px-4 py-3">
                 <div className="flex items-center gap-2">
                   <div className="flex gap-1.5">
                     <div className="size-2.5 rounded-full bg-red-500/80" />
@@ -166,7 +166,7 @@ export function HeroSection({
               <CardContent className="space-y-4 p-5">
                 {activeTab === "graph" ? (
                   <div className="space-y-4">
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
                       <div className="flex items-center gap-2">
                         <Badge
                           variant="destructive"

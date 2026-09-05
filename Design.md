@@ -67,13 +67,17 @@ Crimson (`--evidence-strong`) is for strong fraud evidence and a flagged state. 
 
 ## Navigation
 
-Every console page is `force-dynamic` and reads a separate API deployment, so a navigation costs a real server round trip. The interface still has to paint on click.
+Live data pages are `force-dynamic` and read a separate API deployment, so a navigation costs a real server round trip. The interface still has to paint on click.
+
+The landing page and `/connect` are prerendered. The landing page reads the committed evaluation reports during the build, without querying the live metrics funnel. Report changes invalidate the Turbo build cache through `data/*.json`; rebuild the web app to publish new numbers. The global demo banner reads `hasData` from `/api/razorpay/status`, which checks for one transaction instead of fetching the entire analytics dashboard. Live decisions and payment data still use fresh API reads. See [performance notes](docs/performance.md).
 
 1. **A `loading.tsx` on every route.** Without one, Next renders nothing until the server render finishes. `components/shell/page-skeleton.tsx` holds the pieces, shaped like the page they stand in for.
 2. **Those same files are what prefetch can fetch.** A `<Link>` to a dynamic route has nothing to prefetch unless the route has a loading boundary.
 3. **`experimental.staleTimes` in `next.config.ts`.** The default of 0 for dynamic routes means the back button re-fetches everything. Every mutation calls `router.refresh()` first, so a decision or an import is never read back from a stale entry.
 
 `components/common/route-progress.tsx` puts a bar at the top of the window and a spinner on the control that was clicked, using `useLinkStatus`, so it is only on screen while a navigation is in flight.
+
+On narrow screens the hero uses a shrinkable single-column grid and wraps its preview controls. Grouped model bars keep labels aligned in a keyboard-focusable horizontal scroll region instead of widening the whole page. CSS-only report charts render on the server with their existing animations and reduced-motion support.
 
 ## Graph
 
