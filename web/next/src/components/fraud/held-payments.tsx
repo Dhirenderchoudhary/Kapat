@@ -92,7 +92,7 @@ export function HeldPayments({ pollMs = 10_000 }: { pollMs?: number }) {
   async function decide(hold: Hold, action: "release" | "reject") {
     setError(null)
     if (!decidedBy.trim()) {
-      setError(t("hold.decidedBy"))
+      setError(t("hold.nameRequired"))
       return
     }
     const note = notes[hold.id]?.trim() ?? ""
@@ -164,8 +164,11 @@ export function HeldPayments({ pollMs = 10_000 }: { pollMs?: number }) {
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-0.5 text-xs font-semibold text-amber-700 dark:text-amber-400">
-                        <span className="size-1.5 animate-pulse rounded-full bg-amber-500" />
+                      {/* The dot used to pulse on every row. A hold is a standing state, not an
+                          arrival, so the pulse announced news that never came - and on a list where
+                          every row pulses, none of them stands out. */}
+                      <span className="border-evidence-weak/35 bg-evidence-weak/10 text-evidence-weak inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-semibold">
+                        <span className="bg-evidence-weak size-1.5 rounded-full" />
                         {t("hold.heldLabel")}
                       </span>
                       <span className="text-foreground font-mono text-xs font-semibold">
@@ -185,8 +188,11 @@ export function HeldPayments({ pollMs = 10_000 }: { pollMs?: number }) {
                   <div
                     className={cn(
                       "flex items-center gap-2 rounded-xl border px-3 py-2",
+                      // The urgent box pulsed, which faded its own countdown in and out on the
+                      // one number a merchant is here to read. The crimson and the falling figure
+                      // carry the urgency; the text stays legible.
                       left.urgent
-                        ? "border-destructive/40 bg-destructive/10 text-destructive animate-pulse"
+                        ? "border-destructive/40 bg-destructive/10 text-destructive"
                         : "border-border/80 bg-background/80 text-foreground",
                     )}
                   >
@@ -219,7 +225,7 @@ export function HeldPayments({ pollMs = 10_000 }: { pollMs?: number }) {
 
                 <p className="text-muted-foreground mt-3 flex items-start gap-2 text-xs">
                   <RiAlarmWarningLine
-                    className="mt-0.5 size-4 shrink-0 text-amber-500"
+                    className="text-evidence-weak mt-0.5 size-4 shrink-0"
                     aria-hidden
                   />
                   <span>
@@ -227,18 +233,25 @@ export function HeldPayments({ pollMs = 10_000 }: { pollMs?: number }) {
                   </span>
                 </p>
 
-                <input
-                  value={notes[hold.id] ?? ""}
-                  onChange={(e) => setNotes((n) => ({ ...n, [hold.id]: e.target.value }))}
-                  placeholder={t("hold.reason")}
-                  className="bg-background/80 border-border/80 focus:ring-primary mt-4 h-9 w-full rounded-lg border px-3 text-xs shadow-xs transition-all sm:text-sm"
-                />
+                {/* This field was labelled with t("hold.reason") - "Why it was held" - which is
+                    the detector's reason, already printed above it. It is the merchant's own note,
+                    and a refund is rejected without it, so it says both. */}
+                <label className="mt-4 block">
+                  <span className="text-muted-foreground text-xs font-medium">
+                    {t("hold.noteLabel")}
+                  </span>
+                  <input
+                    value={notes[hold.id] ?? ""}
+                    onChange={(e) => setNotes((n) => ({ ...n, [hold.id]: e.target.value }))}
+                    placeholder={t("hold.notePlaceholder")}
+                    className="bg-background/80 border-border/80 focus-visible:ring-ring mt-1 h-9 w-full rounded-lg border px-3 text-xs shadow-xs focus-visible:ring-2 focus-visible:outline-none sm:text-sm"
+                  />
+                </label>
 
                 <div className="mt-3.5 flex flex-wrap gap-3">
                   <Button
                     onClick={() => decide(hold, "release")}
                     disabled={busyId === hold.id}
-                    className="bg-emerald-600 text-white shadow-xs hover:bg-emerald-700"
                     size="sm"
                   >
                     <RiCheckLine className="size-4" aria-hidden />
