@@ -13,6 +13,7 @@ import {
   verifications,
 } from "@packages/db"
 import { and, asc, count, desc, eq, inArray, ne } from "drizzle-orm"
+import { alias } from "drizzle-orm/pg-core"
 import { Hono } from "hono"
 import { describeRoute, resolver } from "hono-openapi"
 import { z } from "zod"
@@ -97,6 +98,12 @@ const clusterListItemSchema = z.object({
   accountCount: z.number(),
   verificationStatus: z.string().meta({ example: NOT_YET_TRIGGERED }),
   createdAt: z.string(),
+  // The distinct signal types linking members of this group. Without it a queue row carries a
+  // score, a count and a rupee figure, which is the same shape for every row and answers none of
+  // "which of these is actually a ring" - a reviewer had to open all fifteen to find out. This is
+  // the one field that makes the queue scannable, and it is the same account_links data the
+  // detail page renders, not a second opinion.
+  signalTypes: z.array(z.string()).meta({ example: ["shared_promo", "shared_address"] }),
 })
 
 const evidenceSchema = z.object({
@@ -290,7 +297,16 @@ const { data, error } = await unwrap(apiClient.clusters.$get())`,
       const total = totalRes[0]?.value ?? 0
 
       const clusterIds = rows.map((r) => r.id)
-      const [accountCounts, verificationStatuses] = await Promise.all([
+
+      // The edges strictly inside each listed cluster, reduced to their distinct signal types.
+      // Same rule the detail route's evidence query uses - both endpoints of the link have to be
+      // members of the same cluster - so the queue chips and the detail page can never disagree
+      // about what links a group. One extra round trip on a page that already makes three,
+      // batched into the same Promise.all.
+      const memberA = alias(clusterMembers, "member_a")
+      const memberB = alias(clusterMembers, "member_b")
+
+      const [accountCounts, verificationStatuses, signalRows] = await Promise.all([
         clusterIds.length
           ? db
               .select({ clusterId: clusterMembers.clusterId, n: count() })
@@ -299,10 +315,34 @@ const { data, error } = await unwrap(apiClient.clusters.$get())`,
               .groupBy(clusterMembers.clusterId)
           : Promise.resolve([]),
         latestVerificationStatusByCluster(clusterIds),
+        clusterIds.length
+          ? db
+              .selectDistinct({
+                clusterId: memberA.clusterId,
+                signalType: accountLinks.signalType,
+              })
+              .from(accountLinks)
+              .innerJoin(memberA, eq(memberA.accountId, accountLinks.accountA))
+              .innerJoin(
+                memberB,
+                and(
+                  eq(memberB.accountId, accountLinks.accountB),
+                  eq(memberB.clusterId, memberA.clusterId),
+                ),
+              )
+              .where(inArray(memberA.clusterId, clusterIds))
+              .orderBy(asc(memberA.clusterId), asc(accountLinks.signalType))
+          : Promise.resolve([]),
       ])
       const countByCluster = new Map<string, number>()
       for (const row of accountCounts) {
         countByCluster.set(row.clusterId, row.n)
+      }
+      const signalsByCluster = new Map<string, string[]>()
+      for (const row of signalRows) {
+        const list = signalsByCluster.get(row.clusterId)
+        if (list) list.push(row.signalType)
+        else signalsByCluster.set(row.clusterId, [row.signalType])
       }
 
       const data = {
@@ -317,6 +357,7 @@ const { data, error } = await unwrap(apiClient.clusters.$get())`,
             ? row.createdAt
             : new Date(row.createdAt)
           ).toISOString(),
+          signalTypes: signalsByCluster.get(row.id) ?? [],
         })),
         ...paging({ page, perPage, total }),
       }
