@@ -21,11 +21,31 @@ A table, one row per open cluster, sorted by risk score descending by default:
 
 ### 1.2 Ring Detail (`/clusters/:id`) - the core screen
 
-Three sections, in this order:
+**The verdict leads.** Before any of the sections below, one sentence answers the only question
+someone arrives with: why is this marked as fraud. "6 accounts are linked by phone numbers from one
+sequential block. No ordinary household produces that." Then the two or three signals that carried
+the score, each with a plain line on why it counts, and a line naming what was discounted because a
+family would share it too.
+
+`components/fraud/cluster-verdict.ts` derives that from the same evidence rows and the same stored
+detector record the rest of the page renders, never as a second opinion. The detector's own audit
+lines are still there verbatim, collapsed under "Detector audit trail": they are the record, and a
+reviewer months later needs them, but they name the taxonomy and restate the threshold, and reading
+them first is what made this page unreadable to a first-time viewer.
+
+Then, in this order:
 
 1. **Network graph** (`react-force-graph-2d`) - accounts as nodes, edges as the shared signals connecting them. Node color = individual account risk contribution. Edge labeled on hover with the exact `signal_type` and confidence (Rules.md Principle 9 - never an unlabeled line). Clicking a node opens the account drill-down.
 2. **Evidence panel** - plain-language list: _"4 accounts share the same delivery address," "3 accounts used the same promo code within 6 minutes of each other," "2 accounts share a payment method fingerprint."_ This is a direct translation of the graph into sentences a merchant can read in five seconds - don't make them infer it from the graph alone.
 3. **Decide** - ₹ exposure figure, verification status/transcript if triggered, four buttons: Freeze / Block / Escalate / Dismiss. Dismiss opens a required reason field (Rules.md Principle 10) - not a free-text box, a short set of options (e.g., "legitimate shared household," "coincidental overlap," "other" with text).
+
+### 1.2a Onboarding (`/connect`)
+
+Three ways in - live Razorpay keys, a CSV export, the sample dataset - are one choice on one
+screen, not four stacked full-height sections. Presented as separate sections, nobody discovered
+the second and third without scrolling past the first. Picking one collapses the row into a rail
+and gives the width to the thing being done; the other two stay one click away, because people
+routinely try the sample data first and connect afterwards.
 
 ### 1.3 Account drill-down (`/accounts/:id`)
 
@@ -43,12 +63,12 @@ One colour system, defined once in `web/next/src/app/globals.css`. The colour th
 evidence and the colour that paints the interface are the same colour, because on this product they
 mean the same thing.
 
-| Token                | Meaning                                                        |
-| -------------------- | -------------------------------------------------------------- |
-| `--evidence-benign`  | a signal an ordinary household also produces (address, card)   |
-| `--evidence-weak`    | weakly fraud-specific (coordinated timing)                     |
-| `--evidence-strong`  | no ordinary household explanation (promo funnel, SIM block)    |
-| `--primary`          | ultramarine. Links, focus, primary actions                     |
+| Token               | Meaning                                                      |
+| ------------------- | ------------------------------------------------------------ |
+| `--evidence-benign` | a signal an ordinary household also produces (address, card) |
+| `--evidence-weak`   | weakly fraud-specific (coordinated timing)                   |
+| `--evidence-strong` | no ordinary household explanation (promo funnel, SIM block)  |
+| `--primary`         | ultramarine. Links, focus, primary actions                   |
 
 Two rules hold this together:
 
@@ -69,6 +89,34 @@ change moved the interface and left the evidence colours behind.
 
 Colour is never the sole carrier of meaning: every chart also carries a text label or a legend
 naming each class in words (see the accessibility note at the top of `charts.tsx`).
+
+---
+
+## 1b. Navigating between pages
+
+Every console page is `force-dynamic` and reads a separate API deployment, so a navigation costs a
+real server round trip: about 1.5s warm, and over 5s on a cold API. That is worth fixing at the
+source, but it is not a reason for the interface to look broken while it happens, and it did. A
+reviewer clicking Inspect thought the page had frozen, and said the same of the back button.
+
+Three things, in the order they matter:
+
+1. **A `loading.tsx` on every route.** Without one, Next renders nothing at all until the server
+   render finishes; with one, the click paints a skeleton immediately. `components/shell/page-skeleton.tsx`
+   holds the pieces. The skeletons are shaped like the page they stand in for, because a skeleton
+   whose blocks land where the content lands reads as the page arriving, and one that does not
+   reads as a second screen flashing past.
+2. **Those same files are what prefetch can fetch.** A `<Link>` to a dynamic route has nothing to
+   prefetch unless the route has a loading boundary, so this is also what makes the queue's Inspect
+   links warm before they are clicked.
+3. **`experimental.staleTimes` in `next.config.ts`.** The default of 0 for dynamic routes means the
+   back button re-fetches everything. With it set, back is served from the router cache and costs
+   no server request at all. Every mutation calls `router.refresh()` first, which drops the whole
+   cache, so a decision or an import is never read back from a stale entry.
+
+On top of that, `components/common/route-progress.tsx` puts a bar at the top of the window and a
+spinner on the control that was clicked, for the moment between the click and the skeleton. It uses
+`useLinkStatus`, so it is only ever on screen while a navigation is genuinely in flight.
 
 ---
 

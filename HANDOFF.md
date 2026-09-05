@@ -101,6 +101,16 @@ web/next/src/
   app/page.tsx                landing page. Chart-led, minimal prose.
   app/evidence/page.tsx       the evidence dossier: every measurement, failures included
   app/holds/, clusters/, analysis/, metrics/, connect/
+  app/**/loading.tsx          one per route. Every console page is force-dynamic against a
+                              separate API deployment, so a navigation is a 1-2s round trip and
+                              without these the click painted nothing at all. They are also the
+                              only thing <Link prefetch> can fetch ahead for a dynamic route.
+  components/shell/page-skeleton.tsx     the pieces those loading files are built from
+  components/common/route-progress.tsx   useLinkStatus feedback: a portalled top bar, plus
+                                         LinkPending for a spinner on the clicked control
+  components/fraud/cluster-verdict.ts    the one-sentence "why is this flagged", derived from the
+                                         same evidence and detector record the page renders
+  components/fraud/connect-workbench.tsx three ways in as one choice, not four stacked sections
   components/fraud/animated-charts.tsx   the app's charts. Live, animated, theme-aware.
   components/fraud/charts.tsx            older static charts (ShareBar/BarChart), still used
   components/fraud/model-labels.ts       one place where model/feature keys get human names
@@ -112,7 +122,8 @@ data/                         every run report, committed. The source of truth f
 docs/algorithm.md             the full algorithm writeup, including the ML comparison
 docs/submission-draft.md      what goes in the buildathon form
 docs/images/                  static figures for docs and slides only. The app does NOT use these.
-tests/                        Python unittest + tests/test_razorpay.mjs (24 node tests)
+tests/                        Python unittest, node tests (*.mjs), bun tests (*.test.ts).
+                              `bun run test` runs both JS runners; the Python suite needs a DB.
 ```
 
 Note: several code comments reference `Memory.md` and `Rules.md`. **Those files no longer exist.**
@@ -264,16 +275,16 @@ split is read once, at the end. Everything below is read from `data/model_compar
 
 **Result 1: the easy split cannot rank anything.**
 
-| Method on the easy split (held-out AP)      | Value     |
-| ------------------------------------------- | --------- |
-| Logistic regression                         | 1.000     |
-| Random forest                               | 1.000     |
-| Extra trees                                 | 1.000     |
-| Gradient boosting                           | 1.000     |
-| Hybrid (heuristic + random forest)          | 1.000     |
-| **Corroboration heuristic (no training)**   | **1.000** |
-| Hist gradient boosting                      | 0.417     |
-| Isolation forest (no labels at all)         | 0.517     |
+| Method on the easy split (held-out AP)    | Value     |
+| ----------------------------------------- | --------- |
+| Logistic regression                       | 1.000     |
+| Random forest                             | 1.000     |
+| Extra trees                               | 1.000     |
+| Gradient boosting                         | 1.000     |
+| Hybrid (heuristic + random forest)        | 1.000     |
+| **Corroboration heuristic (no training)** | **1.000** |
+| Hist gradient boosting                    | 0.417     |
+| Isolation forest (no labels at all)       | 0.517     |
 
 The heuristic row is the finding. A hand-written rule that never saw a label, a training example or
 a gradient step ties every supervised model at a perfect score. **A number an untrained rule also
@@ -288,15 +299,15 @@ what the current code produces.)
 
 **Result 2: the graded split ranks them, and the hybrid wins.**
 
-| Method on the hard split                | Precision | Recall | Costly errors |
-| --------------------------------------- | --------- | ------ | ------------- |
-| **Hybrid (heuristic + random forest)**  | **90.9%** | **100%** | **4**       |
-| Random forest                           | 87.0%     | 100%   | 6             |
-| Gradient boosting                       | 85.1%     | 100%   | 7             |
-| Hist gradient boosting                  | 85.1%     | 100%   | 7             |
-| Logistic regression                     | 76.9%     | 100%   | 12            |
-| Extra trees                             | 76.9%     | 100%   | 12            |
-| Corroboration heuristic alone           | 66.0%     | 82.5%  | 45            |
+| Method on the hard split               | Precision | Recall   | Costly errors |
+| -------------------------------------- | --------- | -------- | ------------- |
+| **Hybrid (heuristic + random forest)** | **90.9%** | **100%** | **4**         |
+| Random forest                          | 87.0%     | 100%     | 6             |
+| Gradient boosting                      | 85.1%     | 100%     | 7             |
+| Hist gradient boosting                 | 85.1%     | 100%     | 7             |
+| Logistic regression                    | 76.9%     | 100%     | 12            |
+| Extra trees                            | 76.9%     | 100%     | 12            |
+| Corroboration heuristic alone          | 66.0%     | 82.5%    | 45            |
 
 Costly errors is `false_positives x 1 + false_negatives x 4`, a policy dial stated in the report,
 not a measurement.
@@ -414,6 +425,33 @@ is the one place raw rows become clusters, and it goes through the real service 
 
 ---
 
+### Running the whole stack locally against a real database
+
+The root `.env` `POSTGRES_URL` is the **shared Neon database canary and production both read**. Never
+migrate or seed against it. Use the compose Postgres instead:
+
+```bash
+docker compose up -d postgres                      # port 5433, throwaway volume
+for f in packages/db/drizzle/*.sql; do             # migrations are hand-written SQL
+  docker exec -i razorpay_buildathon-postgres-1     psql -U razorpay -d razorpay -v ON_ERROR_STOP=1 -q < "$f"
+done
+
+# API. NODE_ENV and TRUSTED_ORIGINS both matter - see the traps below.
+cd api/hono && NODE_ENV=development   POSTGRES_URL="postgres://razorpay:razorpay@localhost:5433/razorpay"   HONO_TRUSTED_ORIGINS="http://localhost:3210" PORT=4000 bun --hot src/index.ts
+
+# Web, in another shell.
+cd web/next && NODE_ENV=development   INTERNAL_API_URL=http://localhost:4000 NEXT_PUBLIC_API_URL=http://localhost:4000   bunx next dev -p 3210
+
+# Seed: 396 accounts, 949 transactions, then score them.
+curl -X POST http://localhost:4000/api/ingest/demo
+curl -X POST -H 'Content-Type: application/json' -d '{}' http://localhost:4000/api/clusters/detect
+```
+
+Detection reports `engine: typescript-fallback` unless the detector-service container is also up.
+That is the documented fallback, not a failure.
+
+---
+
 ## 10. Environment traps that have already cost hours
 
 - **`bun run dev` uses portless**, which assigns random ports and `.localhost` hostnames, while
@@ -435,6 +473,16 @@ is the one place raw rows become clusters, and it goes through the real service 
   charts instead of shipping images.
 - **The build environment has had no outbound access to `api.razorpay.com` or to npm/PyPI.** Check
   before assuming an install or a live call will work.
+- **`NODE_ENV=production` in `.env` forces SSL on every database connection.** `packages/db/src/index.ts`
+  turns SSL on when the URL looks managed _or_ when NODE_ENV is production, and the root `.env` sets
+  production. Point it at a local Postgres container without overriding NODE_ENV and the only symptom
+  is `Client network socket disconnected before secure TLS connection was established`, which reads
+  like a network fault rather than a config one. Prefix local runs with `NODE_ENV=development`.
+- **The browser talks to the API cross-origin, not through a same-origin path.** `config.api.url`
+  hands the client `NEXT_PUBLIC_API_URL` directly, so a local API must allow the web origin:
+  `HONO_TRUSTED_ORIGINS=http://localhost:3210`. Without it every client-side call fails and the
+  console shows the "API is not reachable" banner even though SSR is working, because SSR uses
+  `INTERNAL_API_URL` and never leaves the server.
 
 ---
 
