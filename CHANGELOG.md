@@ -1,5 +1,47 @@
 # Changelog
 
+## v0.0.7
+
+[compare changes](https://github.com/Dhirenderchoudhary/Kapat/compare/v0.0.6...v0.0.7)
+
+### 🚀 Enhancements
+
+- **web:** Lead the ring detail page with a plain-language verdict ([2d8cbd4](https://github.com/Dhirenderchoudhary/Kapat/commit/2d8cbd4))
+- **web:** Make /connect one choice instead of four stacked sections ([b170bcb](https://github.com/Dhirenderchoudhary/Kapat/commit/b170bcb))
+- **api:** Return the signals linking each cluster in the queue list ([7b49846](https://github.com/Dhirenderchoudhary/Kapat/commit/7b49846))
+- **web:** Give the ring queue evidence chips, filters and sorting ([f7a5b7a](https://github.com/Dhirenderchoudhary/Kapat/commit/f7a5b7a))
+
+### 🔥 Performance
+
+- **web:** Paint a loading state on every console route ([da3b479](https://github.com/Dhirenderchoudhary/Kapat/commit/da3b479))
+- Speed up site rendering and dashboard queries ([3ee4f30](https://github.com/Dhirenderchoudhary/Kapat/commit/3ee4f30))
+
+### 🩹 Fixes
+
+- Draw and serve a cluster's evidence in a stable order ([a5e34a0](https://github.com/Dhirenderchoudhary/Kapat/commit/a5e34a0))
+- **web:** Say what to do on the holds screen ([c9b8f51](https://github.com/Dhirenderchoudhary/Kapat/commit/c9b8f51))
+
+### 💅 Refactors
+
+- **web:** Cut the copy back across the console ([01e2704](https://github.com/Dhirenderchoudhary/Kapat/commit/01e2704))
+- **web:** Paint every signal badge from the evidence tokens ([9a03d39](https://github.com/Dhirenderchoudhary/Kapat/commit/9a03d39))
+
+### 📖 Documentation
+
+- Add walkthrough demo video to README ([24e0f04](https://github.com/Dhirenderchoudhary/Kapat/commit/24e0f04))
+- Embed direct video player for demo in README ([1edbaea](https://github.com/Dhirenderchoudhary/Kapat/commit/1edbaea))
+- Replace mp4 asset with YouTube demo video in README ([40431e2](https://github.com/Dhirenderchoudhary/Kapat/commit/40431e2))
+- Record the console navigation work and the local stack recipe ([ae614c8](https://github.com/Dhirenderchoudhary/Kapat/commit/ae614c8))
+- Record the queue columns, the badge tokens and the holds copy ([be48bde](https://github.com/Dhirenderchoudhary/Kapat/commit/be48bde))
+
+### 🏡 Chore
+
+- Run both JS test runners in bun run test ([387934a](https://github.com/Dhirenderchoudhary/Kapat/commit/387934a))
+
+### ❤️ Contributors
+
+- Dhirender Choudhary @Dhirenderchoudhary
+
 ## v0.0.6
 
 [compare changes](https://github.com/Dhirenderchoudhary/Kapat/compare/v0.0.5...v0.0.6)
