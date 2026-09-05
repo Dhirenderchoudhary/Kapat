@@ -84,7 +84,11 @@ export function RazorpayConnect() {
     const { data: refreshed } = await unwrap(apiClient.razorpay.status.$get())
     if (refreshed) setStatus(refreshed as Status)
     if ((data as SyncResult).clustersFlagged > 0) {
-      setTimeout(() => router.push("/clusters"), 1200)
+      setTimeout(() => {
+        // See load-demo-data.tsx: drop the cached queue before navigating to it.
+        router.refresh()
+        router.push("/clusters")
+      }, 1200)
     }
   }
 
