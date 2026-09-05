@@ -1,50 +1,20 @@
-import {
-  RiAlarmWarningLine,
-  RiArrowRightLine,
-  RiCheckboxCircleLine,
-  RiFlashlightLine,
-  RiMoneyDollarCircleLine,
-  RiShieldCheckLine,
-  RiUserSharedLine,
-} from "@remixicon/react"
+import { RiCheckboxCircleLine } from "@remixicon/react"
 import Link from "next/link"
 
+import { RouteProgress } from "@/components/common/route-progress"
+import { ClusterQueue } from "@/components/fraud/cluster-queue"
 import { LoadDemoData } from "@/components/fraud/load-demo-data"
 import { RunDetection } from "@/components/fraud/run-detection"
-import { RISK_BAND_LABEL, RISK_BAND_STYLE, riskBand } from "@/components/fraud/signal-taxonomy"
+import { riskBand } from "@/components/fraud/signal-taxonomy"
 import { PageHeader } from "@/components/shell/page-header"
 import { PageShell } from "@/components/shell/page-shell"
 import { Button } from "@/components/ui/button"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
 import { apiClient, unwrap } from "@/lib/api/client"
-import { cn } from "@/lib/utils"
 
 export const dynamic = "force-dynamic"
 
-function formatRupees(paise: number | null): string {
-  if (paise === null) return "₹0"
+function formatRupees(paise: number): string {
   return `₹${(paise / 100).toLocaleString("en-IN", { maximumFractionDigits: 0 })}`
-}
-
-const VERIFICATION_LABEL: Record<string, string> = {
-  not_yet_triggered: "Not called",
-  verified_legitimate: "Says legitimate",
-  verified_linked: "Denied knowing",
-  unclear: "Unclear",
-  no_response: "No response",
-}
-
-const STATUS_LABEL: Record<string, string> = {
-  pending_review: "Awaiting decision",
-  pending_verification: "Voice AI calling",
-  resolved: "Decided",
 }
 
 export default async function ClustersPage() {
@@ -58,8 +28,8 @@ export default async function ClustersPage() {
   return (
     <PageShell size="lg" className="space-y-8">
       <PageHeader
-        title="Ring Queue"
-        description="Coordinated account groups surfaced by the corroboration graph detector. Ranked by risk score."
+        title="Ring queue"
+        description="Coordinated account groups, highest risk first."
         actions={<RunDetection />}
       />
 
@@ -71,195 +41,66 @@ export default async function ClustersPage() {
 
       {!error && (
         <>
-          {/* Headline Stats Cards */}
-          <div className="grid gap-4 sm:grid-cols-3">
-            <div className="glass-card-hover border-border/80 bg-card/60 rounded-xl border p-5 shadow-sm">
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
-                  Open Ring Cases
-                </span>
-                <div className="bg-primary/10 text-primary flex size-8 items-center justify-center rounded-lg">
-                  <RiAlarmWarningLine className="size-4.5" />
-                </div>
+          {/* Three counts of one kind, divided by rules rather than boxed in cards.
+              They were three tinted panels, each with its own border colour, its own icon in its
+              own tinted square and an ALL-CAPS label - three different colour treatments for three
+              numbers that mean the same sort of thing, and one of them spent a red on a total that
+              carries no alarm. The landing hero already made this call and wrote down why: a row of
+              measurements reads as one measurement taken three ways, and boxes read as three
+              separate things. Colour is left for the evidence, which is what it means here. */}
+          {clusters.length > 0 && (
+            <dl className="divide-border grid grid-cols-1 gap-px sm:grid-cols-3 sm:divide-x">
+              <div className="sm:pr-6">
+                <dd className="text-foreground font-mono text-3xl tabular-nums">{open.length}</dd>
+                <dt className="text-muted-foreground mt-1 text-sm">
+                  Groups awaiting your decision
+                </dt>
               </div>
-              <div className="text-foreground mt-2 text-3xl font-bold tabular-nums">
-                {open.length}
+              <div className="pt-4 sm:px-6 sm:pt-0">
+                <dd className="text-foreground font-mono text-3xl tabular-nums">
+                  {critical.length}
+                </dd>
+                <dt className="text-muted-foreground mt-1 text-sm">Scored above 0.75</dt>
               </div>
-              <div className="text-muted-foreground mt-1 text-xs">
-                Awaiting merchant investigation
+              <div className="pt-4 sm:pt-0 sm:pl-6">
+                <dd className="text-foreground font-mono text-3xl tabular-nums">
+                  {formatRupees(totalExposure)}
+                </dd>
+                <dt className="text-muted-foreground mt-1 text-sm">
+                  Chargeback exposure held across them
+                </dt>
               </div>
-            </div>
+            </dl>
+          )}
 
-            <div className="glass-card-hover border-destructive/30 bg-destructive/5 rounded-xl border p-5 shadow-sm">
-              <div className="flex items-center justify-between">
-                <span className="text-destructive text-xs font-semibold tracking-wider uppercase">
-                  Critical Risk
-                </span>
-                <div className="bg-destructive/10 text-destructive flex size-8 animate-pulse items-center justify-center rounded-lg">
-                  <RiFlashlightLine className="size-4.5" />
-                </div>
-              </div>
-              <div className="text-destructive mt-2 text-3xl font-bold tabular-nums">
-                {critical.length}
-              </div>
-              <div className="text-muted-foreground mt-1 text-xs">
-                Risk score &gt; 0.75 (High confidence)
-              </div>
-            </div>
-
-            <div className="glass-card-hover rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-5 shadow-sm">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold tracking-wider text-emerald-700 uppercase dark:text-emerald-400">
-                  Prevented Exposure
-                </span>
-                <div className="flex size-8 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-                  <RiMoneyDollarCircleLine className="size-4.5" />
-                </div>
-              </div>
-              <div className="text-foreground mt-2 text-3xl font-bold tabular-nums">
-                {formatRupees(totalExposure)}
-              </div>
-              <div className="text-muted-foreground mt-1 text-xs">
-                Estimated volume across flagged accounts
-              </div>
-            </div>
-          </div>
-
-          {/* Queue Table or Empty State */}
           {clusters.length === 0 ? (
             <div className="glass-panel-elevated relative overflow-hidden rounded-2xl border p-12 text-center shadow-xl">
               <div className="bg-dot-grid pointer-events-none absolute inset-0 opacity-30" />
               <div className="border-border bg-card text-primary relative mx-auto flex size-20 items-center justify-center rounded-2xl border">
-                <RiCheckboxCircleLine
-                  className="size-10 animate-pulse text-emerald-500"
-                  aria-hidden
-                />
-                <span className="absolute -top-1 -right-1 flex size-3">
-                  <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-                  <span className="relative inline-flex size-3 rounded-full bg-emerald-500" />
-                </span>
+                <RiCheckboxCircleLine className="text-primary size-10" aria-hidden />
               </div>
               <h3 className="text-foreground relative z-10 mt-5 text-xl font-bold">
-                No Coordinated Fraud Rings Detected
+                No rings detected
               </h3>
-              <p className="text-muted-foreground relative z-10 mx-auto mt-2 max-w-md text-sm leading-relaxed">
-                The corroboration graph engine is actively monitoring incoming payments. Either no
-                transactions are loaded, or all activity falls safely within normal household
-                behavior.
+              <p className="text-muted-foreground relative z-10 mx-auto mt-2 max-w-md text-sm">
+                Either nothing is loaded yet, or every group here looks like an ordinary household.
               </p>
               <div className="relative z-10 mt-6 flex flex-wrap justify-center gap-3">
                 <LoadDemoData />
-                <Button
-                  render={<Link href="/connect" />}
-                  variant="outline"
-                  size="sm"
-                  className="shadow-xs"
-                >
-                  Connect Razorpay API
+                <Button render={<Link href="/connect" />} variant="outline" size="sm">
+                  Connect Razorpay
+                  <RouteProgress />
                 </Button>
               </div>
             </div>
           ) : (
-            <div className="glass-panel overflow-hidden rounded-xl border shadow-sm">
-              <Table>
-                <TableHeader>
-                  <tr className="bg-muted/40 border-b">
-                    <TableHead className="text-foreground font-semibold">Risk Band</TableHead>
-                    <TableHead className="text-foreground font-semibold">Members</TableHead>
-                    <TableHead className="text-foreground font-semibold">Total Exposure</TableHead>
-                    <TableHead className="text-foreground font-semibold">
-                      AI Voice Verification
-                    </TableHead>
-                    <TableHead className="text-foreground font-semibold">Decision Status</TableHead>
-                    <TableHead className="text-foreground font-semibold">First Detected</TableHead>
-                    <TableHead className="text-foreground text-right font-semibold">
-                      Action
-                    </TableHead>
-                  </tr>
-                </TableHeader>
-                <TableBody>
-                  {clusters.map((cluster) => {
-                    const band = riskBand(cluster.riskScore)
-                    return (
-                      <TableRow key={cluster.id} className="hover:bg-muted/30 transition-colors">
-                        <TableCell>
-                          <div className="flex items-center gap-2.5">
-                            <span className="text-foreground text-base font-bold tabular-nums">
-                              {cluster.riskScore.toFixed(2)}
-                            </span>
-                            <span
-                              className={cn(
-                                "rounded-full border px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wider",
-                                RISK_BAND_STYLE[band],
-                              )}
-                            >
-                              {RISK_BAND_LABEL[band]}
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="text-foreground flex items-center gap-1.5 font-medium tabular-nums">
-                            <RiUserSharedLine className="text-muted-foreground size-4" />
-                            <span>{cluster.accountCount} accounts</span>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-foreground font-semibold tabular-nums">
-                          {formatRupees(cluster.chargebackExposurePaise)}
-                        </TableCell>
-                        <TableCell>
-                          <span className="bg-muted/60 text-foreground inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium">
-                            {VERIFICATION_LABEL[cluster.verificationStatus] ??
-                              cluster.verificationStatus}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          <span
-                            className={cn(
-                              "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium",
-                              cluster.status === "resolved"
-                                ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
-                                : "bg-amber-500/10 text-amber-700 dark:text-amber-300",
-                            )}
-                          >
-                            {STATUS_LABEL[cluster.status] ?? cluster.status}
-                          </span>
-                        </TableCell>
-                        <TableCell className="text-muted-foreground text-xs">
-                          {new Date(cluster.createdAt).toLocaleDateString("en-IN", {
-                            day: "numeric",
-                            month: "short",
-                            year: "numeric",
-                          })}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Button
-                            render={<Link href={`/clusters/${cluster.id}`} />}
-                            size="sm"
-                            variant="outline"
-                            className="gap-1 text-xs"
-                          >
-                            <span>Inspect</span>
-                            <RiArrowRightLine className="size-3.5" aria-hidden />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    )
-                  })}
-                </TableBody>
-              </Table>
-            </div>
+            <ClusterQueue rows={clusters} />
           )}
 
-          <div className="border-border/80 bg-muted/20 text-muted-foreground rounded-xl border p-4 text-xs">
-            <div className="flex items-start gap-2.5">
-              <RiShieldCheckLine className="mt-0.5 size-4 shrink-0 text-emerald-500" aria-hidden />
-              <span>
-                <strong>Human-in-the-loop:</strong> The detector surfaces coordinated clusters with
-                transparent evidence logs. It never automatically blocks or freezes customer
-                accounts. Every decision is confirmed by a merchant operator with reason tracking.
-              </span>
-            </div>
-          </div>
+          <p className="text-muted-foreground text-xs">
+            The detector surfaces groups and holds funds. It never blocks an account on its own:
+            every decision here is yours, and is recorded with a reason.
+          </p>
         </>
       )}
     </PageShell>

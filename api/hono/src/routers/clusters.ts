@@ -12,7 +12,8 @@ import {
   transactions,
   verifications,
 } from "@packages/db"
-import { and, count, desc, eq, inArray, ne } from "drizzle-orm"
+import { and, asc, count, desc, eq, inArray, ne } from "drizzle-orm"
+import { alias } from "drizzle-orm/pg-core"
 import { Hono } from "hono"
 import { describeRoute, resolver } from "hono-openapi"
 import { z } from "zod"
@@ -97,6 +98,12 @@ const clusterListItemSchema = z.object({
   accountCount: z.number(),
   verificationStatus: z.string().meta({ example: NOT_YET_TRIGGERED }),
   createdAt: z.string(),
+  // The distinct signal types linking members of this group. Without it a queue row carries a
+  // score, a count and a rupee figure, which is the same shape for every row and answers none of
+  // "which of these is actually a ring" - a reviewer had to open all fifteen to find out. This is
+  // the one field that makes the queue scannable, and it is the same account_links data the
+  // detail page renders, not a second opinion.
+  signalTypes: z.array(z.string()).meta({ example: ["shared_promo", "shared_address"] }),
 })
 
 const evidenceSchema = z.object({
@@ -290,18 +297,52 @@ const { data, error } = await unwrap(apiClient.clusters.$get())`,
       const total = totalRes[0]?.value ?? 0
 
       const clusterIds = rows.map((r) => r.id)
-      const [accountCounts, verificationStatuses] = await Promise.all([
+
+      // The edges strictly inside each listed cluster, reduced to their distinct signal types.
+      // Same rule the detail route's evidence query uses - both endpoints of the link have to be
+      // members of the same cluster - so the queue chips and the detail page can never disagree
+      // about what links a group. One extra round trip on a page that already makes three,
+      // batched into the same Promise.all.
+      const memberA = alias(clusterMembers, "member_a")
+      const memberB = alias(clusterMembers, "member_b")
+
+      const [accountCounts, verificationStatuses, signalRows] = await Promise.all([
         clusterIds.length
           ? db
-              .select({ clusterId: clusterMembers.clusterId })
+              .select({ clusterId: clusterMembers.clusterId, n: count() })
               .from(clusterMembers)
               .where(inArray(clusterMembers.clusterId, clusterIds))
+              .groupBy(clusterMembers.clusterId)
           : Promise.resolve([]),
         latestVerificationStatusByCluster(clusterIds),
+        clusterIds.length
+          ? db
+              .selectDistinct({
+                clusterId: memberA.clusterId,
+                signalType: accountLinks.signalType,
+              })
+              .from(accountLinks)
+              .innerJoin(memberA, eq(memberA.accountId, accountLinks.accountA))
+              .innerJoin(
+                memberB,
+                and(
+                  eq(memberB.accountId, accountLinks.accountB),
+                  eq(memberB.clusterId, memberA.clusterId),
+                ),
+              )
+              .where(inArray(memberA.clusterId, clusterIds))
+              .orderBy(asc(memberA.clusterId), asc(accountLinks.signalType))
+          : Promise.resolve([]),
       ])
       const countByCluster = new Map<string, number>()
       for (const row of accountCounts) {
-        countByCluster.set(row.clusterId, (countByCluster.get(row.clusterId) ?? 0) + 1)
+        countByCluster.set(row.clusterId, row.n)
+      }
+      const signalsByCluster = new Map<string, string[]>()
+      for (const row of signalRows) {
+        const list = signalsByCluster.get(row.clusterId)
+        if (list) list.push(row.signalType)
+        else signalsByCluster.set(row.clusterId, [row.signalType])
       }
 
       const data = {
@@ -316,6 +357,7 @@ const { data, error } = await unwrap(apiClient.clusters.$get())`,
             ? row.createdAt
             : new Date(row.createdAt)
           ).toISOString(),
+          signalTypes: signalsByCluster.get(row.id) ?? [],
         })),
         ...paging({ page, perPage, total }),
       }
@@ -570,21 +612,36 @@ const { data, error } = await unwrap(apiClient.clusters[":id"].$get({ param: { i
     async (c) => {
       const id = c.req.param("id")
 
-      const [cluster] = await db.select().from(clusters).where(eq(clusters.id, id)).limit(1)
+      // Both reads depend only on the route id; start them together to save a database round trip.
+      const [[cluster], memberRows] = await Promise.all([
+        db.select().from(clusters).where(eq(clusters.id, id)).limit(1),
+        db
+          .select({ accountId: clusterMembers.accountId })
+          .from(clusterMembers)
+          .where(eq(clusterMembers.clusterId, id))
+          .orderBy(asc(clusterMembers.accountId)),
+      ])
       if (!cluster) {
         throw new ApiError(404, "NOT_FOUND", "Cluster not found")
       }
 
-      const memberRows = await db
-        .select({ accountId: clusterMembers.accountId })
-        .from(clusterMembers)
-        .where(eq(clusterMembers.clusterId, id))
+      // Every list below is explicitly ordered. Without an ORDER BY, Postgres is free to return
+      // the same rows in a different order on two identical queries, and it does: the detail page
+      // renders once for the HTML and again for the RSC payload, so the graph came back with its
+      // edges in a different order each time and React threw a hydration mismatch and re-rendered
+      // the whole SVG on the client. It also broke the promise in cluster-network-graph.tsx's own
+      // docstring, that one cluster always draws the same picture - which matters when a merchant
+      // screenshots this screen and attaches it to a dispute.
       const memberIds = memberRows.map((r) => r.accountId)
 
       const [memberAccounts, links, verificationRows, decisionRows, auditRows, txnCounts] =
         await Promise.all([
           memberIds.length
-            ? db.select().from(accounts).where(inArray(accounts.id, memberIds))
+            ? db
+                .select()
+                .from(accounts)
+                .where(inArray(accounts.id, memberIds))
+                .orderBy(asc(accounts.id))
             : Promise.resolve([]),
           // Evidence is every account_links row strictly between two members of this cluster - the
           // same graph edges graph_builder.py produced, never an unlabeled connection (Principle 9).
@@ -598,8 +655,16 @@ const { data, error } = await unwrap(apiClient.clusters[":id"].$get({ param: { i
                     inArray(accountLinks.accountB, memberIds),
                   ),
                 )
+                .orderBy(asc(accountLinks.id))
             : Promise.resolve([]),
-          db.select().from(verifications).where(eq(verifications.clusterId, id)),
+          // Ordered because verificationRows[0] below picks the status shown on the cluster:
+          // unordered, which of several calls decides the label was whatever Postgres returned
+          // first.
+          db
+            .select()
+            .from(verifications)
+            .where(eq(verifications.clusterId, id))
+            .orderBy(asc(verifications.id)),
           db
             .select()
             .from(merchantDecisions)

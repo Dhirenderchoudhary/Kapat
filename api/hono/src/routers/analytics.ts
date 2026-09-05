@@ -123,52 +123,69 @@ export const analyticsRouter = new Hono().get(
 
     const [
       [txnRow],
-      [volumeRow],
       [clusterRow],
       statusRows,
       decisionRows,
       [auditRow],
-      clusterScoreRows,
       signalRows,
-      memberRows,
+      clusterSizes,
       [flaggedAccountsRow],
-      [exposureRow],
     ] = await Promise.all([
-      db.select({ n: count() }).from(transactions),
-      db.select({ total: sum(transactions.amountPaise) }).from(transactions),
-      db.select({ n: count() }).from(clusters),
+      db
+        .select({
+          n: count(),
+          total: sum(transactions.amountPaise),
+          inRings:
+            sql<number>`count(*) filter (where ${transactions.accountId} in (select ${clusterMembers.accountId} from ${clusterMembers}))`.mapWith(
+              Number,
+            ),
+        })
+        .from(transactions),
+      db
+        .select({
+          n: count(),
+          exposure: sum(clusters.chargebackExposurePaise),
+          buckets: sql<number[]>`array[${sql.join(
+            RISK_BUCKETS.map(
+              (b) =>
+                sql`(count(*) filter (where ${clusters.riskScore} >= ${b.from} and ${clusters.riskScore} < ${b.to}))::int`,
+            ),
+            sql`, `,
+          )}]`,
+        })
+        .from(clusters),
       db.select({ status: clusters.status, n: count() }).from(clusters).groupBy(clusters.status),
       db
         .select({ action: merchantDecisions.action, n: count() })
         .from(merchantDecisions)
         .groupBy(merchantDecisions.action),
       db.select({ n: count() }).from(auditLog),
-      db.select({ riskScore: clusters.riskScore }).from(clusters),
       db
         .select({ signalType: accountLinks.signalType, n: count() })
         .from(accountLinks)
         .groupBy(accountLinks.signalType),
-      db.select({ clusterId: clusterMembers.clusterId }).from(clusterMembers),
+      db
+        .select({ size: sql<number>`size`.mapWith(Number), clusters: count() })
+        .from(
+          db
+            .select({ size: count().as("size") })
+            .from(clusterMembers)
+            .groupBy(clusterMembers.clusterId)
+            .as("member_sizes"),
+        )
+        .groupBy(sql`size`)
+        .orderBy(sql`size`),
       db.select({ n: countDistinct(clusterMembers.accountId) }).from(clusterMembers),
-      db.select({ total: sum(clusters.chargebackExposurePaise) }).from(clusters),
     ])
 
     const totalTransactions = txnRow?.n ?? 0
     const accountsFlagged = flaggedAccountsRow?.n ?? 0
 
-    // Transactions belonging to accounts that sit inside a flagged ring. A subquery rather than
-    // pulling ids into JS, because on a real merchant's volume that list is large.
-    const [txnInRingsRow] = await db
-      .select({ n: count() })
-      .from(transactions)
-      .where(
-        sql`${transactions.accountId} in (select ${clusterMembers.accountId} from ${clusterMembers})`,
-      )
-    const transactionsInFlaggedRings = txnInRingsRow?.n ?? 0
+    const transactionsInFlaggedRings = txnRow?.inRings ?? 0
 
-    const riskDistribution = RISK_BUCKETS.map((b) => ({
+    const riskDistribution = RISK_BUCKETS.map((b, i) => ({
       ...b,
-      count: clusterScoreRows.filter((r) => r.riskScore >= b.from && r.riskScore < b.to).length,
+      count: clusterRow?.buckets[i] ?? 0,
     }))
 
     const signalBreakdown = signalRows
@@ -178,15 +195,6 @@ export const analyticsRouter = new Hono().get(
         edges: r.n,
       }))
       .sort((a, b) => b.edges - a.edges)
-
-    const sizeByCluster = new Map<string, number>()
-    for (const row of memberRows)
-      sizeByCluster.set(row.clusterId, (sizeByCluster.get(row.clusterId) ?? 0) + 1)
-    const sizeCounts = new Map<number, number>()
-    for (const size of sizeByCluster.values()) sizeCounts.set(size, (sizeCounts.get(size) ?? 0) + 1)
-    const clusterSizes = Array.from(sizeCounts.entries())
-      .map(([size, clusters]) => ({ size, clusters }))
-      .sort((a, b) => a.size - b.size)
 
     const statusBreakdown: Record<string, number> = {}
     for (const row of statusRows) statusBreakdown[row.status] = row.n
@@ -198,7 +206,7 @@ export const analyticsRouter = new Hono().get(
         totals: {
           accounts: totalAccounts,
           transactions: totalTransactions,
-          transactionVolumePaise: Number(volumeRow?.total ?? 0),
+          transactionVolumePaise: Number(txnRow?.total ?? 0),
           accountsInFlaggedRings: accountsFlagged,
           clustersFlagged: clusterRow?.n ?? 0,
           decisionsMade: decisionRows.reduce((s, r) => s + r.n, 0),
@@ -209,7 +217,7 @@ export const analyticsRouter = new Hono().get(
           accountsClean: Math.max(0, totalAccounts - accountsFlagged),
           transactionsInFlaggedRings,
           transactionsClean: Math.max(0, totalTransactions - transactionsInFlaggedRings),
-          exposurePaise: Number(exposureRow?.total ?? 0),
+          exposurePaise: Number(clusterRow?.exposure ?? 0),
         },
         riskDistribution,
         signalBreakdown,

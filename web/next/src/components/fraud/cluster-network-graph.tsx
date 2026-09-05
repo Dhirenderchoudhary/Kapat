@@ -154,7 +154,15 @@ export function ClusterNetworkGraph({
         }
       })
       .filter((e): e is NonNullable<typeof e> => e !== null)
-      .sort((p, q) => CLASS_ORDER[p.cls] - CLASS_ORDER[q.cls])
+      // Broken by id, not left to the sort's tie handling. Class alone is not a total order - a
+      // ring can have a dozen edges of the same class - and the server and the browser then drew
+      // those in different orders, which React reported as a hydration mismatch and paid for by
+      // regenerating the whole SVG on the client. It also quietly falsified the promise at the top
+      // of this file, that one cluster always draws the same picture.
+      .sort(
+        (p, q) =>
+          CLASS_ORDER[p.cls] - CLASS_ORDER[q.cls] || (p.id < q.id ? -1 : p.id > q.id ? 1 : 0),
+      )
 
     return { nodes, edges, presentClasses: new Set(edges.map((e) => e.cls)) }
   }, [accounts, evidence])

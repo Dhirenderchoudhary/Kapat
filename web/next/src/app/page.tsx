@@ -1,6 +1,7 @@
 import { RiArrowRightLine, RiGitBranchLine } from "@remixicon/react"
 import Link from "next/link"
 
+import { RouteProgress } from "@/components/common/route-progress"
 import {
   AnimatedChartStyles,
   GroupedBars,
@@ -18,9 +19,7 @@ import { FEATURE_LABEL, HAND_WEIGHTED, METHOD_LABEL } from "@/components/fraud/m
 import { VoiceStudio } from "@/components/fraud/voice-studio"
 import { CompareTable, Section } from "@/components/marketing/sections"
 import { Button } from "@/components/ui/button"
-import { apiClient, unwrap } from "@/lib/api/client"
-
-export const dynamic = "force-dynamic"
+import { landingReports } from "@/lib/landing-reports"
 
 function pct(value: number | null | undefined, digits = 0): string | null {
   return value === null || value === undefined ? null : `${(value * 100).toFixed(digits)}%`
@@ -46,22 +45,17 @@ const SIGNALS = [
 /**
  * The landing page.
  *
- * Charts do the explaining. Every number in them is read from the evidence endpoint, which reads
+ * Charts do the explaining. Every number in them is read from the committed reports in
  * the JSON files evaluate.py / verify_holds.py / stress_test.py / train_model.py write - nothing
  * on this page is typed by hand, because a marketing page that has drifted from the detector's
  * measured behaviour destroys exactly the trust it exists to build.
  */
-export default async function LandingPage() {
-  const [metricsRes, evidenceRes] = await Promise.all([
-    unwrap(apiClient.metrics.$get()),
-    unwrap(apiClient.evidence.$get()),
-  ])
-
-  const d = metricsRes.data?.detector ?? null
+export default function LandingPage() {
+  const d = landingReports.detectorMetrics
   const precision = pct(d?.precision_predicted_clusters)
   const precisionBefore = pct(d?.precision_without_threshold)
 
-  const ev = evidenceRes.data as {
+  const ev = landingReports as {
     holdVerification: {
       n_payments: number
       results: { truth: string; held: boolean }[]
@@ -236,7 +230,7 @@ export default async function LandingPage() {
         <Section
           eyebrow="How it's doing"
           title={`${ev?.holdVerification?.n_payments ?? replayCells.length} payments, one at a time`}
-          lead="The detector scores each transaction strictly using telemetry accumulated up to that instant. Watch the grid fill in chronological order."
+          lead="Each one scored using only what was known at that moment, in arrival order."
         >
           <div className="space-y-6">
             <div className="glass-panel relative overflow-hidden rounded-2xl border p-6 shadow-sm sm:p-8">
@@ -280,11 +274,10 @@ export default async function LandingPage() {
               ]}
             />
             <p className="text-muted-foreground max-w-2xl text-sm sm:text-base">
-              Measured on 1,185 accounts and 5,341 transactions the model never saw, where rings
-              range from sloppy to careful and families share up to four signals. The hand-built
-              rule alone gets {heuristicRow ? pct(heuristicRow.precision, 1) : "less"} precision;
-              the trained model makes {best?.cost ?? 0} costly errors where the rule makes{" "}
-              {heuristicRow?.cost ?? 0}.
+              On 1,185 accounts the model never saw, where families share up to four signals. The
+              hand-built rule alone gets {heuristicRow ? pct(heuristicRow.precision, 1) : "less"}{" "}
+              precision, and makes {heuristicRow?.cost ?? 0} costly errors where the model makes{" "}
+              {best?.cost ?? 0}.
             </p>
           </div>
         </Section>
@@ -298,8 +291,7 @@ export default async function LandingPage() {
               <RankBars rows={saturation} />
             </div>
             <p className="text-muted-foreground max-w-2xl text-sm sm:text-base">
-              A score an unlabelled model also reaches is measuring the split, not the method. We
-              report that rather than bury it.
+              A score an unlabelled model also reaches is measuring the dataset, not the method.
             </p>
           </div>
         </Section>
@@ -313,8 +305,8 @@ export default async function LandingPage() {
               <RankBars rows={features} />
             </div>
             <p className="text-muted-foreground max-w-2xl text-sm sm:text-base">
-              Highlighted bars are signals the corroboration score already weights by hand. Nothing
-              new was found, and a merchant can be shown its reason for a hold.
+              Highlighted bars are what the corroboration score already weights by hand. It found
+              nothing new, which is why every hold can still be explained.
             </p>
           </div>
         </Section>
@@ -365,8 +357,8 @@ export default async function LandingPage() {
             </div>
             <h3 className="text-foreground mt-2 font-semibold">Flatmates sharing one coupon</h3>
             <p className="text-muted-foreground mt-2 text-sm">
-              On the five signals available, indistinguishable from promo abuse. The information is
-              not there. This is what voice verification exists for.
+              On the five signals available, indistinguishable from promo abuse. This is what the
+              voice check exists for.
             </p>
           </div>
           <div className="bg-card/60 rounded-xl border p-5">
@@ -378,12 +370,12 @@ export default async function LandingPage() {
             </h3>
             <p className="text-muted-foreground mt-2 text-sm">
               Only coordinated timing links them. Flagging on that alone would put real customers in
-              your queue every day. Deliberate.
+              your queue daily. Deliberate.
             </p>
           </div>
         </div>
         <p className="text-muted-foreground mt-6 max-w-2xl text-sm sm:text-base">
-          The data is synthetic and encodes the detector&rsquo;s own assumption. That validates the
+          The data is synthetic and encodes the detector&rsquo;s own assumption, so it validates the
           implementation, not the assumption. Real proof needs real chargebacks.
         </p>
       </Section>
@@ -399,6 +391,7 @@ export default async function LandingPage() {
               <Button render={<Link href="/connect" />} size="lg" className="h-11 px-6 shadow-md">
                 <span>Connect Razorpay</span>
                 <RiArrowRightLine className="size-4" aria-hidden />
+                <RouteProgress />
               </Button>
               <Button
                 render={<Link href="/clusters" />}
@@ -407,9 +400,11 @@ export default async function LandingPage() {
                 className="h-11 px-6"
               >
                 <span>Open ring queue</span>
+                <RouteProgress />
               </Button>
               <Button render={<Link href="/evidence" />} variant="ghost" size="lg" className="h-11">
                 <span>Full evidence</span>
+                <RouteProgress />
               </Button>
             </div>
             <p className="text-muted-foreground mt-8 flex items-center gap-2 text-xs">

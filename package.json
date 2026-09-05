@@ -1,6 +1,6 @@
 {
   "name": "razorpay",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "private": true,
   "workspaces": [
     "api/*",
@@ -27,7 +27,8 @@
     "prepare": "bunx lefthook install",
     "shadcn:update": "bash .github/scripts/shadcn-update.sh && bun i",
     "start": "turbo run start",
-    "test": "if [ -d tests ]; then turbo run build --filter='./packages/*' && bun packages/scripts/src/data-table-metrics.ts && bun test tests; fi"
+    "test:performance": "bun test api/hono/src/routers/performance.test.ts",
+    "test": "if [ -d tests ]; then turbo run build --filter='./packages/*' && bun packages/scripts/src/data-table-metrics.ts && bun test tests && node --test tests/*.mjs; fi"
   },
   "devDependencies": {
     "@commitlint/cli": "catalog:",

@@ -191,7 +191,7 @@ export default async function EvidencePage() {
       <AnimatedChartStyles />
       <PageHeader
         title="Evidence"
-        description="Everything this detector has been measured on, including the cases it gets wrong. All of it reproducible from the repository."
+        description="Every measurement, including the cases it gets wrong. All reproducible from the repo."
       />
 
       <div className="space-y-6">
@@ -226,10 +226,10 @@ export default async function EvidencePage() {
                   </div>
                 </div>
                 <p className="text-muted-foreground mt-4 text-sm leading-relaxed">
-                  Measured on a split the detector never saw. Without a decision threshold
-                  (surfacing every connected group, which is what the first version did), precision
-                  on the same split is <strong>{pct(dm.precision_without_threshold)}</strong>. The
-                  gain came from scoring corroboration instead of connection density.
+                  On a split the detector never saw. Surfacing every connected group instead, which
+                  is what the first version did, gives{" "}
+                  <strong>{pct(dm.precision_without_threshold)}</strong> on the same split. The gain
+                  came from scoring corroboration, not connection density.
                 </p>
               </>
             ) : (
@@ -498,9 +498,8 @@ export default async function EvidencePage() {
                   <h3 className="mb-4 text-sm font-medium">What the forest actually keyed on</h3>
                   <RankBars rows={featureRows} />
                   <p className="text-muted-foreground mt-4 text-sm leading-relaxed">
-                    Highlighted bars are signals the corroboration score already weights by hand. It
-                    rediscovered the heuristic rather than beating it, and a merchant can be shown a
-                    corroboration score&apos;s reason for a hold.
+                    Highlighted bars are what the corroboration score already weights by hand. It
+                    rediscovered the heuristic rather than beating it.
                   </p>
                 </div>
               </div>
@@ -516,12 +515,10 @@ export default async function EvidencePage() {
             What none of this proves
           </h3>
           <p className="text-muted-foreground mt-2 text-sm leading-relaxed">
-            Every number above is measured on synthetic data whose generator encodes the same
-            assumption the detector encodes: that honest households share an address but not a
-            sequential phone block or a funnelled promo code. That validates the{" "}
-            <em>implementation</em>. It cannot validate the <em>assumption</em>, because the same
-            belief authored both sides. Real validation needs real merchant traffic with real
-            chargeback outcomes.{" "}
+            The data generator encodes the same assumption the detector does: households share an
+            address, not a sequential phone block. That validates the <em>implementation</em>, never
+            the <em>assumption</em>, because one belief authored both sides. Real validation needs
+            real chargebacks.{" "}
             <Link href="/connect" className="underline underline-offset-4">
               Connecting your account
             </Link>{" "}
