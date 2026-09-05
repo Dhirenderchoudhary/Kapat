@@ -57,7 +57,7 @@ export default async function MetricsPage() {
     <PageShell size="lg">
       <PageHeader
         title="Detector metrics"
-        description="Measured on a held-out split the detector never saw. Not recomputed on page load."
+        description="Measured once on a split the detector never saw, not recomputed here."
       />
 
       <div className="space-y-6">

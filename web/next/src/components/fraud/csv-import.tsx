@@ -254,7 +254,11 @@ export function CsvImport() {
 
       const { error: detectErr } = await unwrap(apiClient.clusters.detect.$post({ json: {} }))
       if (detectErr) setError(`Imported, but detection failed: ${detectErr.message}`)
-      else router.push("/clusters")
+      else {
+        // See load-demo-data.tsx: drop the cached queue before navigating to it.
+        router.refresh()
+        router.push("/clusters")
+      }
     } finally {
       setBusy(false)
     }

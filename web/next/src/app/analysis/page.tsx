@@ -44,10 +44,7 @@ export default async function AnalysisPage() {
   if (error || !data) {
     return (
       <PageShell size="lg">
-        <PageHeader
-          title="Portfolio Risk Analysis"
-          description="Live breakdown of ingested telemetry."
-        />
+        <PageHeader title="Analysis" description="Breakdown of everything ingested." />
         <div className="border-destructive/30 bg-destructive/10 text-destructive rounded-xl border p-6">
           <p className="text-sm font-semibold">Could not load analytics: {error?.message}</p>
           <p className="text-muted-foreground mt-2 text-xs">
@@ -75,8 +72,8 @@ export default async function AnalysisPage() {
     <PageShell size="lg" className="space-y-8">
       <ChartPalette />
       <PageHeader
-        title="Portfolio Risk Analysis"
-        description="Real-time multi-dimensional analytics calculated across all connected accounts and transaction graphs in the database."
+        title="Analysis"
+        description="Across every account and transaction currently loaded."
       />
 
       {/* KPI Stats Grid */}

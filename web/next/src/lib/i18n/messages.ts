@@ -90,7 +90,7 @@ const en: Messages = {
   "hero.badge": "Abuse-ring sentinel · defence-only",
   "hero.title": "The fraud that costs you most doesn't look like fraud on any single transaction.",
   "hero.subtitle":
-    "Promo farming and coordinated chargeback rings run through accounts that each look perfectly ordinary. They are only visible in the relationships between accounts. This finds those groups, explains exactly why it flagged each one, and refuses to flag the family that just happens to share a delivery address.",
+    "Promo farming and chargeback rings run through accounts that each look perfectly ordinary. This finds the group, explains exactly why it flagged it, and leaves the family that happens to share an address alone.",
   "hero.connectCta": "Connect your account",
   "hero.queueCta": "See a live ring queue",
   "hero.recallLabel": "of true rings caught on a held-out test split",
@@ -149,7 +149,7 @@ const hi: Messages = {
   "hero.badge": "धोखाधड़ी रिंग सेंटिनल · केवल सुरक्षा",
   "hero.title": "सबसे अधिक नुकसान पहुँचाने वाली धोखाधड़ी किसी एक लेनदेन में नहीं दिखती।",
   "hero.subtitle":
-    "प्रोमो फार्मिंग और सुनियोजित चार्जबैक गिरोह ऐसे खातों से संचालित होते हैं जो व्यक्तिगत रूप से सामान्य दिखते हैं। वे केवल खातों के आपसी संबंधों में दिखाई देते हैं। यह प्रणाली उन समूहों को खोजती है, कारण स्पष्ट करती है, और सामान्य परिवारों को सुरक्षित रखती है।",
+    "प्रोमो फार्मिंग और सुनियोजित चार्जबैक गिरोह ऐसे खातों से संचालित होते हैं जो व्यक्तिगत रूप से सामान्य दिखते हैं। यह प्रणाली उन समूहों को खोजती है, कारण स्पष्ट करती है, और सामान्य परिवारों को सुरक्षित रखती है।",
   "hero.connectCta": "अपना खाता जोड़ें",
   "hero.queueCta": "लाइव रिंग कतार देखें",
   "hero.recallLabel": "परीक्षण डेटा पर पकड़े गए वास्तविक रिंग",
@@ -206,7 +206,7 @@ const mr: Messages = {
   "hero.badge": "फसवणूक रिंग सेंटिनेल · फक्त संरक्षण",
   "hero.title": "सर्वात जास्त नुकसान करणारी फसवणूक कोणत्याही एका व्यवहारात दिसत नाही.",
   "hero.subtitle":
-    "प्रोमो फार्मिंग आणि फसवणूक करणाऱ्या टोळ्या सामान्य दिसणाऱ्या खात्यांमधून चालतात. ते फक्त खात्यांमधील परस्पर संबंधांमध्ये दिसून येतात. ही प्रणाली ते गट शोधते, स्पष्ट कारण देते आणि सामान्य कुटुंबांना सुरक्षित ठेवते.",
+    "प्रोमो फार्मिंग आणि फसवणूक करणाऱ्या टोळ्या सामान्य दिसणाऱ्या खात्यांमधून चालतात. ही प्रणाली ते गट शोधते, स्पष्ट कारण देते आणि सामान्य कुटुंबांना सुरक्षित ठेवते.",
   "hero.connectCta": "तुमचे खाते जोडा",
   "hero.queueCta": "थेट रिंग रांग पाहा",
   "hero.recallLabel": "चाचणी डेटावर पकडलेल्या खऱ्या टोळ्या",
@@ -263,7 +263,7 @@ const gu: Messages = {
   "hero.badge": "છેતરપિંડી રિંગ સેન્ટિનલ · ફક્ત સંરક્ષણ",
   "hero.title": "સૌથી વધુ નુકસાન કરતી છેતરપિંડી કોઈ એક વ્યવહારમાં દેખાતી નથી.",
   "hero.subtitle":
-    "પ્રોમો ફાર્મિંગ અને વ્યવસ્થિત ચાર્જબૅક ટોળકીઓ સામાન્ય દેખાતા ખાતાઓ દ્વારા ચાલે છે. તે માત્ર ખાતાઓ વચ્ચેના સંબંધોમાં જ દેખાય છે. આ સિસ્ટમ તે જૂથોને શોધે છે, ચોક્કસ કારણ આપે છે અને સામાન્ય પરિવારોનું રક્ષણ કરે છે.",
+    "પ્રોમો ફાર્મિંગ અને વ્યવસ્થિત ચાર્જબૅક ટોળકીઓ સામાન્ય દેખાતા ખાતાઓ દ્વારા ચાલે છે. આ સિસ્ટમ તે જૂથોને શોધે છે, ચોક્કસ કારણ આપે છે અને સામાન્ય પરિવારોનું રક્ષણ કરે છે.",
   "hero.connectCta": "તમારું ખાતું જોડો",
   "hero.queueCta": "લાઇવ રિંગ કતાર જુઓ",
   "hero.recallLabel": "પરીક્ષણ ડેટા પર પકડાયેલ વાસ્તવિક રિંગ",

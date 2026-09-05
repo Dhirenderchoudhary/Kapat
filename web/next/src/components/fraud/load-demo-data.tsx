@@ -30,6 +30,10 @@ export function LoadDemoData() {
       setStage("idle")
       return
     }
+    // refresh before push: the router cache now holds dynamic pages for a minute (see
+    // staleTimes in next.config.ts), and an import that landed a second ago must not be read
+    // back from an entry captured before it.
+    router.refresh()
     router.push("/clusters")
   }
 

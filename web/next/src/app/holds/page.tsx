@@ -8,8 +8,8 @@ export default function HoldsPage() {
   return (
     <PageShell size="lg" className="space-y-8">
       <PageHeader
-        title="Held Payments Queue"
-        description="Transactions held pending risk review or voice verification. Authorizations auto-expire after 3 days per Razorpay policy."
+        title="Held payments"
+        description="Waiting on your decision. Authorisations expire after 3 days, per Razorpay policy."
       />
       <HeldPayments />
     </PageShell>

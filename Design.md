@@ -16,6 +16,12 @@ One row per open cluster, risk descending: flagged at, account count, risk, expo
 
 ### Ring detail (`/clusters/[id]`)
 
+The verdict leads. Before any of the sections below, one sentence answers why this is marked as fraud. Then the two or three signals that carried the score, each with a plain line on why it counts, and a line naming what was discounted because a family would share it too.
+
+`components/fraud/cluster-verdict.ts` derives that from the same evidence rows and the same stored detector record the rest of the page renders, never as a second opinion. The detector's own audit lines stay verbatim, collapsed under "Detector audit trail".
+
+Then, in this order:
+
 1. **Network graph.** Accounts as nodes, shared signals as edges. Hover shows `signal_type` and confidence. No unlabeled edge.
 2. **Evidence.** Sentences a merchant can read: "4 accounts share a delivery address." Direct translation of `account_links`, not a separate model.
 3. **Decide.** Exposure, transcript if any, Freeze / Block / Escalate / Dismiss. Dismiss requires a reason (database CHECK, not only UI).
@@ -40,6 +46,8 @@ Offline held-out numbers next to live funnel counts. The API keeps those two fam
 
 ### Connect (`/connect`)
 
+Three ways in (live Razorpay keys, a CSV export, the sample dataset) are one choice on one screen. Picking one collapses the row into a rail and gives the width to the thing being done. The other two stay one click away.
+
 Merchant Razorpay key id and secret. Secret stored AES-256-GCM. Without `RAZORPAY_CREDENTIAL_KEY` the API refuses to store a credential.
 
 ## Evidence colours
@@ -56,6 +64,16 @@ One palette in `web/next/src/app/globals.css`. The colour that classifies a sign
 Crimson (`--evidence-strong`) is for strong fraud evidence and a flagged state. Not headings, not decorative buttons. Green is not the brand accent: on a risk queue green means cleared.
 
 `ChartPalette` in `components/fraud/charts.tsx` aliases the same tokens. Colour is never the only carrier: every chart has a text label or legend.
+
+## Navigation
+
+Every console page is `force-dynamic` and reads a separate API deployment, so a navigation costs a real server round trip. The interface still has to paint on click.
+
+1. **A `loading.tsx` on every route.** Without one, Next renders nothing until the server render finishes. `components/shell/page-skeleton.tsx` holds the pieces, shaped like the page they stand in for.
+2. **Those same files are what prefetch can fetch.** A `<Link>` to a dynamic route has nothing to prefetch unless the route has a loading boundary.
+3. **`experimental.staleTimes` in `next.config.ts`.** The default of 0 for dynamic routes means the back button re-fetches everything. Every mutation calls `router.refresh()` first, so a decision or an import is never read back from a stale entry.
+
+`components/common/route-progress.tsx` puts a bar at the top of the window and a spinner on the control that was clicked, using `useLinkStatus`, so it is only on screen while a navigation is in flight.
 
 ## Graph
 
