@@ -4,6 +4,7 @@ import { RiNodeTree, RiRadarLine } from "@remixicon/react"
 import Link from "next/link"
 import { useState } from "react"
 
+import { RouteProgress } from "@/components/common/route-progress"
 import { useT } from "@/components/fraud/locale"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -52,6 +53,7 @@ export function HeroSection({
                 className="bg-primary hover:bg-primary/90 text-primary-foreground h-11 px-6 font-medium"
               >
                 <span>{t("hero.connectCta")}</span>
+                <RouteProgress />
               </Button>
               <Button
                 render={<Link href="/clusters" />}
@@ -61,6 +63,7 @@ export function HeroSection({
               >
                 <RiNodeTree className="text-primary size-4" aria-hidden />
                 <span>{t("hero.queueCta")}</span>
+                <RouteProgress />
               </Button>
               <Button
                 render={<Link href="/holds" />}
@@ -68,10 +71,11 @@ export function HeroSection({
                 size="lg"
                 className="text-muted-foreground hover:text-foreground h-11 px-4"
               >
-                <span>Active Payment Holds</span>
+                <span>Held payments</span>
                 <span className="ml-1.5 rounded-full bg-amber-500/10 px-2 py-0.5 text-xs font-semibold text-amber-600 dark:text-amber-400">
                   Live
                 </span>
+                <RouteProgress />
               </Button>
             </div>
 

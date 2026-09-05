@@ -16,6 +16,7 @@ import { usePathname } from "next/navigation"
 import { useState } from "react"
 
 import { ModeToggle } from "@/components/common/mode-toggle"
+import { RouteProgress } from "@/components/common/route-progress"
 import { LanguageSwitcher, useT } from "@/components/fraud/locale"
 import { Button } from "@/components/ui/button"
 import type { MessageKey } from "@/lib/i18n/messages"
@@ -93,6 +94,7 @@ export function ConsoleNav() {
               )}
             >
               {t(item.msgKey)}
+              <RouteProgress />
             </Link>
           ))}
         </nav>
@@ -109,6 +111,7 @@ export function ConsoleNav() {
             className="bg-primary hover:bg-primary/90 text-primary-foreground mr-1 hidden h-8 px-3 text-sm font-medium sm:inline-flex"
           >
             {t("nav.connect")}
+            <RouteProgress />
           </Button>
           <LanguageSwitcher />
           <ModeToggle />
@@ -152,6 +155,7 @@ export function ConsoleNav() {
                       aria-hidden
                     />
                     <span>{t(item.msgKey)}</span>
+                    <RouteProgress />
                   </Link>
                 </li>
               ))}
@@ -163,6 +167,7 @@ export function ConsoleNav() {
               size="sm"
             >
               {t("nav.connect")}
+              <RouteProgress />
             </Button>
           </nav>
         </div>

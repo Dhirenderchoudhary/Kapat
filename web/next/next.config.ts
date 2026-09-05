@@ -70,6 +70,15 @@ const nextConfig: NextConfig = {
     },
   }),
   reactCompiler: true,
+  // Every console page is force-dynamic and its data comes from a separate API deployment, so a
+  // navigation costs a full server round trip. Two things make that bearable: every route now has
+  // a loading.tsx, which is what <Link prefetch> can actually fetch ahead for a dynamic route, and
+  // these stale times let the back button re-use the RSC payload the router already holds instead
+  // of paying for the round trip a second time. Any mutation calls router.refresh(), which drops
+  // the whole cache, so a decision or an import is never read back from a stale entry.
+  experimental: {
+    staleTimes: { dynamic: 60, static: 300 },
+  },
   rewrites: async () => {
     const targetApiUrl =
       process.env.INTERNAL_API_URL ||
