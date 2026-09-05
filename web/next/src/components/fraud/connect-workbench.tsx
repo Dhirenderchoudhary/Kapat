@@ -14,6 +14,7 @@ import { CheckoutButton } from "@/components/fraud/checkout-button"
 import { CsvImport } from "@/components/fraud/csv-import"
 import { LoadDemoData } from "@/components/fraud/load-demo-data"
 import { RazorpayConnect } from "@/components/fraud/razorpay-connect"
+import { SubscribeButton } from "@/components/fraud/subscribe-button"
 import { cn } from "@/lib/utils"
 
 /**
@@ -157,6 +158,16 @@ function RazorpayPanel() {
   return (
     <div className="space-y-4">
       <RazorpayConnect />
+
+      <div id="plan" className="rounded-xl border p-5">
+        <h3 className="text-foreground text-base font-semibold">Kapat · ₹500 / month</h3>
+        <p className="text-muted-foreground mt-1 text-sm leading-relaxed">
+          One plan. Every feature. Billed monthly through Razorpay Subscriptions.
+        </p>
+        <div className="mt-4">
+          <SubscribeButton />
+        </div>
+      </div>
 
       {/* Both of these used to be full sections of their own. They are real caveats and they stay,
           but they are things you read once, when you hit them: closed by default. */}

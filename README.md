@@ -6,6 +6,8 @@ All data in this repository is synthetic. Accounts, phones, addresses, and verif
 
 **The agent never captures, refunds, or cancels money.** Detection and voice only produce evidence. A named merchant decision is the only thing that can freeze a cluster, capture a hold, or refund a hold. If nobody decides, Razorpay's authorization window expires and the customer is refunded.
 
+The product itself is ₹500 / month through Razorpay Subscriptions, one plan, all features. Subscribe from the landing page or `/connect`.
+
 Rendering behavior, database query improvements and verification commands are documented in [`docs/performance.md`](docs/performance.md).
 
 ## Demo

@@ -56,6 +56,8 @@ Three ways in (live Razorpay keys, a CSV export, the sample dataset) are one cho
 
 Merchant Razorpay key id and secret. Secret stored AES-256-GCM. Without `RAZORPAY_CREDENTIAL_KEY` the API refuses to store a credential.
 
+The same screen offers the product plan: ₹500 / month through Razorpay Subscriptions, every feature included. One plan, no add-ons. The landing page `#pricing` block is the same offer.
+
 ## Evidence colours
 
 One palette in `web/next/src/app/globals.css`. The colour that classifies a signal is the colour the UI uses.

@@ -11,6 +11,7 @@ import {
 import { mapPayment } from "../api/hono/src/lib/razorpay-client.ts"
 import {
   verifyCheckoutSignature,
+  verifySubscriptionSignature,
   verifyWebhookSignature,
 } from "../api/hono/src/lib/razorpay-signatures.ts"
 
@@ -71,6 +72,35 @@ test("checkout: empty/missing inputs never verify", () => {
   )
   assert.equal(
     verifyCheckoutSignature({ orderId: "o", paymentId: "p", signature: "s", keySecret: "" }),
+    false,
+  )
+})
+
+test("subscription: a signature Razorpay would produce verifies", () => {
+  const paymentId = "pay_KbCFyQ0t9Lmi1n"
+  const subscriptionId = "sub_RB58MiP5SPFYyM"
+  const signature = createHmac("sha256", KEY_SECRET)
+    .update(`${paymentId}|${subscriptionId}`)
+    .digest("hex")
+  assert.equal(
+    verifySubscriptionSignature({ paymentId, subscriptionId, signature, keySecret: KEY_SECRET }),
+    true,
+  )
+})
+
+test("subscription: swapping payment and subscription ids is rejected", () => {
+  const paymentId = "pay_A"
+  const subscriptionId = "sub_B"
+  const swapped = createHmac("sha256", KEY_SECRET)
+    .update(`${subscriptionId}|${paymentId}`)
+    .digest("hex")
+  assert.equal(
+    verifySubscriptionSignature({
+      paymentId,
+      subscriptionId,
+      signature: swapped,
+      keySecret: KEY_SECRET,
+    }),
     false,
   )
 })

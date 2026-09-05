@@ -58,6 +58,18 @@ CORS: `HONO_TRUSTED_ORIGINS`. Rate limit: `HONO_RATE_LIMIT` / window.
 
 Languages: `en-IN`, `hi-IN`, `mr-IN`. Roles: `merchant`, `customer`. Turns: `opening`, `closing`. Unset `SARVAM_API_KEY`: `VOICE_NOT_CONFIGURED`.
 
+## Checkout and subscription
+
+Uses the platform `RAZORPAY_KEY_ID` / `RAZORPAY_KEY_SECRET` (this product's keys), not the merchant connection keys.
+
+| Method | Path                                | Notes                                                                          |
+| ------ | ----------------------------------- | ------------------------------------------------------------------------------ |
+| GET    | `/api/checkout/config`              | Public key id, mode, and the ₹500 / month plan                                 |
+| POST   | `/api/checkout/order`               | One-time test order (paise). For live detection demos                          |
+| POST   | `/api/checkout/verify`              | HMAC of `order_id\|payment_id`                                                 |
+| POST   | `/api/checkout/subscription`        | Creates the Kapat plan (or uses `RAZORPAY_PLAN_ID`) and a monthly subscription |
+| POST   | `/api/checkout/subscription/verify` | HMAC of `payment_id\|subscription_id`                                          |
+
 ## Razorpay merchant connection
 
 | Method | Path                       | Notes                                                            |

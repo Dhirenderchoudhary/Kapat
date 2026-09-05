@@ -16,6 +16,7 @@ import {
 import { ChartPalette } from "@/components/fraud/charts"
 import { HeroSection } from "@/components/fraud/hero-section"
 import { FEATURE_LABEL, HAND_WEIGHTED, METHOD_LABEL } from "@/components/fraud/model-labels"
+import { SubscribeButton } from "@/components/fraud/subscribe-button"
 import { VoiceStudio } from "@/components/fraud/voice-studio"
 import { CompareTable, Section } from "@/components/marketing/sections"
 import { Button } from "@/components/ui/button"
@@ -212,6 +213,17 @@ export default function LandingPage() {
             <strong className="text-foreground">{precision ?? "100%"}</strong>, with no loss of
             recall.
           </p>
+        </div>
+      </Section>
+
+      <Section
+        id="pricing"
+        eyebrow="Price"
+        title="₹500 a month, everything included"
+        lead="One Razorpay subscription. Detection, holds, voice, sync, CSV, sample data, evidence and metrics. No add-ons."
+      >
+        <div className="max-w-xl rounded-2xl border p-6">
+          <SubscribeButton />
         </div>
       </Section>
 

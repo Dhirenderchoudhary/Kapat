@@ -5,7 +5,7 @@ import { z } from "zod"
 
 import { ApiError, validationErrorResponses } from "@/lib/error"
 import { jsonRequestBody } from "@/lib/openapi"
-import { verifyCheckoutSignature } from "@/lib/razorpay-signatures"
+import { verifyCheckoutSignature, verifySubscriptionSignature } from "@/lib/razorpay-signatures"
 
 // Razorpay Standard Web Checkout (docs: /payments/payment-gateway/web-integration/standard).
 //
@@ -36,6 +36,87 @@ const verifyPaymentSchema = z.object({
   razorpay_payment_id: z.string().trim().min(1).max(200),
   razorpay_signature: z.string().trim().min(1).max(400),
 })
+
+const verifySubscriptionSchema = z.object({
+  razorpay_payment_id: z.string().trim().min(1).max(200),
+  razorpay_subscription_id: z.string().trim().min(1).max(200),
+  razorpay_signature: z.string().trim().min(1).max(400),
+})
+
+// One plan, all features. Amount is paise: ₹500 / month.
+export const SUBSCRIPTION_AMOUNT_PAISE = 50_000
+export const SUBSCRIPTION_CURRENCY = "INR"
+export const SUBSCRIPTION_PERIOD = "monthly" as const
+
+const verifySubscriptionBody = z.object({
+  data: z.object({
+    subscriptionId: z.string(),
+    planId: z.string(),
+    amount: z.number(),
+    currency: z.string(),
+    period: z.literal("monthly"),
+    keyId: z.string(),
+  }),
+})
+
+async function razorpayJson(
+  path: string,
+  body: unknown,
+): Promise<{ status: number; json: unknown }> {
+  const { keyId, keySecret } = credentials()
+  let res: Response
+  try {
+    res = await fetch(`${RAZORPAY_API}${path}`, {
+      method: "POST",
+      headers: {
+        authorization: `Basic ${Buffer.from(`${keyId}:${keySecret}`).toString("base64")}`,
+        "content-type": "application/json",
+      },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(20_000),
+    })
+  } catch (cause) {
+    throw new ApiError(
+      502,
+      "RAZORPAY_UNREACHABLE",
+      `Could not reach Razorpay: ${cause instanceof Error ? cause.message : String(cause)}`,
+    )
+  }
+  const json = await res.json().catch(() => ({}))
+  return { status: res.status, json }
+}
+
+async function resolvePlanId(): Promise<string> {
+  const pinned = process.env.RAZORPAY_PLAN_ID?.trim()
+  if (pinned) return pinned
+
+  const { status, json } = await razorpayJson("/plans", {
+    period: SUBSCRIPTION_PERIOD,
+    interval: 1,
+    item: {
+      name: "Kapat",
+      amount: SUBSCRIPTION_AMOUNT_PAISE,
+      currency: SUBSCRIPTION_CURRENCY,
+      description: "All features, billed monthly",
+    },
+  })
+  if (status === 401) {
+    throw new ApiError(
+      401,
+      "RAZORPAY_AUTH_FAILED",
+      "Razorpay rejected the API credentials (401). Check RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET are a matching pair from the same mode.",
+    )
+  }
+  const plan = json as { id?: string; error?: { description?: string } }
+  if (status >= 400 || !plan.id) {
+    throw new ApiError(
+      500,
+      "RAZORPAY_SUBSCRIPTION_FAILED",
+      `Razorpay returned ${status} creating the plan. ${plan.error?.description ?? ""}`.trim(),
+    )
+  }
+  return plan.id
+}
 
 function credentials(): { keyId: string; keySecret: string } {
   const keyId = process.env.RAZORPAY_KEY_ID
@@ -68,6 +149,11 @@ export const checkoutRouter = new Hono()
                     keyId: z.string().nullable(),
                     configured: z.boolean(),
                     mode: z.enum(["live", "test"]),
+                    subscription: z.object({
+                      amountPaise: z.number(),
+                      currency: z.string(),
+                      period: z.literal("monthly"),
+                    }),
                   }),
                 }),
               ),
@@ -82,6 +168,11 @@ export const checkoutRouter = new Hono()
           keyId: process.env.RAZORPAY_KEY_ID ?? null,
           configured: Boolean(process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET),
           mode: process.env.RAZORPAY_KEY_ID?.startsWith("rzp_live_") ? "live" : "test",
+          subscription: {
+            amountPaise: SUBSCRIPTION_AMOUNT_PAISE,
+            currency: SUBSCRIPTION_CURRENCY,
+            period: SUBSCRIPTION_PERIOD,
+          },
         },
       }),
   )
@@ -221,6 +312,112 @@ export const checkoutRouter = new Hono()
           orderId: razorpay_order_id,
           paymentId: razorpay_payment_id,
           note: "Signature verified. Fraud analysis happens from the webhook, independently of this call.",
+        },
+      })
+    },
+  )
+  .post(
+    "/subscription",
+    describeRoute({
+      tags: ["Checkout"],
+      description:
+        "Creates a Razorpay Subscription for the single Kapat plan (₹500 / month, all features). Uses RAZORPAY_PLAN_ID when set, otherwise creates the plan. Returns the subscription id the browser needs to open Checkout.",
+      responses: {
+        200: {
+          description: "OK",
+          content: {
+            "application/json": {
+              schema: resolver(verifySubscriptionBody),
+            },
+          },
+        },
+        ...validationErrorResponses,
+      },
+    }),
+    async (c) => {
+      const { keyId } = credentials()
+      const planId = await resolvePlanId()
+      const { status, json } = await razorpayJson("/subscriptions", {
+        plan_id: planId,
+        total_count: 120,
+        quantity: 1,
+        customer_notify: 1,
+        notes: { source: "kapat-monthly-all-features" },
+      })
+      if (status === 401) {
+        throw new ApiError(
+          401,
+          "RAZORPAY_AUTH_FAILED",
+          "Razorpay rejected the API credentials (401). Check RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET are a matching pair from the same mode.",
+        )
+      }
+      const sub = json as { id?: string; error?: { description?: string } }
+      if (status >= 400 || !sub.id) {
+        throw new ApiError(
+          500,
+          "RAZORPAY_SUBSCRIPTION_FAILED",
+          `Razorpay returned ${status} creating the subscription. ${sub.error?.description ?? ""}`.trim(),
+        )
+      }
+      return c.json({
+        data: {
+          subscriptionId: sub.id,
+          planId,
+          amount: SUBSCRIPTION_AMOUNT_PAISE,
+          currency: SUBSCRIPTION_CURRENCY,
+          period: SUBSCRIPTION_PERIOD,
+          keyId,
+        },
+      })
+    },
+  )
+  .post(
+    "/subscription/verify",
+    describeRoute({
+      tags: ["Checkout"],
+      description:
+        "Verifies the first invoice of a subscription checkout: HMAC-SHA256 of `payment_id|subscription_id` with the API key secret.",
+      ...jsonRequestBody(verifySubscriptionSchema),
+      responses: {
+        200: { description: "OK" },
+        ...validationErrorResponses,
+      },
+    }),
+    sValidator("json", verifySubscriptionSchema, (result) => {
+      if (!result.success) {
+        throw new ApiError(
+          400,
+          "VALIDATION_ERROR",
+          "Missing or malformed subscription verification fields",
+          { issues: result.error },
+        )
+      }
+    }),
+    async (c) => {
+      const { keySecret } = credentials()
+      const { razorpay_payment_id, razorpay_subscription_id, razorpay_signature } =
+        c.req.valid("json")
+
+      const valid = verifySubscriptionSignature({
+        paymentId: razorpay_payment_id,
+        subscriptionId: razorpay_subscription_id,
+        signature: razorpay_signature,
+        keySecret,
+      })
+
+      if (!valid) {
+        throw new ApiError(
+          400,
+          "SIGNATURE_MISMATCH",
+          "Subscription signature did not verify. This subscription has NOT been accepted as genuine.",
+        )
+      }
+
+      return c.json({
+        data: {
+          verified: true,
+          subscriptionId: razorpay_subscription_id,
+          paymentId: razorpay_payment_id,
         },
       })
     },

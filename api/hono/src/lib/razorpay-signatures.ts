@@ -12,6 +12,10 @@ import { createHmac, timingSafeEqual } from "node:crypto"
  *     signed string : `${razorpay_order_id}|${razorpay_payment_id}`
  *     secret        : your API KEY SECRET
  *
+ *   SUBSCRIPTION CHECKOUT (client -> your server, after the first invoice is paid)
+ *     signed string : `${razorpay_payment_id}|${razorpay_subscription_id}`
+ *     secret        : your API KEY SECRET
+ *
  *   WEBHOOK (Razorpay -> your server, server to server)
  *     signed string : the RAW request body, byte for byte, unparsed
  *     secret        : your WEBHOOK SECRET (set when creating the webhook, NOT the key secret)
@@ -45,6 +49,22 @@ export function verifyCheckoutSignature(params: {
   const { orderId, paymentId, signature, keySecret } = params
   if (!orderId || !paymentId || !signature || !keySecret) return false
   const expected = createHmac("sha256", keySecret).update(`${orderId}|${paymentId}`).digest("hex")
+  return safeEqualHex(expected, signature)
+}
+
+/** Subscription checkout callback: payment_id first, then subscription_id. Swapping the
+ *  fields is the easy way to accept a forged first invoice. */
+export function verifySubscriptionSignature(params: {
+  paymentId: string
+  subscriptionId: string
+  signature: string
+  keySecret: string
+}): boolean {
+  const { paymentId, subscriptionId, signature, keySecret } = params
+  if (!paymentId || !subscriptionId || !signature || !keySecret) return false
+  const expected = createHmac("sha256", keySecret)
+    .update(`${paymentId}|${subscriptionId}`)
+    .digest("hex")
   return safeEqualHex(expected, signature)
 }
 

@@ -137,14 +137,15 @@ is nothing to detect. That is the cold-start limit, and it is measured rather th
 
 ## Environment variables that change behaviour
 
-| Variable                  | Effect when unset                                                                             |
-| ------------------------- | --------------------------------------------------------------------------------------------- |
-| `POSTGRES_URL`            | API will not start; DB-backed tests skip                                                      |
-| `RAZORPAY_WEBHOOK_SECRET` | `POST /webhooks/razorpay` returns 503 and accepts nothing                                     |
-| `DETECTOR_SERVICE_URL`    | Detection falls back to the TypeScript engine, and reports it                                 |
-| `SARVAM_API_KEY`          | `/api/voice/*` cannot synthesize or transcribe                                                |
-| `RAZORPAY_CREDENTIAL_KEY` | Merchant credentials cannot be encrypted; connect refuses                                     |
-| `RAZORPAY_KEY_ID/SECRET`  | Checkout returns 503; hold release/reject records honestly that no capture or refund happened |
+| Variable                  | Effect when unset                                                                                              |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `POSTGRES_URL`            | API will not start; DB-backed tests skip                                                                       |
+| `RAZORPAY_WEBHOOK_SECRET` | `POST /webhooks/razorpay` returns 503 and accepts nothing                                                      |
+| `DETECTOR_SERVICE_URL`    | Detection falls back to the TypeScript engine, and reports it                                                  |
+| `SARVAM_API_KEY`          | `/api/voice/*` cannot synthesize or transcribe                                                                 |
+| `RAZORPAY_CREDENTIAL_KEY` | Merchant credentials cannot be encrypted; connect refuses                                                      |
+| `RAZORPAY_KEY_ID/SECRET`  | Checkout and subscriptions return 503; hold release/reject records honestly that no capture or refund happened |
+| `RAZORPAY_PLAN_ID`        | Subscribe creates a new ₹500 / month plan on Razorpay each time. Set this to reuse one plan.                   |
 
 Every one of these degrades loudly. None of them silently pretends to work.
 

@@ -110,25 +110,29 @@ Prefix `/api` except `POST /webhooks/razorpay`. CORS from `HONO_TRUSTED_ORIGINS`
 
 `GET /api/clusters` includes `signalTypes` on each row: the distinct `account_links` types whose both endpoints are members of that cluster. The queue uses the same edges as the detail page.
 
+`POST /api/checkout/subscription` starts the ₹500 / month Kapat plan (all features) on Razorpay Subscriptions.
+
 See [`docs/api.md`](docs/api.md).
 
 ## Environment
 
 Hosts and secrets come from env. They are not compiled into source.
 
-| Variable                  | Who reads it                                          |
-| ------------------------- | ----------------------------------------------------- |
-| `POSTGRES_URL`            | API, migrations                                       |
-| `NEXT_PUBLIC_APP_URL`     | Site origin (build-time for the browser bundle)       |
-| `NEXT_PUBLIC_API_URL`     | Browser API origin. One URL, not a comma list         |
-| `INTERNAL_API_URL`        | Next server → Hono when the public API is same-origin |
-| `HONO_APP_URL`            | API self URL                                          |
-| `HONO_WEB_URL`            | Console origin                                        |
-| `HONO_TRUSTED_ORIGINS`    | CORS allow list (comma-separated)                     |
-| `SARVAM_API_KEY`          | Voice. Optional                                       |
-| `RAZORPAY_CREDENTIAL_KEY` | Encrypt merchant secrets at rest                      |
-| `RAZORPAY_WEBHOOK_SECRET` | Webhook signatures (not the API key secret)           |
-| `DETECTOR_SERVICE_URL`    | Compose / sidecar. Unset → TypeScript fallback        |
+| Variable                  | Who reads it                                           |
+| ------------------------- | ------------------------------------------------------ |
+| `POSTGRES_URL`            | API, migrations                                        |
+| `NEXT_PUBLIC_APP_URL`     | Site origin (build-time for the browser bundle)        |
+| `NEXT_PUBLIC_API_URL`     | Browser API origin. One URL, not a comma list          |
+| `INTERNAL_API_URL`        | Next server → Hono when the public API is same-origin  |
+| `HONO_APP_URL`            | API self URL                                           |
+| `HONO_WEB_URL`            | Console origin                                         |
+| `HONO_TRUSTED_ORIGINS`    | CORS allow list (comma-separated)                      |
+| `SARVAM_API_KEY`          | Voice. Optional                                        |
+| `RAZORPAY_CREDENTIAL_KEY` | Encrypt merchant secrets at rest                       |
+| `RAZORPAY_KEY_ID/SECRET`  | Product checkout and the ₹500 / month subscription     |
+| `RAZORPAY_PLAN_ID`        | Optional. Pin the monthly plan instead of creating one |
+| `RAZORPAY_WEBHOOK_SECRET` | Webhook signatures (not the API key secret)            |
+| `DETECTOR_SERVICE_URL`    | Compose / sidecar. Unset → TypeScript fallback         |
 
 `.env.example` is localhost only. Production values belong on the host (Vercel or similar), not in git.
 

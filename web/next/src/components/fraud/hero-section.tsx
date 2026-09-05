@@ -73,6 +73,15 @@ export function HeroSection({
                 <RouteProgress />
               </Button>
               <Button
+                render={<Link href="/#pricing" />}
+                variant="ghost"
+                size="lg"
+                className="text-muted-foreground hover:text-foreground h-11 px-4"
+              >
+                <span>₹500 / month</span>
+                <RouteProgress />
+              </Button>
+              <Button
                 render={<Link href="/holds" />}
                 variant="ghost"
                 size="lg"
