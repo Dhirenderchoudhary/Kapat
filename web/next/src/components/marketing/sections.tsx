@@ -76,7 +76,7 @@ export function CompareTable({
   rows: { label: string; note?: string; values: Cell[] }[]
 }) {
   return (
-    <div className="glass-panel overflow-x-auto rounded-xl border shadow-sm">
+    <div className="glass-panel relative overflow-x-auto rounded-xl border shadow-sm">
       <table className="w-full min-w-[640px] text-sm">
         <thead>
           <tr className="bg-muted/40 border-b">

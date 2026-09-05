@@ -11,6 +11,8 @@ COPY --from=prepare /app/.github/scripts .github/scripts
 COPY --from=prepare /app/out/json/ .
 RUN bun install --frozen-lockfile --ignore-scripts
 COPY --from=prepare /app/out/full/ .
+# Turbo prune omits root data files used by the landing page and the API dependency.
+COPY --from=prepare /app/data ./data
 ENV INTERNAL_API_URL=http://api:4000
 RUN --mount=type=secret,id=dotenv,target=/app/.env,required=true bunx turbo run build --filter=@web/next --force
 RUN cp -r /app/web/next/.next/static /app/web/next/.next/standalone/web/next/.next/static

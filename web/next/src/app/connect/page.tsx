@@ -3,7 +3,6 @@ import { RiEyeOffLine, RiLockLine, RiServerLine } from "@remixicon/react"
 import { ConnectWorkbench } from "@/components/fraud/connect-workbench"
 
 export const metadata = { title: "Connect your Razorpay account" }
-export const dynamic = "force-dynamic"
 
 /**
  * Onboarding.

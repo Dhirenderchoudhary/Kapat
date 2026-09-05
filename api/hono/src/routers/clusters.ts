@@ -293,15 +293,16 @@ const { data, error } = await unwrap(apiClient.clusters.$get())`,
       const [accountCounts, verificationStatuses] = await Promise.all([
         clusterIds.length
           ? db
-              .select({ clusterId: clusterMembers.clusterId })
+              .select({ clusterId: clusterMembers.clusterId, n: count() })
               .from(clusterMembers)
               .where(inArray(clusterMembers.clusterId, clusterIds))
+              .groupBy(clusterMembers.clusterId)
           : Promise.resolve([]),
         latestVerificationStatusByCluster(clusterIds),
       ])
       const countByCluster = new Map<string, number>()
       for (const row of accountCounts) {
-        countByCluster.set(row.clusterId, (countByCluster.get(row.clusterId) ?? 0) + 1)
+        countByCluster.set(row.clusterId, row.n)
       }
 
       const data = {
@@ -570,7 +571,15 @@ const { data, error } = await unwrap(apiClient.clusters[":id"].$get({ param: { i
     async (c) => {
       const id = c.req.param("id")
 
-      const [cluster] = await db.select().from(clusters).where(eq(clusters.id, id)).limit(1)
+      // Both reads depend only on the route id; start them together to save a database round trip.
+      const [[cluster], memberRows] = await Promise.all([
+        db.select().from(clusters).where(eq(clusters.id, id)).limit(1),
+        db
+          .select({ accountId: clusterMembers.accountId })
+          .from(clusterMembers)
+          .where(eq(clusterMembers.clusterId, id))
+          .orderBy(asc(clusterMembers.accountId)),
+      ])
       if (!cluster) {
         throw new ApiError(404, "NOT_FOUND", "Cluster not found")
       }
@@ -582,11 +591,6 @@ const { data, error } = await unwrap(apiClient.clusters[":id"].$get({ param: { i
       // the whole SVG on the client. It also broke the promise in cluster-network-graph.tsx's own
       // docstring, that one cluster always draws the same picture - which matters when a merchant
       // screenshots this screen and attaches it to a dispute.
-      const memberRows = await db
-        .select({ accountId: clusterMembers.accountId })
-        .from(clusterMembers)
-        .where(eq(clusterMembers.clusterId, id))
-        .orderBy(asc(clusterMembers.accountId))
       const memberIds = memberRows.map((r) => r.accountId)
 
       const [memberAccounts, links, verificationRows, decisionRows, auditRows, txnCounts] =

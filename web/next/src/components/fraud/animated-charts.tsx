@@ -1,14 +1,12 @@
-"use client"
-
 /**
  * Animated charts, hand-built as CSS + inline SVG.
+ * Rendered on the server: CSS drives the motion, so these charts need no hydration.
  *
  * THREE RULES THIS FILE FOLLOWS, EACH FOR A REASON THAT ALREADY BIT US ONCE
  * ------------------------------------------------------------------------
  * 1. SERIALISABLE PROPS ONLY. Every label arrives as a pre-formatted string. These are client
- *    components rendered from server pages, and Next.js cannot serialise a function across that
- *    boundary - `valueLabel={(v) => ...}` throws at render and takes the page down with an error
- *    boundary. That is exactly what happened to /analysis and /evidence.
+ *    components previously rendered across a client boundary. Keep that simple data contract
+ *    shared with the interactive charts; these CSS-only charts now render entirely on the server.
  *
  * 2. THE RESTING STATE IS THE FINISHED STATE. Every animation runs FROM a transformed state TO the
  *    element's ordinary CSS, never the other way round. So if animations never run - reduced
@@ -119,65 +117,76 @@ export function GroupedBars({
 }) {
   return (
     <div>
-      {/* pt-6 is the headroom the value labels sit in: box-sizing is border-box, so the padding
-          comes out of the height the bars measure against and a 100% bar cannot clip its label. */}
       <div
-        className="border-border/60 flex items-end gap-4 border-b pt-6 sm:gap-8"
-        style={{ height }}
-        role="img"
-        aria-label={rows
-          .map(
-            (r) =>
-              `${r.label}: ${r.bars.map((b) => `${series[b.seriesIndex]?.label} ${b.valueText}`).join(", ")}`,
-          )
-          .join(". ")}
+        className="overflow-x-auto"
+        role="region"
+        aria-label="Model comparison chart"
+        tabIndex={0}
       >
-        {rows.map((row, ri) => (
-          <div key={row.label} className="flex h-full flex-1 items-end justify-center gap-1.5">
-            {row.bars.map((b) => {
-              const h = Math.min(Math.max(b.value, 0), 1) * 100
-              return (
-                // The label is positioned against the bar's top edge rather than stacked above it:
-                // stacking would put it inside the scaleY animation and squash it on the way up.
-                <div
-                  key={b.seriesIndex}
-                  className="relative flex h-full flex-1 flex-col justify-end"
-                >
-                  <span
-                    className="rd-fade-up text-foreground absolute inset-x-0 text-center text-xs font-medium tabular-nums"
-                    style={{ bottom: `calc(${h}% + 4px)`, animationDelay: `${400 + ri * 110}ms` }}
-                  >
-                    {b.valueText}
-                  </span>
-                  <div
-                    className="rd-grow-y w-full rounded-t-sm"
-                    style={{
-                      height: `${h}%`,
-                      backgroundColor: series[b.seriesIndex]?.color,
-                      animationDelay: `${ri * 110 + b.seriesIndex * 55}ms`,
-                    }}
-                  />
-                </div>
-              )
-            })}
-          </div>
-        ))}
-      </div>
-
-      <div className="mt-2 flex gap-4 sm:gap-8">
-        {rows.map((row) => (
+        <div className="min-w-[640px]">
+          {/* pt-6 is the headroom the value labels sit in: box-sizing is border-box, so the padding
+          comes out of the height the bars measure against and a 100% bar cannot clip its label. */}
           <div
-            key={row.label}
-            className={
-              "flex-1 text-center text-xs leading-snug " +
-              (row.highlight ? "text-foreground font-semibold" : "text-muted-foreground")
-            }
+            className="border-border/60 flex items-end gap-4 border-b pt-6 sm:gap-8"
+            style={{ height }}
+            role="img"
+            aria-label={rows
+              .map(
+                (r) =>
+                  `${r.label}: ${r.bars.map((b) => `${series[b.seriesIndex]?.label} ${b.valueText}`).join(", ")}`,
+              )
+              .join(". ")}
           >
-            {row.label}
+            {rows.map((row, ri) => (
+              <div key={row.label} className="flex h-full flex-1 items-end justify-center gap-1.5">
+                {row.bars.map((b) => {
+                  const h = Math.min(Math.max(b.value, 0), 1) * 100
+                  return (
+                    // The label is positioned against the bar's top edge rather than stacked above it:
+                    // stacking would put it inside the scaleY animation and squash it on the way up.
+                    <div
+                      key={b.seriesIndex}
+                      className="relative flex h-full flex-1 flex-col justify-end"
+                    >
+                      <span
+                        className="rd-fade-up text-foreground absolute inset-x-0 text-center text-xs font-medium tabular-nums"
+                        style={{
+                          bottom: `calc(${h}% + 4px)`,
+                          animationDelay: `${400 + ri * 110}ms`,
+                        }}
+                      >
+                        {b.valueText}
+                      </span>
+                      <div
+                        className="rd-grow-y w-full rounded-t-sm"
+                        style={{
+                          height: `${h}%`,
+                          backgroundColor: series[b.seriesIndex]?.color,
+                          animationDelay: `${ri * 110 + b.seriesIndex * 55}ms`,
+                        }}
+                      />
+                    </div>
+                  )
+                })}
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
 
+          <div className="mt-2 flex gap-4 sm:gap-8">
+            {rows.map((row) => (
+              <div
+                key={row.label}
+                className={
+                  "min-w-0 flex-1 text-center text-xs leading-snug break-words " +
+                  (row.highlight ? "text-foreground font-semibold" : "text-muted-foreground")
+                }
+              >
+                {row.label}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
       <ul className="mt-5 flex flex-wrap gap-x-6 gap-y-2">
         {series.map((s) => (
           <li key={s.label} className="text-muted-foreground flex items-center gap-2 text-xs">

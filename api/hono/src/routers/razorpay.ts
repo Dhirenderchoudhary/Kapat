@@ -1,5 +1,5 @@
 import { sValidator } from "@hono/standard-validator"
-import { db, razorpayConnections } from "@packages/db"
+import { db, razorpayConnections, transactions } from "@packages/db"
 import { desc } from "drizzle-orm"
 import { eq } from "drizzle-orm"
 import { Hono } from "hono"
@@ -109,18 +109,26 @@ export const razorpayRouter = new Hono()
     describeRoute({
       tags: ["Razorpay"],
       description:
-        "Whether a Razorpay account is connected, which mode it is in, and when it last synced. Never returns the API secret - only a masked key id.",
+        "Whether a Razorpay account is connected, which mode it is in, when it last synced, and whether any transactions have been ingested. Uses a bounded existence check, not dashboard analytics. Never returns the API secret - only a masked key id.",
       responses: {
         200: {
           description: "OK",
           content: {
-            "application/json": { schema: resolver(z.object({ data: connectionStatusSchema })) },
+            "application/json": {
+              schema: resolver(
+                z.object({ data: connectionStatusSchema.extend({ hasData: z.boolean() }) }),
+              ),
+            },
           },
         },
       },
     }),
     async (c) => {
-      return c.json({ data: projectStatus(await currentConnection()) })
+      const [connection, transactionRows] = await Promise.all([
+        currentConnection(),
+        db.select({ id: transactions.id }).from(transactions).limit(1),
+      ])
+      return c.json({ data: { ...projectStatus(connection), hasData: transactionRows.length > 0 } })
     },
   )
   .post(
