@@ -1,6 +1,7 @@
 import { RiArrowRightLine, RiGitBranchLine } from "@remixicon/react"
 import Link from "next/link"
 
+import { RouteProgress } from "@/components/common/route-progress"
 import {
   AnimatedChartStyles,
   GroupedBars,
@@ -226,9 +227,9 @@ export default async function LandingPage() {
       {/* -------------------------------------------------------------- voice ai verification */}
       <Section
         id="voice"
-        eyebrow="Autonomous Verification"
-        title="Voice AI verifies ambiguous links in 3 languages"
-        lead="When cross-correlation signals are inconclusive (e.g. shared student housing or family members), an autonomous Voice AI agent conducts a 30-second telephone check in the customer's native tongue to confirm or dispute linkage."
+        eyebrow="Verification"
+        title="When the signals are ambiguous, it calls"
+        lead="A 30-second call in the customer's own language, in three languages, to settle whether the link is a household or a ring."
       >
         <VoiceStudio />
       </Section>
@@ -238,7 +239,7 @@ export default async function LandingPage() {
         <Section
           eyebrow="How it's doing"
           title={`${ev?.holdVerification?.n_payments ?? replayCells.length} payments, one at a time`}
-          lead="The detector scores each transaction strictly using telemetry accumulated up to that instant. Watch the grid fill in chronological order."
+          lead="Each one scored using only what was known at that moment, in arrival order."
         >
           <div className="space-y-6">
             <div className="glass-panel relative overflow-hidden rounded-2xl border p-6 shadow-sm sm:p-8">
@@ -282,11 +283,10 @@ export default async function LandingPage() {
               ]}
             />
             <p className="text-muted-foreground max-w-2xl text-sm sm:text-base">
-              Measured on 1,185 accounts and 5,341 transactions the model never saw, where rings
-              range from sloppy to careful and families share up to four signals. The hand-built
-              rule alone gets {heuristicRow ? pct(heuristicRow.precision, 1) : "less"} precision;
-              the trained model makes {best?.cost ?? 0} costly errors where the rule makes{" "}
-              {heuristicRow?.cost ?? 0}.
+              On 1,185 accounts the model never saw, where families share up to four signals. The
+              hand-built rule alone gets {heuristicRow ? pct(heuristicRow.precision, 1) : "less"}{" "}
+              precision, and makes {heuristicRow?.cost ?? 0} costly errors where the model makes{" "}
+              {best?.cost ?? 0}.
             </p>
           </div>
         </Section>
@@ -300,8 +300,7 @@ export default async function LandingPage() {
               <RankBars rows={saturation} />
             </div>
             <p className="text-muted-foreground max-w-2xl text-sm sm:text-base">
-              A score an unlabelled model also reaches is measuring the split, not the method. We
-              report that rather than bury it.
+              A score an unlabelled model also reaches is measuring the dataset, not the method.
             </p>
           </div>
         </Section>
@@ -315,8 +314,8 @@ export default async function LandingPage() {
               <RankBars rows={features} />
             </div>
             <p className="text-muted-foreground max-w-2xl text-sm sm:text-base">
-              Highlighted bars are signals the corroboration score already weights by hand. Nothing
-              new was found, and a merchant can be shown its reason for a hold.
+              Highlighted bars are what the corroboration score already weights by hand. It found
+              nothing new, which is why every hold can still be explained.
             </p>
           </div>
         </Section>
@@ -367,8 +366,8 @@ export default async function LandingPage() {
             </div>
             <h3 className="text-foreground mt-2 font-semibold">Flatmates sharing one coupon</h3>
             <p className="text-muted-foreground mt-2 text-sm">
-              On the five signals available, indistinguishable from promo abuse. The information is
-              not there. This is what voice verification exists for.
+              On the five signals available, indistinguishable from promo abuse. This is what the
+              voice check exists for.
             </p>
           </div>
           <div className="bg-card/60 rounded-xl border p-5">
@@ -380,12 +379,12 @@ export default async function LandingPage() {
             </h3>
             <p className="text-muted-foreground mt-2 text-sm">
               Only coordinated timing links them. Flagging on that alone would put real customers in
-              your queue every day. Deliberate.
+              your queue daily. Deliberate.
             </p>
           </div>
         </div>
         <p className="text-muted-foreground mt-6 max-w-2xl text-sm sm:text-base">
-          The data is synthetic and encodes the detector&rsquo;s own assumption. That validates the
+          The data is synthetic and encodes the detector&rsquo;s own assumption, so it validates the
           implementation, not the assumption. Real proof needs real chargebacks.
         </p>
       </Section>
@@ -401,6 +400,7 @@ export default async function LandingPage() {
               <Button render={<Link href="/connect" />} size="lg" className="h-11 px-6 shadow-md">
                 <span>Connect Razorpay</span>
                 <RiArrowRightLine className="size-4" aria-hidden />
+                <RouteProgress />
               </Button>
               <Button
                 render={<Link href="/clusters" />}
@@ -409,9 +409,11 @@ export default async function LandingPage() {
                 className="h-11 px-6"
               >
                 <span>Open ring queue</span>
+                <RouteProgress />
               </Button>
               <Button render={<Link href="/evidence" />} variant="ghost" size="lg" className="h-11">
                 <span>Full evidence</span>
+                <RouteProgress />
               </Button>
             </div>
             <p className="text-muted-foreground mt-8 flex items-center gap-2 text-xs">

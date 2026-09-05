@@ -3,12 +3,13 @@ import {
   RiArrowRightLine,
   RiCheckboxCircleLine,
   RiFlashlightLine,
+  RiLoader4Line,
   RiMoneyDollarCircleLine,
-  RiShieldCheckLine,
   RiUserSharedLine,
 } from "@remixicon/react"
 import Link from "next/link"
 
+import { LinkPending, RouteProgress } from "@/components/common/route-progress"
 import { LoadDemoData } from "@/components/fraud/load-demo-data"
 import { RunDetection } from "@/components/fraud/run-detection"
 import { RISK_BAND_LABEL, RISK_BAND_STYLE, riskBand } from "@/components/fraud/signal-taxonomy"
@@ -58,8 +59,8 @@ export default async function ClustersPage() {
   return (
     <PageShell size="lg" className="space-y-8">
       <PageHeader
-        title="Ring Queue"
-        description="Coordinated account groups surfaced by the corroboration graph detector. Ranked by risk score."
+        title="Ring queue"
+        description="Coordinated account groups, highest risk first."
         actions={<RunDetection />}
       />
 
@@ -71,12 +72,11 @@ export default async function ClustersPage() {
 
       {!error && (
         <>
-          {/* Headline Stats Cards */}
           <div className="grid gap-4 sm:grid-cols-3">
             <div className="glass-card-hover border-border/80 bg-card/60 rounded-xl border p-5 shadow-sm">
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
-                  Open Ring Cases
+                  Open cases
                 </span>
                 <div className="bg-primary/10 text-primary flex size-8 items-center justify-center rounded-lg">
                   <RiAlarmWarningLine className="size-4.5" />
@@ -85,32 +85,28 @@ export default async function ClustersPage() {
               <div className="text-foreground mt-2 text-3xl font-bold tabular-nums">
                 {open.length}
               </div>
-              <div className="text-muted-foreground mt-1 text-xs">
-                Awaiting merchant investigation
-              </div>
+              <div className="text-muted-foreground mt-1 text-xs">Awaiting your decision</div>
             </div>
 
             <div className="glass-card-hover border-destructive/30 bg-destructive/5 rounded-xl border p-5 shadow-sm">
               <div className="flex items-center justify-between">
                 <span className="text-destructive text-xs font-semibold tracking-wider uppercase">
-                  Critical Risk
+                  Critical
                 </span>
-                <div className="bg-destructive/10 text-destructive flex size-8 animate-pulse items-center justify-center rounded-lg">
+                <div className="bg-destructive/10 text-destructive flex size-8 items-center justify-center rounded-lg">
                   <RiFlashlightLine className="size-4.5" />
                 </div>
               </div>
               <div className="text-destructive mt-2 text-3xl font-bold tabular-nums">
                 {critical.length}
               </div>
-              <div className="text-muted-foreground mt-1 text-xs">
-                Risk score &gt; 0.75 (High confidence)
-              </div>
+              <div className="text-muted-foreground mt-1 text-xs">Risk above 0.75</div>
             </div>
 
             <div className="glass-card-hover rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-5 shadow-sm">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-semibold tracking-wider text-emerald-700 uppercase dark:text-emerald-400">
-                  Prevented Exposure
+                  Exposure
                 </span>
                 <div className="flex size-8 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
                   <RiMoneyDollarCircleLine className="size-4.5" />
@@ -119,43 +115,27 @@ export default async function ClustersPage() {
               <div className="text-foreground mt-2 text-3xl font-bold tabular-nums">
                 {formatRupees(totalExposure)}
               </div>
-              <div className="text-muted-foreground mt-1 text-xs">
-                Estimated volume across flagged accounts
-              </div>
+              <div className="text-muted-foreground mt-1 text-xs">Across flagged accounts</div>
             </div>
           </div>
 
-          {/* Queue Table or Empty State */}
           {clusters.length === 0 ? (
             <div className="glass-panel-elevated relative overflow-hidden rounded-2xl border p-12 text-center shadow-xl">
               <div className="bg-dot-grid pointer-events-none absolute inset-0 opacity-30" />
               <div className="border-border bg-card text-primary relative mx-auto flex size-20 items-center justify-center rounded-2xl border">
-                <RiCheckboxCircleLine
-                  className="size-10 animate-pulse text-emerald-500"
-                  aria-hidden
-                />
-                <span className="absolute -top-1 -right-1 flex size-3">
-                  <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-                  <span className="relative inline-flex size-3 rounded-full bg-emerald-500" />
-                </span>
+                <RiCheckboxCircleLine className="size-10 text-emerald-500" aria-hidden />
               </div>
               <h3 className="text-foreground relative z-10 mt-5 text-xl font-bold">
-                No Coordinated Fraud Rings Detected
+                No rings detected
               </h3>
-              <p className="text-muted-foreground relative z-10 mx-auto mt-2 max-w-md text-sm leading-relaxed">
-                The corroboration graph engine is actively monitoring incoming payments. Either no
-                transactions are loaded, or all activity falls safely within normal household
-                behavior.
+              <p className="text-muted-foreground relative z-10 mx-auto mt-2 max-w-md text-sm">
+                Either nothing is loaded yet, or every group here looks like an ordinary household.
               </p>
               <div className="relative z-10 mt-6 flex flex-wrap justify-center gap-3">
                 <LoadDemoData />
-                <Button
-                  render={<Link href="/connect" />}
-                  variant="outline"
-                  size="sm"
-                  className="shadow-xs"
-                >
-                  Connect Razorpay API
+                <Button render={<Link href="/connect" />} variant="outline" size="sm">
+                  Connect Razorpay
+                  <RouteProgress />
                 </Button>
               </div>
             </div>
@@ -164,16 +144,14 @@ export default async function ClustersPage() {
               <Table>
                 <TableHeader>
                   <tr className="bg-muted/40 border-b">
-                    <TableHead className="text-foreground font-semibold">Risk Band</TableHead>
-                    <TableHead className="text-foreground font-semibold">Members</TableHead>
-                    <TableHead className="text-foreground font-semibold">Total Exposure</TableHead>
-                    <TableHead className="text-foreground font-semibold">
-                      AI Voice Verification
-                    </TableHead>
-                    <TableHead className="text-foreground font-semibold">Decision Status</TableHead>
-                    <TableHead className="text-foreground font-semibold">First Detected</TableHead>
+                    <TableHead className="text-foreground font-semibold">Risk</TableHead>
+                    <TableHead className="text-foreground font-semibold">Accounts</TableHead>
+                    <TableHead className="text-foreground font-semibold">Exposure</TableHead>
+                    <TableHead className="text-foreground font-semibold">Voice check</TableHead>
+                    <TableHead className="text-foreground font-semibold">Status</TableHead>
+                    <TableHead className="text-foreground font-semibold">Detected</TableHead>
                     <TableHead className="text-foreground text-right font-semibold">
-                      Action
+                      <span className="sr-only">Open</span>
                     </TableHead>
                   </tr>
                 </TableHeader>
@@ -189,7 +167,7 @@ export default async function ClustersPage() {
                             </span>
                             <span
                               className={cn(
-                                "rounded-full border px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wider",
+                                "rounded-full border px-2.5 py-0.5 text-xs font-semibold tracking-wider uppercase",
                                 RISK_BAND_STYLE[band],
                               )}
                             >
@@ -200,7 +178,7 @@ export default async function ClustersPage() {
                         <TableCell>
                           <div className="text-foreground flex items-center gap-1.5 font-medium tabular-nums">
                             <RiUserSharedLine className="text-muted-foreground size-4" />
-                            <span>{cluster.accountCount} accounts</span>
+                            <span>{cluster.accountCount}</span>
                           </div>
                         </TableCell>
                         <TableCell className="text-foreground font-semibold tabular-nums">
@@ -232,6 +210,11 @@ export default async function ClustersPage() {
                           })}
                         </TableCell>
                         <TableCell className="text-right">
+                          {/* The click a reviewer thought had frozen the app. The route now has a
+                              loading.tsx for the router to prefetch and paint into, RouteProgress
+                              puts a bar at the top of the window the moment the click lands, and
+                              LinkPending swaps the arrow for a spinner so the feedback also lands
+                              on the control that was actually pressed. */}
                           <Button
                             render={<Link href={`/clusters/${cluster.id}`} />}
                             size="sm"
@@ -239,7 +222,13 @@ export default async function ClustersPage() {
                             className="gap-1 text-xs"
                           >
                             <span>Inspect</span>
-                            <RiArrowRightLine className="size-3.5" aria-hidden />
+                            <LinkPending
+                              idle={<RiArrowRightLine className="size-3.5" aria-hidden />}
+                              pending={
+                                <RiLoader4Line className="size-3.5 animate-spin" aria-hidden />
+                              }
+                            />
+                            <RouteProgress />
                           </Button>
                         </TableCell>
                       </TableRow>
@@ -250,16 +239,10 @@ export default async function ClustersPage() {
             </div>
           )}
 
-          <div className="border-border/80 bg-muted/20 text-muted-foreground rounded-xl border p-4 text-xs">
-            <div className="flex items-start gap-2.5">
-              <RiShieldCheckLine className="mt-0.5 size-4 shrink-0 text-emerald-500" aria-hidden />
-              <span>
-                <strong>Human-in-the-loop:</strong> The detector surfaces coordinated clusters with
-                transparent evidence logs. It never automatically blocks or freezes customer
-                accounts. Every decision is confirmed by a merchant operator with reason tracking.
-              </span>
-            </div>
-          </div>
+          <p className="text-muted-foreground text-xs">
+            The detector surfaces groups and holds funds. It never blocks an account on its own:
+            every decision here is yours, and is recorded with a reason.
+          </p>
         </>
       )}
     </PageShell>
