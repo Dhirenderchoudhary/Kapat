@@ -157,7 +157,7 @@ export default async function ClusterDetailPage({ params }: { params: Promise<{ 
           {flagged ? (
             <RiAlarmWarningLine className="text-destructive size-4" aria-hidden />
           ) : (
-            <RiShieldCheckLine className="size-4 text-emerald-500" aria-hidden />
+            <RiShieldCheckLine className="text-success size-4" aria-hidden />
           )}
           <span
             className={cn(
@@ -183,7 +183,7 @@ export default async function ClusterDetailPage({ params }: { params: Promise<{ 
                   "bg-background/70 rounded-xl border p-4",
                   driver.signalClass === "strong_fraud_specific"
                     ? "border-destructive/30"
-                    : "border-amber-500/30",
+                    : "border-evidence-weak/35",
                 )}
               >
                 <div className="text-foreground text-sm font-semibold">{driver.label}</div>
@@ -236,7 +236,8 @@ export default async function ClusterDetailPage({ params }: { params: Promise<{ 
                           "rounded-xl border p-4",
                           cls === "strong_fraud_specific" &&
                             "border-destructive/30 bg-destructive/5",
-                          cls === "weak_fraud_specific" && "border-amber-500/30 bg-amber-500/5",
+                          cls === "weak_fraud_specific" &&
+                            "border-evidence-weak/35 bg-evidence-weak/5",
                           cls === "benign_explainable" && "border-border/80 bg-card/60",
                         )}
                       >

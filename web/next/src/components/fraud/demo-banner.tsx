@@ -94,12 +94,12 @@ export function DemoBanner() {
   // work, and every other message would be a guess about data we cannot read.
   if (apiDown) {
     return (
-      <div className="border-b bg-red-500/5">
+      <div className="bg-destructive/5 border-b">
         <div className="mx-auto w-full max-w-6xl px-4 py-2.5 sm:px-6">
           <p className="text-sm">
-            <span className="font-medium text-red-700 dark:text-red-400">
-              The API is not reachable.
-            </span>{" "}
+            {/* Was `red-500`/`red-700`, a fourth red on a product that defines exactly one.
+                --destructive is the token, and it already resolves to the evidence crimson. */}
+            <span className="text-destructive font-medium">The API is not reachable.</span>{" "}
             <span className="text-muted-foreground">
               Every screen will be empty until it is running. In development start both together
               with <code className="font-mono text-xs">bun run dev</code> from the repo root

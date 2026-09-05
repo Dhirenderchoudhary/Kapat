@@ -77,13 +77,22 @@ export const SIGNAL_CLASS_LABEL: Record<SignalClass, string> = {
 }
 
 /**
- * Status styling. Every use pairs the colour with the text label above - colour is never the only
- * carrier of meaning (accessibility, and the merchant is making a money decision on this).
+ * Status styling, read from the evidence tokens instead of Tailwind's raw palette.
+ *
+ * These were `red-500` and `amber-500`, which meant a "Strong fraud signal" badge and the
+ * strong-signal colour in a chart or on a graph edge were two different reds on the same screen.
+ * Design.md's rule is that one signal class is one colour everywhere it appears, and
+ * --evidence-strong / --evidence-weak are where that colour is defined. Reading them here also
+ * retires the `dark:` variant on every badge: the token already flips per theme, so one class
+ * covers both.
+ *
+ * Every use pairs the colour with the text label above - colour is never the only carrier of
+ * meaning (accessibility, and the merchant is making a money decision on this).
  */
 export const SIGNAL_CLASS_STYLE: Record<SignalClass, string> = {
   benign_explainable: "border-transparent bg-muted text-muted-foreground",
-  weak_fraud_specific: "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400",
-  strong_fraud_specific: "border-red-500/30 bg-red-500/10 text-red-700 dark:text-red-400",
+  weak_fraud_specific: "border-evidence-weak/35 bg-evidence-weak/10 text-evidence-weak",
+  strong_fraud_specific: "border-evidence-strong/35 bg-evidence-strong/10 text-evidence-strong",
 }
 
 export function signalClassOf(signalType: string): SignalClass {
@@ -112,8 +121,30 @@ export const RISK_BAND_LABEL: Record<RiskBand, string> = {
 }
 
 export const RISK_BAND_STYLE: Record<RiskBand, string> = {
-  critical: "border-red-500/30 bg-red-500/10 text-red-700 dark:text-red-400",
-  serious: "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400",
+  critical: "border-evidence-strong/35 bg-evidence-strong/10 text-evidence-strong",
+  serious: "border-evidence-weak/35 bg-evidence-weak/10 text-evidence-weak",
   watch: "border-transparent bg-muted text-muted-foreground",
   cleared: "border-transparent bg-muted text-muted-foreground",
+}
+
+/** The same signal, short enough to sit in a table cell. SIGNAL_LABEL is a heading and runs to
+ *  three words; a queue row carries up to five of these at once and needs them scannable. */
+export const SIGNAL_SHORT_LABEL: Record<string, string> = {
+  shared_address: "Address",
+  shared_payment: "Payment method",
+  coordinated_timing: "Timing",
+  shared_promo: "Promo funnel",
+  shared_phone_pattern: "SIM block",
+}
+
+/** Strong signals first, then weak, then benign, so the reason a group was flagged is the first
+ *  thing read in a row of chips. Ties keep the taxonomy's own order. */
+const SIGNAL_CLASS_RANK: Record<SignalClass, number> = {
+  strong_fraud_specific: 0,
+  weak_fraud_specific: 1,
+  benign_explainable: 2,
+}
+
+export function bySignalWeight(a: string, b: string): number {
+  return SIGNAL_CLASS_RANK[signalClassOf(a)] - SIGNAL_CLASS_RANK[signalClassOf(b)]
 }
