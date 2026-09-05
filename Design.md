@@ -10,14 +10,33 @@ The dashboard is the product. This document is weighted accordingly.
 
 A table, one row per open cluster, sorted by risk score descending by default:
 
-| Column              | Content                                                             |
-| ------------------- | ------------------------------------------------------------------- |
-| Flagged at          | timestamp                                                           |
-| Accounts involved   | count                                                               |
-| Risk score          | 0-1, colored band                                                   |
-| ₹ exposure          | chargeback_exposure figure                                          |
-| Verification status | verified-linked / verified-legitimate / unclear / not yet triggered |
-| ->                  | link to detail                                                      |
+| Column            | Content                                                                    |
+| ----------------- | -------------------------------------------------------------------------- |
+| Risk score        | 0-1, with its band named in words                                          |
+| Accounts involved | count                                                                      |
+| Why it is flagged | the signals linking the group, coloured by evidence class, strongest first |
+| ₹ exposure        | chargeback_exposure figure                                                 |
+| Review            | status, with the voice-check outcome beneath it                            |
+| Detected          | date                                                                       |
+| ->                | link to detail                                                             |
+
+**The row has to say why.** Without the signals column every row carries a score, a count, a rupee
+figure and two status words, which is the same shape for every row: fifteen open groups looked
+identical and a reviewer opened all of them to find out which was actually a ring. The chips are
+`account_links` reduced to its distinct signal types (`signalTypes` on the list endpoint, the same
+edges the detail page renders), coloured by the taxonomy in §1a, with the strong ones first.
+
+Above the table are the filters someone actually asks for out loud - what is worst, what has
+evidence no household produces, what is still on me, what is already done - and the sortable
+columns. Both run in the browser over rows already fetched: these routes are `force-dynamic`
+against a separate API, and a server round trip to hide four rows is not a trade worth making. A
+filter matching nothing is hidden rather than shown disabled.
+
+The three counts above that (open, critical, exposure) are set as a divided row, not as three
+tinted cards. They were three panels with three different border colours, three icons in three
+tinted squares, and one of them spent a red on a total that carries no alarm. Three numbers of one
+kind read as one measurement taken three ways; boxes read as three separate things. The colour
+budget on this screen belongs to the evidence.
 
 ### 1.2 Ring Detail (`/clusters/:id`) - the core screen
 
@@ -50,6 +69,18 @@ routinely try the sample data first and connect afterwards.
 ### 1.3 Account drill-down (`/accounts/:id`)
 
 Transaction history, which clusters this account has appeared in (past and present), verification history if any.
+
+### 1.3a Held payments (`/holds`)
+
+The one screen where a click moves money, so its copy has to be exact. Two things were not.
+
+The note field on each hold was a bare placeholder reading "Why it was held" - which is the
+detector's reason, already printed directly above it - when it is the merchant's own note, and a
+refund is refused without one. It carries a label and says which of the two actions needs it.
+
+And the guard on the "your name" field surfaced the field's own label as the error, so pressing
+Release with no name printed the words "Your name" in red and left the merchant to work out what
+that meant. Errors here say what to do (`hold.nameRequired`), in all four languages.
 
 ### 1.4 Metrics view
 
@@ -86,6 +117,18 @@ Charts read the same tokens: `ChartPalette` in `components/fraud/charts.tsx` ali
 `--chart-benign/-weak/-strong` onto them, so a signal class is the same colour in a chart, on a
 badge, and on a graph edge. It used to be six hex values redeclared per page, which meant a theme
 change moved the interface and left the evidence colours behind.
+
+Badges read them too. `SIGNAL_CLASS_STYLE` and `RISK_BAND_STYLE` in `signal-taxonomy.ts` were
+written against Tailwind's `red-500` and `amber-500`, so a "Strong fraud signal" badge and the
+strong-signal colour in a chart were two different reds on the same screen. They read
+`--evidence-*` now, which also retires the `dark:` variant on every badge: the token flips per
+theme, so one class covers both. The hero's own graph had the same fault in its worst form - five
+edges hardcoded to one rose hex, saying a shared card is as damning as a sequential SIM block,
+which is the opposite of what this product argues. Each edge carries the colour of its own class.
+
+Two ornaments were spending the rationed colour on nothing: three macOS traffic-light dots in the
+hero preview's chrome, one of them red, and a pulsing dot on every row of `/holds`. On a list where
+every row pulses, none of them stands out.
 
 Colour is never the sole carrier of meaning: every chart also carries a text label or a legend
 naming each class in words (see the accessibility note at the top of `charts.tsx`).
