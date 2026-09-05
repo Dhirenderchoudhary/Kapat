@@ -108,6 +108,8 @@ Better Auth's `account` table is OAuth links for console users. Fraud `accounts`
 
 Prefix `/api` except `POST /webhooks/razorpay`. CORS from `HONO_TRUSTED_ORIGINS`. Rate limit `HONO_RATE_LIMIT`. OpenAPI at `/api/openapi.json`.
 
+`GET /api/clusters` includes `signalTypes` on each row: the distinct `account_links` types whose both endpoints are members of that cluster. The queue uses the same edges as the detail page.
+
 See [`docs/api.md`](docs/api.md).
 
 ## Environment

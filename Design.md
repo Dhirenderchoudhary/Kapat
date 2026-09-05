@@ -12,7 +12,11 @@ Hero numbers from the shipped scorer's held-out row. Charts from `data/*.json`. 
 
 ### Queue (`/clusters`)
 
-One row per open cluster, risk descending: flagged at, account count, risk, exposure, verification status, link to detail.
+One row per open cluster: flagged at, account count, risk, the signals linking the group (strongest first, coloured by evidence class), exposure, verification status, link to detail.
+
+The chips are `account_links` reduced to distinct signal types (`signalTypes` on the list endpoint, the same edges the detail page renders). Filters and sortable columns run in the browser over rows already fetched. A filter matching nothing is hidden rather than shown disabled.
+
+The three counts above the table (open, critical, exposure) are a divided row, not three tinted cards. The colour budget on this screen belongs to the evidence.
 
 ### Ring detail (`/clusters/[id]`)
 
@@ -31,6 +35,8 @@ There is no `/accounts/:id` page in this build. Account facts live on the cluste
 ### Holds (`/holds`)
 
 Payments in `authorized` that the agent did not capture. Countdown from `expires_at`. Release captures. Reject refunds. Both require a named person.
+
+The note field is the merchant's own note, not the detector reason already printed above it. A refund is refused without one. The name field error says what to do (`hold.nameRequired`), in all four languages.
 
 ### Analysis (`/analysis`)
 
@@ -60,6 +66,8 @@ One palette in `web/next/src/app/globals.css`. The colour that classifies a sign
 | `--evidence-weak`   | Weakly fraud-specific (coordinated timing)                  |
 | `--evidence-strong` | No ordinary household explanation (promo funnel, SIM block) |
 | `--primary`         | Ultramarine. Links, focus, primary actions                  |
+
+Badges read the same tokens. `SIGNAL_CLASS_STYLE` and `RISK_BAND_STYLE` in `signal-taxonomy.ts` use `--evidence-*`, so a badge and a chart of the same class are the same colour. Hero graph edges carry their own class colour. No traffic-light dots in the preview chrome, and no pulse on every holds row.
 
 Crimson (`--evidence-strong`) is for strong fraud evidence and a flagged state. Not headings, not decorative buttons. Green is not the brand accent: on a risk queue green means cleared.
 
