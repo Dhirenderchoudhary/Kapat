@@ -69,6 +69,9 @@ export type MessageKey =
   | "hold.decidedBy"
   | "hold.reasonRequired"
   | "hold.agentNeverActs"
+  | "hold.nameRequired"
+  | "hold.noteLabel"
+  | "hold.notePlaceholder"
   | "metrics.title"
   | "metrics.subtitle"
   | "queue.title"
@@ -126,6 +129,9 @@ const en: Messages = {
   "hold.decidedBy": "Your name",
   "hold.reasonRequired": "Please give a reason.",
   "hold.agentNeverActs": "The agent never releases or refunds on its own. Only you can.",
+  "hold.nameRequired": "Enter your name before deciding.",
+  "hold.noteLabel": "Your note",
+  "hold.notePlaceholder": "Required to refund. Optional to release.",
 
   "metrics.title": "Detector metrics",
   "metrics.subtitle":
@@ -185,6 +191,9 @@ const hi: Messages = {
   "hold.decidedBy": "आपका नाम",
   "hold.reasonRequired": "कृपया कारण बताएँ।",
   "hold.agentNeverActs": "एजेंट अपने आप न भुगतान जारी करता है, न धनवापसी। यह केवल आप कर सकते हैं।",
+  "hold.nameRequired": "निर्णय लेने से पहले अपना नाम भरें।",
+  "hold.noteLabel": "आपका नोट",
+  "hold.notePlaceholder": "धनवापसी के लिए ज़रूरी। जारी करने के लिए वैकल्पिक।",
 
   "metrics.title": "डिटेक्टर मेट्रिक्स",
   "metrics.subtitle": "परीक्षण डेटा पर मापा गया जिसे डिटेक्टर ने कभी नहीं देखा।",
@@ -242,6 +251,9 @@ const mr: Messages = {
   "hold.decidedBy": "तुमचे नाव",
   "hold.reasonRequired": "कृपया कारण द्या.",
   "hold.agentNeverActs": "एजंट स्वतःहून देयक जारी करत नाही किंवा परतावा देत नाही. ते फक्त तुम्हीच करू शकता.",
+  "hold.nameRequired": "निर्णय घेण्यापूर्वी तुमचे नाव भरा.",
+  "hold.noteLabel": "तुमची नोंद",
+  "hold.notePlaceholder": "परताव्यासाठी आवश्यक. जारी करण्यासाठी ऐच्छिक.",
 
   "metrics.title": "डिटेक्टर मेट्रिक्स",
   "metrics.subtitle": "डिटेक्टरने कधीही न पाहिलेल्या चाचणी डेटावर मोजले गेले.",
@@ -299,6 +311,9 @@ const gu: Messages = {
   "hold.decidedBy": "તમારું નામ",
   "hold.reasonRequired": "કૃપા કરીને કારણ આપો.",
   "hold.agentNeverActs": "એજન્ટ જાતે ચુકવણી રિલીઝ કે રિફંડ કરતો નથી. તે ફક્ત તમે જ કરી શકો.",
+  "hold.nameRequired": "નિર્ણય લેતા પહેલાં તમારું નામ ભરો.",
+  "hold.noteLabel": "તમારી નોંધ",
+  "hold.notePlaceholder": "રિફંડ માટે જરૂરી. રિલીઝ માટે વૈકલ્પિક.",
 
   "metrics.title": "ડિટેક્ટર મેટ્રિક્સ",
   "metrics.subtitle": "પરીક્ષણ ડેટા પર માપવામાં આવેલ જેને ડિટેક્ટરે ક્યારેય જોયો નથી.",
